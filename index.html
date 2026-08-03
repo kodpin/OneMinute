@@ -61,7 +61,6 @@
             color: var(--blue);
         }
 
-        /* Бургер-меню */
         .burger-menu {
             display: flex;
             flex-direction: column;
@@ -113,7 +112,6 @@
             color: var(--blue);
         }
 
-        /* Кнопка корзины */
         .cart-btn {
             background: none;
             border: none;
@@ -144,7 +142,6 @@
             justify-content: center;
         }
 
-        /* Мобильное меню */
         @media (max-width: 768px) {
             .nav-links {
                 position: fixed;
@@ -323,7 +320,6 @@
             font-weight: 700;
         }
 
-        /* Корзина */
         .cart-item {
             display: flex;
             justify-content: space-between;
@@ -382,7 +378,6 @@
             margin-top: 10px;
         }
 
-        /* Форма заказа */
         #orderForm {
             display: flex;
             flex-direction: column;
@@ -430,7 +425,6 @@
             cursor: pointer;
         }
 
-        /* Оплата */
         .payment-options {
             display: flex;
             flex-direction: column;
@@ -506,7 +500,6 @@
             color: var(--blue);
         }
 
-        /* Уведомление */
         .notification {
             position: fixed;
             bottom: 30px;
@@ -527,7 +520,6 @@
             to { bottom: 30px; opacity: 1; }
         }
 
-        /* Оверлей для мобильного меню */
         .overlay {
             display: none;
             position: fixed;
@@ -546,10 +538,8 @@
 </head>
 <body>
 
-    <!-- Оверлей для мобильного меню -->
     <div class="overlay" id="overlay"></div>
 
-    <!-- НАВБАР -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">One<span>Minute</span></div>
@@ -561,7 +551,7 @@
             <div class="nav-links" id="navLinks">
                 <a href="#catalog">Каталог</a>
                 <a href="#footer">Контакты</a>
-                <a href="#" onclick="orderByManager()">Менеджер</a>
+                <a href="#" id="managerLink">Менеджер</a>
                 <button class="cart-btn" onclick="openCart()" aria-label="Корзина">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" stroke-linecap="round" stroke-linejoin="round"/>
@@ -572,15 +562,13 @@
         </div>
     </nav>
 
-    <!-- КАТАЛОГ -->
     <main class="catalog" id="catalog">
         <h2 class="section-title">Каталог часов</h2>
         <div class="products-grid" id="productsGrid">
-            <!-- Товары загружаются через JS -->
+            <p style="text-align:center;color:var(--gray);padding:60px 0;">Загрузка товаров...</p>
         </div>
     </main>
 
-    <!-- МОДАЛЬНОЕ ОКНО: КОРЗИНА -->
     <div class="modal" id="cartModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeCart()">✕</button>
@@ -594,7 +582,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО: ОФОРМЛЕНИЕ -->
     <div class="modal" id="orderModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeOrder()">✕</button>
@@ -610,7 +597,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО: ОПЛАТА -->
     <div class="modal" id="paymentModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closePayment()">✕</button>
@@ -627,88 +613,47 @@
         </div>
     </div>
 
-    <!-- ФУТЕР -->
     <footer class="footer" id="footer">
         <div class="footer-content">
-            <div class="footer-info" id="ipInfo">
-                <!-- Информация об ИП -->
-            </div>
+            <div class="footer-info" id="ipInfo">Загрузка информации...</div>
             <div class="footer-links">
                 <a href="#catalog">Каталог</a>
-                <a href="#" onclick="orderByManager()">Поддержка</a>
-                <a href="#" onclick="orderByManager()">Telegram менеджера</a>
+                <a href="#" id="supportLink">Поддержка</a>
             </div>
         </div>
     </footer>
 
     <script>
-        // ==================== ДАННЫЕ ====================
-        // Это временные данные. Потом они будут загружаться с сервера / из JSON
-        const DEMO_PRODUCTS = [
-            {
-                id: 1,
-                name: "Apple Watch Ultra 2",
-                price: 79900,
-                description: "Титановый корпус 49 мм. Экран Retina. Водонепроницаемость WR100.",
-                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-ultra2-202409?wid=800&hei=800&fmt=jpeg",
-                category: "smart"
-            },
-            {
-                id: 2,
-                name: "Apple Watch Series 9",
-                price: 49900,
-                description: "Алюминиевый корпус 45 мм. Всегда включенный дисплей. S9 чип.",
-                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-s9-202409?wid=800&hei=800&fmt=jpeg",
-                category: "smart"
-            },
-            {
-                id: 3,
-                name: "Apple Watch SE",
-                price: 29900,
-                description: "Лёгкий алюминиевый корпус 44 мм. Отличный выбор для спорта.",
-                image: "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-se-202409?wid=800&hei=800&fmt=jpeg",
-                category: "smart"
-            },
-            {
-                id: 4,
-                name: "Casio G-Shock GA-2100",
-                price: 12900,
-                description: "Ударопрочные. Водонепроницаемость 200 м. Мировое время.",
-                image: "https://www.casio.com/content/dam/casio/productimages/watches/gshock/ga2100/GA-2100-1A.png",
-                category: "classic"
-            },
-            {
-                id: 5,
-                name: "Tissot PRX Powermatic 80",
-                price: 75000,
-                description: "Швейцарский автоматический механизм. Сапфировое стекло.",
-                image: "https://www.tissotwatches.com/media/catalog/product/T/1/T137.407.11.051.00.png",
-                category: "luxury"
-            },
-            {
-                id: 6,
-                name: "Samsung Galaxy Watch 6",
-                price: 39900,
-                description: "Биоактивный датчик. Wear OS. Измерение ЭКГ и давления.",
-                image: "https://images.samsung.com/ru/watches/galaxy-watch6/images/galaxy-watch6-share.jpg",
-                category: "smart"
+        // ==================== ЗАГРУЗКА ДАННЫХ ====================
+        let PRODUCTS = [];
+        let SETTINGS = {};
+
+        async function loadData() {
+            try {
+                const response = await fetch('data/products.json');
+                if (!response.ok) throw new Error('Файл не найден');
+                const data = await response.json();
+                PRODUCTS = data.products || [];
+                SETTINGS = data.settings || {};
+                
+                renderProducts(PRODUCTS);
+                updateFooter(SETTINGS.ip_info || 'Информация не указана');
+                updateLinks();
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                document.getElementById('productsGrid').innerHTML = 
+                    '<p style="text-align:center;color:var(--gray);padding:60px 0;">Ошибка загрузки товаров</p>';
+                document.getElementById('ipInfo').textContent = 'Информация не загружена';
             }
-        ];
+        }
 
-        const DEMO_SETTINGS = {
-            ip_info: "ИП Иванов Иван Иванович\nИНН: 123456789012\nОГРНИП: 123456789012345\nг. Москва, ул. Часовая, д. 1\nТелефон: +7 (999) 123-45-67",
-            payment_qr: "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg",
-            payment_link: "https://example.com/pay",
-            manager_telegram: "https://t.me/manager"
-        };
-
-        // ==================== СОСТОЯНИЕ ====================
-        let cart = [];
-
-        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
-        function init() {
-            renderProducts(DEMO_PRODUCTS);
-            updateFooter(DEMO_SETTINGS.ip_info);
+        function updateLinks() {
+            const managerLink = document.getElementById('managerLink');
+            const supportLink = document.getElementById('supportLink');
+            const managerTelegram = SETTINGS.manager_telegram || 'https://t.me/manager';
+            
+            if (managerLink) managerLink.href = managerTelegram;
+            if (supportLink) supportLink.href = managerTelegram;
         }
 
         // ==================== РЕНДЕР ТОВАРОВ ====================
@@ -742,11 +687,12 @@
         }
 
         // ==================== КОРЗИНА ====================
+        let cart = [];
+
         function addToCart(productId) {
-            const product = DEMO_PRODUCTS.find(p => p.id === productId);
+            const product = PRODUCTS.find(p => p.id === productId);
             if (!product) return;
 
-            // Проверяем, есть ли уже такой товар
             const existingIndex = cart.findIndex(item => item.product.id === productId);
             if (existingIndex >= 0) {
                 cart[existingIndex].quantity++;
@@ -832,7 +778,6 @@
             document.body.style.overflow = '';
         }
 
-        // Обработка формы
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             closeOrder();
@@ -849,16 +794,18 @@
         function showQR() {
             const container = document.getElementById('qrContainer');
             const img = document.getElementById('qrImage');
-            img.src = DEMO_SETTINGS.payment_qr;
+            img.src = SETTINGS.payment_qr || '';
             container.style.display = 'block';
         }
 
         function payByLink() {
-            window.open(DEMO_SETTINGS.payment_link, '_blank');
+            const link = SETTINGS.payment_link;
+            if (link) window.open(link, '_blank');
         }
 
         function orderByManager() {
-            window.open(DEMO_SETTINGS.manager_telegram, '_blank');
+            const link = SETTINGS.manager_telegram || 'https://t.me/manager';
+            window.open(link, '_blank');
         }
 
         // ==================== ФУТЕР ====================
@@ -885,7 +832,6 @@
             document.body.style.overflow = '';
         });
 
-        // Закрывать меню при клике на ссылку
         navLinks.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', function() {
                 burgerBtn.classList.remove('active');
@@ -897,7 +843,6 @@
 
         // ==================== УВЕДОМЛЕНИЯ ====================
         function showNotification(message) {
-            // Удаляем старое уведомление, если есть
             const old = document.querySelector('.notification');
             if (old) old.remove();
 
@@ -909,7 +854,7 @@
             setTimeout(() => notif.remove(), 2500);
         }
 
-        // ==================== ЗАКРЫТИЕ МОДАЛОК ПО КЛИКУ ВНЕ ====================
+        // ==================== ЗАКРЫТИЕ МОДАЛОК ====================
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
                 if (e.target === this) {
@@ -923,7 +868,7 @@
         });
 
         // ==================== ЗАПУСК ====================
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>
 </html>
