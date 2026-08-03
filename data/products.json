@@ -23,6 +23,14 @@
       "description": "Лёгкий алюминиевый корпус 44 мм. Отличный выбор для спорта.",
       "image": "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-se-202409?wid=800&hei=800&fmt=jpeg",
       "category": "smart"
+    },
+    {
+      "id": 4,
+      "name": "Чекунец",
+      "price": 250,
+      "description": "250 топлива",
+      "image": "https://i.imgur.com/XpZXL7S.jpeg",
+      "category": "luxury"
     }
   ],
   "settings": {
