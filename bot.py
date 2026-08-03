@@ -2,85 +2,111 @@ import json
 import os
 import requests
 import base64
+import traceback
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
 # Конфигурация
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
-REPO_OWNER = os.environ.get('GITHUB_REPOSITORY', '').split('/')[0] if '/' in os.environ.get('GITHUB_REPOSITORY', '') else 'kodpin'
-REPO_NAME = 'OneMinute'
+REPO = os.environ.get('GITHUB_REPOSITORY', 'kodpin/OneMinute')
+REPO_OWNER = REPO.split('/')[0]
+REPO_NAME = REPO.split('/')[1] if '/' in REPO else 'OneMinute'
 FILE_PATH = 'data/products.json'
-TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
-ADMIN_IDS = [int(id) for id in os.environ.get('ADMIN_IDS', '').split(',')]
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+ADMIN_IDS_STR = os.environ.get('ADMIN_IDS', '')
+ADMIN_IDS = [int(id.strip()) for id in ADMIN_IDS_STR.split(',') if id.strip()]
 
 user_states = {}
 
-# ============== GitHub API ==============
+print(f"Bot started! Admin IDs: {ADMIN_IDS}")
+print(f"Repo: {REPO_OWNER}/{REPO_NAME}")
+
+# ============== GitHub ==============
 def get_github_file():
     url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}'
-    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    headers = {
+        'Authorization': f'token {GITHUB_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+    print(f"GET {url}")
     response = requests.get(url, headers=headers)
+    print(f"Response: {response.status_code}")
     if response.status_code == 200:
-        content = base64.b64decode(response.json()['content']).decode('utf-8')
-        return json.loads(content), response.json()['sha']
+        data = response.json()
+        content = base64.b64decode(data['content']).decode('utf-8')
+        return json.loads(content), data['sha']
+    else:
+        print(f"Error: {response.text}")
     return None, None
 
 def save_github_file(data, sha=None):
     url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}'
-    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    headers = {
+        'Authorization': f'token {GITHUB_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
     content = json.dumps(data, ensure_ascii=False, indent=2)
     encoded = base64.b64encode(content.encode('utf-8')).decode('utf-8')
-    payload = {'message': 'Update via bot', 'content': encoded}
+    payload = {
+        'message': 'Update via bot',
+        'content': encoded
+    }
     if sha:
         payload['sha'] = sha
+    
+    print(f"PUT {url}")
     response = requests.put(url, headers=headers, json=payload)
+    print(f"Response: {response.status_code}")
+    if response.status_code not in [200, 201]:
+        print(f"Error: {response.text}")
+    
     return response.status_code in [200, 201]
 
-# ============== Telegram API ==============
+# ============== Telegram ==============
 def send_message(chat_id, text, reply_markup=None):
-    url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
-    payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}
-    if reply_markup:
-        payload['reply_markup'] = reply_markup
-    requests.post(url, json=payload)
-
-def send_photo(chat_id, photo_url, caption=None, reply_markup=None):
-    url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto'
-    payload = {'chat_id': chat_id, 'photo': photo_url}
-    if caption:
-        payload['caption'] = caption
-        payload['parse_mode'] = 'HTML'
-    if reply_markup:
-        payload['reply_markup'] = reply_markup
-    requests.post(url, json=payload)
-
-def edit_message(chat_id, message_id, text, reply_markup=None):
-    url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/editMessageText'
+    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
     payload = {
         'chat_id': chat_id,
-        'message_id': message_id,
         'text': text,
         'parse_mode': 'HTML'
     }
     if reply_markup:
-        payload['reply_markup'] = reply_markup
-    requests.post(url, json=payload)
+        payload['reply_markup'] = json.dumps(reply_markup)
+    
+    print(f"Sending message to {chat_id}")
+    response = requests.post(url, json=payload)
+    print(f"Message response: {response.status_code}")
+    if response.status_code != 200:
+        print(f"Error: {response.text}")
 
-def delete_message(chat_id, message_id):
-    url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteMessage'
-    requests.post(url, json={'chat_id': chat_id, 'message_id': message_id})
+def send_photo(chat_id, photo_url, caption=None, reply_markup=None):
+    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto'
+    payload = {
+        'chat_id': chat_id,
+        'photo': photo_url,
+        'parse_mode': 'HTML'
+    }
+    if caption:
+        payload['caption'] = caption
+    if reply_markup:
+        payload['reply_markup'] = json.dumps(reply_markup)
+    
+    print(f"Sending photo to {chat_id}")
+    response = requests.post(url, json=payload)
+    print(f"Photo response: {response.status_code}")
+    if response.status_code != 200:
+        print(f"Error: {response.text}")
 
-def answer_callback(callback_id, text=None, show_alert=False):
-    url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery'
+def answer_callback(callback_id, text=None):
+    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/answerCallbackQuery'
     payload = {'callback_query_id': callback_id}
     if text:
         payload['text'] = text
-        payload['show_alert'] = show_alert
     requests.post(url, json=payload)
 
 # ============== Клавиатуры ==============
-def main_menu_keyboard():
+def main_menu_kb():
     return {
         "inline_keyboard": [
             [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
@@ -90,14 +116,12 @@ def main_menu_keyboard():
         ]
     }
 
-def back_keyboard():
+def cancel_kb():
     return {
-        "inline_keyboard": [
-            [{"text": "🔙 Назад в меню", "callback_data": "main_menu"}]
-        ]
+        "inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]
     }
 
-def category_keyboard():
+def category_kb():
     return {
         "inline_keyboard": [
             [
@@ -109,17 +133,16 @@ def category_keyboard():
         ]
     }
 
-def confirm_keyboard():
+def confirm_kb():
     return {
         "inline_keyboard": [
-            [
-                {"text": "✅ Подтвердить", "callback_data": "confirm_product"},
-                {"text": "❌ Отмена", "callback_data": "cancel_add"}
-            ]
+            [{"text": "✅ Подтвердить", "callback_data": "confirm_product"}],
+            [{"text": "🔄 Заново", "callback_data": "add_product"}],
+            [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
         ]
     }
 
-def settings_keyboard():
+def settings_kb():
     return {
         "inline_keyboard": [
             [{"text": "📝 Изменить ИП", "callback_data": "edit_ip"}],
@@ -130,162 +153,122 @@ def settings_keyboard():
         ]
     }
 
-def products_list_keyboard(products):
-    keyboard = []
-    for p in products:
-        keyboard.append([
-            {"text": f"❌ {p['name']} - {p['price']}₽", "callback_data": f"delete_{p['id']}"}
-        ])
-    keyboard.append([{"text": "🔙 Назад", "callback_data": "main_menu"}])
-    return {"inline_keyboard": keyboard}
-
-# ============== Обработка сообщений ==============
+# ============== Обработка ==============
 def process_update(update):
-    # Callback query (нажатие на кнопку)
+    print(f"Update received: {json.dumps(update, indent=2)[:500]}")
+    
+    # Callback query
     if 'callback_query' in update:
-        process_callback(update['callback_query'])
+        callback = update['callback_query']
+        chat_id = callback['message']['chat']['id']
+        data = callback['data']
+        
+        print(f"Callback from {chat_id}: {data}")
+        
+        if chat_id not in ADMIN_IDS:
+            answer_callback(callback['id'], 'Нет доступа')
+            return
+        
+        answer_callback(callback['id'])
+        
+        if data == 'main_menu':
+            send_main_menu(chat_id)
+        elif data == 'add_product':
+            start_add_product(chat_id)
+        elif data == 'cancel_add':
+            cancel_action(chat_id)
+        elif data.startswith('cat_'):
+            set_category(chat_id, data.replace('cat_', ''))
+        elif data == 'confirm_product':
+            save_product(chat_id)
+        elif data == 'list_products':
+            show_products(chat_id)
+        elif data.startswith('delete_'):
+            delete_product(chat_id, int(data.replace('delete_', '')))
+        elif data == 'settings_menu':
+            show_settings(chat_id)
+        elif data == 'edit_ip':
+            start_edit(chat_id, 'ip_info', '📝 Введите информацию об ИП:')
+        elif data == 'edit_qr':
+            start_edit(chat_id, 'payment_qr', '📱 Отправьте ссылку на QR-код:')
+        elif data == 'edit_link':
+            start_edit(chat_id, 'payment_link', '🔗 Отправьте ссылку для оплаты:')
+        elif data == 'edit_manager':
+            start_edit(chat_id, 'manager_telegram', '👤 Отправьте ссылку на менеджера:')
+        
         return
     
-    # Обычное сообщение
+    # Message
     if 'message' not in update:
         return
     
     message = update['message']
     chat_id = message['chat']['id']
     
+    print(f"Message from {chat_id}: {message.get('text', '[photo]')[:100]}")
+    
     if chat_id not in ADMIN_IDS:
-        send_message(chat_id, '🚫 У вас нет доступа к управлению.', main_menu_keyboard())
+        send_message(chat_id, '🚫 Нет доступа')
         return
     
-    # Проверяем состояние пользователя
     state = user_states.get(chat_id)
     
-    if state:
-        if state['action'] == 'waiting_text':
-            handle_waiting_text(chat_id, message)
-            return
-        elif state['action'] == 'waiting_photo':
-            handle_waiting_photo(chat_id, message)
-            return
+    # Обработка фото
+    if 'photo' in message:
+        if state and state.get('action') == 'waiting_photo':
+            handle_photo(chat_id, message)
+        else:
+            send_message(chat_id, 'Сначала начните добавление товара', main_menu_kb())
+        return
     
-    # Обычные команды
+    # Обработка текста
     text = message.get('text', '')
+    
     if text == '/start':
         send_main_menu(chat_id)
+    elif state and state.get('action') == 'waiting_text':
+        handle_text(chat_id, text)
     else:
         send_main_menu(chat_id)
 
-def process_callback(callback):
-    chat_id = callback['message']['chat']['id']
-    message_id = callback['message']['message_id']
-    data = callback['data']
-    
-    if chat_id not in ADMIN_IDS:
-        answer_callback(callback['id'], '🚫 Нет доступа', True)
-        return
-    
-    # Главное меню
-    if data == 'main_menu':
-        send_main_menu(chat_id)
-    
-    # Добавление товара
-    elif data == 'add_product':
-        start_add_product(chat_id)
-    
-    elif data == 'cancel_add':
-        cancel_action(chat_id)
-    
-    elif data.startswith('cat_'):
-        category = data.replace('cat_', '')
-        set_category(chat_id, category)
-    
-    elif data == 'confirm_product':
-        save_product(chat_id)
-    
-    # Список товаров
-    elif data == 'list_products':
-        show_products_list(chat_id)
-    
-    elif data.startswith('delete_'):
-        product_id = int(data.replace('delete_', ''))
-        delete_product(chat_id, product_id)
-    
-    # Настройки
-    elif data == 'settings_menu':
-        show_settings(chat_id)
-    
-    elif data == 'edit_ip':
-        start_edit_setting(chat_id, 'ip_info', '📝 Введите новую информацию об ИП:')
-    
-    elif data == 'edit_qr':
-        start_edit_setting(chat_id, 'payment_qr', '📱 Отправьте URL нового QR-кода:')
-    
-    elif data == 'edit_link':
-        start_edit_setting(chat_id, 'payment_link', '🔗 Отправьте новую ссылку для оплаты:')
-    
-    elif data == 'edit_manager':
-        start_edit_setting(chat_id, 'manager_telegram', '👤 Отправьте ссылку на Telegram менеджера:')
-    
-    answer_callback(callback['id'])
-
-# ============== Главное меню ==============
+# ============== Меню ==============
 def send_main_menu(chat_id):
-    text = """
-🎯 <b>OneMinute — Панель управления</b>
+    send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>\n\nВыберите действие:', main_menu_kb())
 
-Добро пожаловать! Выберите действие:
-    """
-    send_message(chat_id, text, main_menu_keyboard())
-
-# ============== Добавление товара ==============
+# ============== Добавление ==============
 def start_add_product(chat_id):
     user_states[chat_id] = {
         'action': 'waiting_text',
         'step': 'name',
         'data': {}
     }
-    
-    text = """
-➕ <b>Добавление нового товара</b>
+    send_message(chat_id, '➕ <b>Шаг 1/5:</b> Введите <b>название</b> товара:', cancel_kb())
 
-<b>Шаг 1/5:</b> Введите <b>название</b> товара:
-
-<i>Или нажмите кнопку для отмены</i>
-    """
-    send_message(chat_id, text, {
-        "inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]
-    })
-
-def handle_waiting_text(chat_id, message):
+def handle_text(chat_id, text):
     state = user_states.get(chat_id)
     if not state:
         return
     
-    text = message.get('text', '')
     step = state['step']
     
     if step == 'name':
         state['data']['name'] = text
         state['step'] = 'price'
-        send_message(chat_id, f'✅ Название: <b>{text}</b>\n\n<b>Шаг 2/5:</b> Введите <b>цену</b> в рублях:\n<i>Только цифры, например: 79900</i>', {
-            "inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]
-        })
+        send_message(chat_id, f'✅ <b>{text}</b>\n\n💰 <b>Шаг 2/5:</b> Введите <b>цену</b> (только цифры):', cancel_kb())
     
     elif step == 'price':
         try:
             price = int(text.replace(' ', '').replace('₽', ''))
             state['data']['price'] = price
             state['step'] = 'description'
-            send_message(chat_id, f'✅ Цена: <b>{price:,} ₽</b>\n\n<b>Шаг 3/5:</b> Введите <b>описание</b> товара:', {
-                "inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]
-            })
+            send_message(chat_id, f'✅ <b>{price:,} ₽</b>\n\n📝 <b>Шаг 3/5:</b> Введите <b>описание</b>:', cancel_kb())
         except:
-            send_message(chat_id, '❌ Введите цену цифрами!\n<i>Например: 79900</i>')
+            send_message(chat_id, '❌ Введите цену цифрами!')
     
     elif step == 'description':
         state['data']['description'] = text
         state['step'] = 'category'
-        send_message(chat_id, f'✅ Описание сохранено\n\n<b>Шаг 4/5:</b> Выберите <b>категорию</b>:', category_keyboard())
+        send_message(chat_id, '🏷 <b>Шаг 4/5:</b> Выберите <b>категорию</b>:', category_kb())
     
     elif step == 'edit_setting':
         save_setting(chat_id, text)
@@ -295,45 +278,42 @@ def set_category(chat_id, category):
     if not state:
         return
     
-    category_names = {
-        'smart': '⌚ Smart',
-        'classic': '🎩 Classic',
-        'luxury': '💎 Luxury'
-    }
-    
     state['data']['category'] = category
     state['action'] = 'waiting_photo'
     
-    send_message(chat_id, f'✅ Категория: <b>{category_names.get(category, category)}</b>\n\n<b>Шаг 5/5:</b> Отправьте <b>фото</b> товара:', {
-        "inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]
-    })
+    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n📸 <b>Шаг 5/5:</b> Отправьте <b>фото</b> товара:', cancel_kb())
 
-def handle_waiting_photo(chat_id, message):
+def handle_photo(chat_id, message):
     state = user_states.get(chat_id)
     if not state:
         return
     
-    photo = message.get('photo')
-    if not photo:
-        send_message(chat_id, '❌ Отправьте именно фото (картинку)!')
-        return
+    print("Processing photo...")
     
-    # Получаем URL фото
-    file_id = photo[-1]['file_id']
-    url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getFile?file_id={file_id}'
-    response = requests.get(url)
-    
-    if response.status_code != 200:
-        send_message(chat_id, '❌ Ошибка загрузки. Попробуйте ещё раз.')
-        return
-    
-    file_path = response.json()['result']['file_path']
-    photo_url = f'https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}'
-    state['data']['image'] = photo_url
-    state['action'] = 'confirm'
-    
-    # Показываем превью
-    caption = f"""
+    try:
+        # Получаем фото
+        photo = message['photo']
+        file_id = photo[-1]['file_id']
+        print(f"File ID: {file_id}")
+        
+        # Получаем URL
+        get_file_url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}'
+        response = requests.get(get_file_url)
+        
+        if response.status_code != 200:
+            print(f"GetFile error: {response.text}")
+            send_message(chat_id, '❌ Ошибка получения фото. Попробуйте ещё раз.')
+            return
+        
+        file_path = response.json()['result']['file_path']
+        photo_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
+        print(f"Photo URL: {photo_url}")
+        
+        state['data']['image'] = photo_url
+        state['action'] = 'confirm'
+        
+        # Показываем подтверждение
+        caption = f"""
 📋 <b>Проверьте товар:</b>
 
 📱 <b>Название:</b> {state['data']['name']}
@@ -341,83 +321,97 @@ def handle_waiting_photo(chat_id, message):
 📝 <b>Описание:</b> {state['data']['description']}
 🏷 <b>Категория:</b> {state['data']['category']}
 
-Подтверждаете добавление?
-    """
-    send_photo(chat_id, photo_url, caption, confirm_keyboard())
+Всё верно?
+        """
+        send_photo(chat_id, photo_url, caption, confirm_kb())
+        print("Confirmation sent")
+        
+    except Exception as e:
+        print(f"Photo error: {traceback.format_exc()}")
+        send_message(chat_id, f'❌ Ошибка обработки фото. Попробуйте ещё раз.', cancel_kb())
 
 def save_product(chat_id):
     state = user_states.get(chat_id)
     if not state:
         return
     
-    product_data = state['data']
+    print("Saving product...")
+    print(f"Product data: {json.dumps(state['data'], ensure_ascii=False)}")
     
     try:
         data, sha = get_github_file()
+        
         if data is None:
-            send_message(chat_id, '❌ Ошибка доступа к данным')
+            print("Failed to get file!")
+            send_message(chat_id, '❌ Ошибка доступа к базе данных')
             return
         
-        new_id = max([p['id'] for p in data['products']], default=0) + 1
+        new_id = max([p['id'] for p in data.get('products', [])], default=0) + 1
         
         new_product = {
             'id': new_id,
-            'name': product_data['name'],
-            'price': product_data['price'],
-            'description': product_data['description'],
-            'image': product_data['image'],
-            'category': product_data['category']
+            'name': state['data']['name'],
+            'price': state['data']['price'],
+            'description': state['data']['description'],
+            'image': state['data']['image'],
+            'category': state['data']['category']
         }
+        
+        if 'products' not in data:
+            data['products'] = []
         
         data['products'].append(new_product)
         
         if save_github_file(data, sha):
+            print("Product saved!")
             text = f"""
-✅ <b>Товар успешно добавлен!</b>
+✅ <b>Товар добавлен!</b>
 
 🆔 ID: <b>{new_id}</b>
-📱 Название: <b>{product_data['name']}</b>
-💰 Цена: <b>{product_data['price']:,} ₽</b>
-🏷 Категория: <b>{product_data['category']}</b>
+📱 <b>{new_product['name']}</b>
+💰 <b>{new_product['price']:,} ₽</b>
+🏷 <b>{new_product['category']}</b>
 
-<i>🌐 Сайт обновится через 1-2 минуты</i>
+🌐 Сайт обновится через 1-2 минуты
             """
-            send_photo(chat_id, product_data['image'], text, main_menu_keyboard())
+            send_photo(chat_id, new_product['image'], text, main_menu_kb())
         else:
-            send_message(chat_id, '❌ Ошибка сохранения', main_menu_keyboard())
+            print("Failed to save!")
+            send_message(chat_id, '❌ Ошибка сохранения', main_menu_kb())
     
     except Exception as e:
-        send_message(chat_id, f'❌ Ошибка: {e}', main_menu_keyboard())
+        print(f"Save error: {traceback.format_exc()}")
+        send_message(chat_id, f'❌ Ошибка: {e}', main_menu_kb())
     
     finally:
         if chat_id in user_states:
             del user_states[chat_id]
 
-# ============== Список товаров ==============
-def show_products_list(chat_id):
+# ============== Список ==============
+def show_products(chat_id):
     data, _ = get_github_file()
     
     if not data or not data.get('products'):
-        send_message(chat_id, '📋 <b>Список товаров пуст</b>\n\nДобавьте первый товар!', main_menu_keyboard())
+        send_message(chat_id, '📋 Товаров пока нет', main_menu_kb())
         return
     
     products = data['products']
-    text = f'📋 <b>Всего товаров: {len(products)}</b>\n\n'
+    text = f'📋 <b>Товары ({len(products)}):</b>\n\n'
     
+    keyboard = []
     for p in products:
-        text += f"🆔 <b>{p['id']}</b> | 📱 {p['name']}\n"
-        text += f"💰 {p['price']:,} ₽ | 🏷 {p['category']}\n"
-        text += f"📝 {p['description'][:50]}...\n\n"
+        text += f"🆔 {p['id']} | {p['name']} | {p['price']:,}₽\n"
+        keyboard.append([{"text": f"❌ Удалить: {p['name']}", "callback_data": f"delete_{p['id']}"}])
     
-    text += "<i>Нажмите на товар чтобы удалить:</i>"
+    keyboard.append([{"text": "🔙 Назад", "callback_data": "main_menu"}])
     
-    send_message(chat_id, text, products_list_keyboard(products))
+    send_message(chat_id, text, {"inline_keyboard": keyboard})
 
 def delete_product(chat_id, product_id):
     data, sha = get_github_file()
     
     if not data:
-        send_message(chat_id, '❌ Ошибка доступа')
+        send_message(chat_id, '❌ Ошибка')
         return
     
     product = next((p for p in data['products'] if p['id'] == product_id), None)
@@ -428,49 +422,33 @@ def delete_product(chat_id, product_id):
     data['products'] = [p for p in data['products'] if p['id'] != product_id]
     
     if save_github_file(data, sha):
-        send_message(chat_id, f'✅ Товар <b>{product["name"]}</b> удалён!\n\n<i>Сайт обновится через 1-2 минуты</i>')
-        show_products_list(chat_id)
+        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!')
+        show_products(chat_id)
     else:
         send_message(chat_id, '❌ Ошибка сохранения')
 
 # ============== Настройки ==============
 def show_settings(chat_id):
     data, _ = get_github_file()
+    s = data.get('settings', {}) if data else {}
     
-    if not data:
-        send_message(chat_id, '❌ Ошибка доступа')
-        return
-    
-    s = data.get('settings', {})
     text = f"""
-⚙️ <b>Текущие настройки</b>
+⚙️ <b>Настройки</b>
 
-📝 <b>Информация ИП:</b>
-{s.get('ip_info', 'Не задана')}
-
-📱 <b>QR-код оплаты:</b>
-{s.get('payment_qr', 'Не задан')}
-
-🔗 <b>Ссылка оплаты:</b>
-{s.get('payment_link', 'Не задана')}
-
-👤 <b>Менеджер:</b>
-{s.get('manager_telegram', 'Не задан')}
-
-<i>Выберите что изменить:</i>
+📝 ИП: {s.get('ip_info', '-')[:100]}
+📱 QR: {s.get('payment_qr', '-')[:50]}
+🔗 Ссылка: {s.get('payment_link', '-')[:50]}
+👤 Менеджер: {s.get('manager_telegram', '-')[:50]}
     """
-    send_message(chat_id, text, settings_keyboard())
+    send_message(chat_id, text, settings_kb())
 
-def start_edit_setting(chat_id, key, prompt):
+def start_edit(chat_id, key, prompt):
     user_states[chat_id] = {
         'action': 'waiting_text',
         'step': 'edit_setting',
         'setting_key': key
     }
-    
-    send_message(chat_id, prompt, {
-        "inline_keyboard": [[{"text": "🔙 Назад к настройкам", "callback_data": "settings_menu"}]]
-    })
+    send_message(chat_id, prompt, cancel_kb())
 
 def save_setting(chat_id, value):
     state = user_states.get(chat_id)
@@ -481,13 +459,16 @@ def save_setting(chat_id, value):
     data, sha = get_github_file()
     
     if not data:
-        send_message(chat_id, '❌ Ошибка доступа')
+        send_message(chat_id, '❌ Ошибка')
         return
+    
+    if 'settings' not in data:
+        data['settings'] = {}
     
     data['settings'][key] = value
     
     if save_github_file(data, sha):
-        send_message(chat_id, f'✅ Настройка обновлена!', settings_keyboard())
+        send_message(chat_id, f'✅ Настройка обновлена!', main_menu_kb())
     else:
         send_message(chat_id, '❌ Ошибка сохранения')
     
@@ -496,7 +477,7 @@ def save_setting(chat_id, value):
 def cancel_action(chat_id):
     if chat_id in user_states:
         del user_states[chat_id]
-    send_message(chat_id, '❌ Действие отменено', main_menu_keyboard())
+    send_message(chat_id, '❌ Отменено', main_menu_kb())
 
 # ============== Webhook ==============
 @app.route('/webhook', methods=['POST'])
@@ -508,7 +489,7 @@ def webhook():
 
 @app.route('/')
 def index():
-    return 'OneMinute Bot is running'
+    return 'Bot is running! Check logs on Render.'
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
