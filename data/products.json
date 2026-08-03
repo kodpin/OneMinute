@@ -1,0 +1,34 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Apple Watch Ultra 2",
+      "price": 79900,
+      "description": "Титановый корпус 49 мм. Экран Retina. Водонепроницаемость WR100.",
+      "image": "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-ultra2-202409?wid=800&hei=800&fmt=jpeg",
+      "category": "smart"
+    },
+    {
+      "id": 2,
+      "name": "Apple Watch Series 9",
+      "price": 49900,
+      "description": "Алюминиевый корпус 45 мм. Всегда включенный дисплей. S9 чип.",
+      "image": "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-s9-202409?wid=800&hei=800&fmt=jpeg",
+      "category": "smart"
+    },
+    {
+      "id": 3,
+      "name": "Apple Watch SE",
+      "price": 29900,
+      "description": "Лёгкий алюминиевый корпус 44 мм. Отличный выбор для спорта.",
+      "image": "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-se-202409?wid=800&hei=800&fmt=jpeg",
+      "category": "smart"
+    }
+  ],
+  "settings": {
+    "ip_info": "ИП Иванов Иван Иванович\nИНН: 123456789012\nОГРНИП: 123456789012345\nг. Москва, ул. Часовая, д. 1\n+7 (999) 123-45-67",
+    "payment_qr": "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg",
+    "payment_link": "https://example.com/pay",
+    "manager_telegram": "https://t.me/manager"
+  }
+}
