@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root { --bg: #f5f5f7; --dark: #1d1d1f; --blue: #0071e3; --gray: #86868b; --green: #34c759; --white: #ffffff; --radius-md: 16px; --radius-xl: 28px; }
+        :root { --bg: #f5f5f7; --dark: #1d1d1f; --blue: #0071e3; --gray: #86868b; --green: #34c759; --white: #ffffff; --radius-md: 16px; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--white); color: var(--dark); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
         .container { max-width: 480px; width: 100%; text-align: center; padding: 40px 20px; }
@@ -22,14 +22,11 @@
         .label { color: var(--gray); }
         .value { font-weight: 600; }
         .order-number { color: var(--blue); font-weight: 700; }
-        .total-row { font-weight: 700; font-size: 16px; border-top: 2px solid var(--dark); padding-top: 10px; margin-top: 4px; }
         .receipt-status { background: #e8f8ed; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 14px; color: #1a7a3a; display: flex; align-items: center; gap: 10px; justify-content: center; }
         .receipt-status i { font-size: 18px; }
         .btn { display: block; width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; }
-        .btn-primary { background: var(--blue); color: white; margin-bottom: 10px; }
+        .btn-primary { background: var(--blue); color: white; }
         .btn-primary:hover { background: #0066cc; }
-        .btn-secondary { background: var(--bg); color: var(--dark); }
-        .btn-secondary:hover { background: #e0e0e5; }
     </style>
 </head>
 <body>
@@ -37,30 +34,18 @@
         <div class="icon"><i class="fa-solid fa-circle-check"></i></div>
         <h1>Заказ оформлен!</h1>
         <p class="subtitle">Спасибо за покупку. Наш менеджер свяжется с вами в ближайшее время.</p>
-        
-        <div class="receipt-status" id="receiptStatus" style="display:none;">
-            <i class="fa-solid fa-check-circle"></i>
-            <span>Чек отправлен менеджеру</span>
-        </div>
-        
-        <div class="order-card" id="orderDetails">
-            <h3>Загрузка данных заказа...</h3>
-        </div>
-        
+        <div class="receipt-status" id="receiptStatus" style="display:none;"><i class="fa-solid fa-check-circle"></i><span>Чек отправлен менеджеру</span></div>
+        <div class="order-card" id="orderDetails"><h3>Загрузка данных заказа...</h3></div>
         <button class="btn btn-primary" onclick="window.location.href='/'"><i class="fa-solid fa-arrow-left"></i> Вернуться в каталог</button>
     </div>
-
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const orderData = urlParams.get('order');
-        
         if (orderData) {
             try {
                 const order = JSON.parse(decodeURIComponent(orderData));
                 renderOrder(order);
-                // Автоотправка чека если загружен
-                const receiptFile = urlParams.get('receipt');
-                if (receiptFile === 'uploaded') {
+                if (urlParams.get('receipt') === 'uploaded') {
                     document.getElementById('receiptStatus').style.display = 'flex';
                 }
             } catch(e) {
@@ -69,25 +54,17 @@
         } else {
             document.getElementById('orderDetails').innerHTML = '<p style="color:var(--gray);">Данные заказа не найдены</p>';
         }
-
         function renderOrder(order) {
-            const itemsHtml = order.items.map(item => 
-                `<div class="row"><span class="label">${item.product.name} ×${item.quantity}</span><span class="value">${fmt(item.product.price * item.quantity)}</span></div>`
-            ).join('');
-            
-            document.getElementById('orderDetails').innerHTML = `
-                <h3>Детали заказа</h3>
+            const itemsHtml = order.items.map(item => `<div class="row"><span class="label">${item.product.name} ×${item.quantity}</span><span class="value">${fmt(item.product.price * item.quantity)}</span></div>`).join('');
+            document.getElementById('orderDetails').innerHTML = `<h3>Детали заказа</h3>
                 <div class="row"><span class="label">Номер заказа</span><span class="value order-number">${order.orderNumber}</span></div>
                 <div class="row"><span class="label">Дата</span><span class="value">${order.date}</span></div>
                 <div class="row"><span class="label">Клиент</span><span class="value">${order.lastName} ${order.firstName} ${order.middleName !== '—' ? order.middleName : ''}</span></div>
                 <div class="row"><span class="label">Телефон</span><span class="value">${order.phone}</span></div>
                 <div class="row"><span class="label">Доставка</span><span class="value">${order.delivery}</span></div>
                 <div class="row"><span class="label">Адрес</span><span class="value">${order.address}</span></div>
-                ${itemsHtml}
-                <div class="row total-row"><span>Итого</span><span>${fmt(order.total)}</span></div>
-            `;
+                ${itemsHtml}`;
         }
-
         function fmt(p) { return p.toLocaleString('ru-RU') + ' ₽'; }
     </script>
 </body>
