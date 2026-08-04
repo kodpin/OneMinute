@@ -22,7 +22,6 @@
         .bg-ambient { position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 25% 15%, rgba(0,113,227,0.03) 0%, transparent 50%), radial-gradient(ellipse at 75% 80%, rgba(0,113,227,0.02) 0%, transparent 50%); animation: bgShift 25s ease-in-out infinite; }
         @keyframes bgShift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(1%,-0.5%)} 66%{transform:translate(-0.5%,0.8%)} }
 
-        /* НАВБАР */
         .navbar { position: fixed; top:0;left:0;right:0;z-index:1000;transition:all 0.35s ease; }
         .navbar.scrolled { background:rgba(255,255,255,0.84);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border-bottom:1px solid rgba(0,0,0,0.05);box-shadow:0 1px 3px rgba(0,0,0,0.04); }
         .nav-container { max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center; }
@@ -51,13 +50,11 @@
         .manager-btn:hover { background:#30b350;transform:translateY(-1px);box-shadow:0 4px 16px rgba(52,199,89,0.3); }
         @media(max-width:768px){.burger-menu{display:flex;}.nav-links{position:fixed;top:0;right:-100%;width:78%;max-width:340px;height:100vh;background:rgba(255,255,255,0.96);backdrop-filter:blur(30px);flex-direction:column;padding:100px 28px 40px;gap:24px;transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1);box-shadow:-10px 0 60px rgba(0,0,0,0.08);}.nav-links.active{right:0;}.nav-links a{font-size:17px;}.manager-btn span{display:none;}.cart-btn .cart-amount{display:none;}.cart-btn > span:not(.cart-icon-wrap):not(.cart-count){display:none;}}
 
-        /* ПЛАВАЮЩАЯ КОРЗИНА */
         .floating-cart { position:fixed;bottom:28px;left:28px;z-index:1500;background:var(--dark);color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:20px;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,0.3);transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);display:flex;align-items:center;justify-content:center;transform:scale(0);opacity:0; }
         .floating-cart.visible { transform:scale(1);opacity:1; }
         .floating-cart:hover { transform:scale(1.08);background:#333; }
         .floating-cart .float-cart-count { position:absolute;top:-4px;right:-4px;background:var(--blue);color:white;border-radius:50%;min-width:20px;height:20px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--dark); }
 
-        /* КАТАЛОГ */
         .catalog { padding:100px 20px 40px;max-width:1280px;margin:0 auto; }
         .section-title { font-size:38px;font-weight:900;letter-spacing:-1px;text-align:center;margin-bottom:4px; }
         .section-subtitle { text-align:center;color:var(--gray);font-size:15px;margin-bottom:32px; }
@@ -106,7 +103,6 @@
         .loader{grid-column:1/-1;text-align:center;padding:40px 0;color:var(--gray);}
         .loader i{font-size:28px;display:block;margin-bottom:10px;}
 
-        /* КАРТОЧКА */
         .product-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:3000;background:rgba(0,0,0,0.5);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);animation:fadeIn 0.3s ease;}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         .product-modal-content{background:var(--white);border-radius:var(--radius-xl);max-width:500px;width:94%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,0.2);animation:modalIn 0.4s ease;}
@@ -132,7 +128,6 @@
         .product-modal-cart:hover{background:#e0e0e5;}
         .product-modal-close{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.9);backdrop-filter:blur(8px);border:none;font-size:16px;cursor:pointer;color:var(--dark);display:flex;align-items:center;justify-content:center;z-index:1;}
 
-        /* МОДАЛКИ */
         .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:2000;background:rgba(0,0,0,0.45);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:fadeIn 0.3s ease;}
         .modal-content{background:var(--white);border-radius:var(--radius-xl);padding:28px 24px;max-width:460px;width:94%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);max-height:88vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,0.15);animation:modalIn 0.4s ease;}
         .modal-close{position:absolute;right:14px;top:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;font-size:16px;cursor:pointer;color:var(--gray);display:flex;align-items:center;justify-content:center;}
@@ -160,27 +155,17 @@
         .form-row{display:flex;gap:10px;}
         .form-row input,.form-row select{flex:1;}
 
-        /* ОКНО ОПЛАТЫ */
         .payment-content { text-align: center; }
         .payment-qr-section { margin: 20px 0; }
         .payment-qr-section img { max-width: 200px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); border: 1px solid var(--border); }
         .payment-qr-label { font-weight: 600; margin-bottom: 14px; font-size: 14px; color: var(--gray); }
-        .payment-link-btn { 
-            display: block; width: 100%; padding: 14px; border-radius: var(--radius-sm);
-            background: var(--blue); color: white; border: none; font-size: 15px;
-            font-weight: 700; cursor: pointer; margin-top: 12px; transition: all var(--transition);
-        }
+        .payment-link-btn { display: block; width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--blue); color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 12px; transition: all var(--transition); }
         .payment-link-btn:hover { background: var(--blue-dark); }
-        .payment-divider { 
-            display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--gray); font-size: 13px; 
-        }
+        .payment-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--gray); font-size: 13px; }
         .payment-divider::before, .payment-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
         .payment-receipt-section { margin-top: 16px; }
         .payment-receipt-label { font-size: 13px; color: var(--gray); margin-bottom: 10px; }
-        .file-upload-wrap { 
-            border: 2px dashed var(--border); border-radius: var(--radius-md);
-            padding: 20px; text-align: center; cursor: pointer; transition: all var(--transition);
-        }
+        .file-upload-wrap { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; cursor: pointer; transition: all var(--transition); }
         .file-upload-wrap:hover { border-color: var(--blue); background: var(--blue-light); }
         .file-upload-wrap i { font-size: 28px; color: var(--gray); margin-bottom: 8px; display: block; }
         .file-upload-wrap .upload-text { font-size: 13px; color: var(--gray); }
@@ -188,29 +173,9 @@
         .file-upload-wrap.has-file { border-color: var(--green); background: rgba(52,199,89,0.05); }
         .file-upload-wrap.has-file i { color: var(--green); }
         #fileInput { display: none; }
-        .send-receipt-btn {
-            width: 100%; padding: 14px; border-radius: var(--radius-sm);
-            background: var(--green); color: white; border: none; font-size: 15px;
-            font-weight: 700; cursor: pointer; margin-top: 12px; transition: all var(--transition);
-        }
+        .send-receipt-btn { width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--green); color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 12px; transition: all var(--transition); }
         .send-receipt-btn:hover { background: #30b350; }
         .send-receipt-btn:disabled { background: var(--gray-light); cursor: not-allowed; }
-
-        /* СТРАНИЦА СПАСИБО */
-        .thank-you-page { display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:5000;background:var(--white);overflow-y:auto;animation:fadeIn 0.4s ease; }
-        .thank-you-content { max-width:500px;margin:0 auto;padding:60px 24px;text-align:center; }
-        .thank-you-icon { font-size:64px;color:var(--green);margin-bottom:20px;animation:popIn 0.6s cubic-bezier(0.34,1.56,0.64,1); }
-        @keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-        .thank-you-title { font-size:28px;font-weight:900;letter-spacing:-0.5px;margin-bottom:8px; }
-        .thank-you-subtitle { color:var(--gray);font-size:15px;margin-bottom:24px;line-height:1.5; }
-        .thank-you-order { background:var(--bg);border-radius:var(--radius-md);padding:20px;text-align:left;margin-bottom:24px; }
-        .thank-you-order h3 { font-size:14px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px; }
-        .order-detail-row { display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-bottom:1px solid rgba(0,0,0,0.04); }
-        .order-detail-row:last-child{border-bottom:none;}
-        .order-detail-label{color:var(--gray);}
-        .order-detail-value{font-weight:600;}
-        .btn-back-catalog { border:none;padding:14px 0;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;width:100%;transition:all var(--transition);background:var(--blue);color:white;margin-top:8px; }
-        .btn-back-catalog:hover{background:var(--blue-dark);}
 
         .manager-fab{position:fixed;bottom:24px;right:24px;z-index:1500;background:var(--green);color:white;border:none;width:52px;height:52px;border-radius:50%;font-size:20px;cursor:pointer;box-shadow:0 6px 24px rgba(52,199,89,0.35);transition:all var(--transition);display:flex;align-items:center;justify-content:center;}
         .manager-fab:hover{transform:scale(1.08);}
@@ -237,7 +202,6 @@
             .search-wrap{min-width:100%;}
             .filter-chips{justify-content:center;}
             .form-row{flex-direction:column;}
-            .thank-you-content{padding:40px 16px;}
         }
     </style>
 </head>
@@ -245,7 +209,6 @@
     <div class="bg-ambient"></div>
     <div class="overlay" id="overlay"></div>
 
-    <!-- НАВБАР -->
     <nav class="navbar" id="navbar">
         <div class="nav-container">
             <div class="nav-left">
@@ -268,7 +231,6 @@
 
     <button class="floating-cart" id="floatingCart" onclick="openCart()"><i class="fa-solid fa-bag-shopping"></i><span class="float-cart-count" id="floatCartCount">0</span></button>
 
-    <!-- КАТАЛОГ -->
     <main class="catalog" id="catalog">
         <h2 class="section-title">Каталог часов</h2>
         <p class="section-subtitle">Найдите идеальные часы для любого момента</p>
@@ -291,7 +253,6 @@
         <div class="loader" id="loader" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</div>
     </main>
 
-    <!-- КАРТОЧКА -->
     <div class="product-modal" id="productModal">
         <div class="product-modal-content">
             <button class="product-modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -315,7 +276,6 @@
         </div>
     </div>
 
-    <!-- КОРЗИНА -->
     <div class="modal" id="cartModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeCart()"><i class="fa-solid fa-xmark"></i></button>
@@ -327,7 +287,6 @@
         </div>
     </div>
 
-    <!-- ОФОРМЛЕНИЕ -->
     <div class="modal" id="orderModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeOrder()"><i class="fa-solid fa-xmark"></i></button>
@@ -351,21 +310,16 @@
         </div>
     </div>
 
-    <!-- ОПЛАТА -->
     <div class="modal" id="paymentModal">
         <div class="modal-content payment-content">
             <button class="modal-close" onclick="closePayment()"><i class="fa-solid fa-xmark"></i></button>
             <h2><i class="fa-solid fa-wallet" style="margin-right:8px;"></i>Способ оплаты</h2>
-            
             <div class="payment-qr-section">
                 <p class="payment-qr-label">Отсканируйте QR-код для оплаты:</p>
                 <img id="qrImage" src="" alt="QR-код оплаты" style="max-width:200px;">
             </div>
-            
             <button class="payment-link-btn" onclick="openPaymentLink()"><i class="fa-solid fa-arrow-up-right-from-square"></i> Нажмите для оплаты</button>
-            
             <div class="payment-divider"><span>или</span></div>
-            
             <div class="payment-receipt-section">
                 <p class="payment-receipt-label">Отправьте чек об оплате на проверку:</p>
                 <div class="file-upload-wrap" id="fileUploadWrap" onclick="document.getElementById('fileInput').click()">
@@ -378,17 +332,6 @@
                     <i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- СТРАНИЦА СПАСИБО -->
-    <div class="thank-you-page" id="thankYouPage">
-        <div class="thank-you-content">
-            <div class="thank-you-icon"><i class="fa-solid fa-circle-check"></i></div>
-            <h2 class="thank-you-title">Заказ оформлен!</h2>
-            <p class="thank-you-subtitle">Спасибо за покупку. Наш менеджер свяжется с вами в ближайшее время.</p>
-            <div class="thank-you-order" id="thankYouOrderDetails"></div>
-            <button class="btn-back-catalog" onclick="goToCatalog()"><i class="fa-solid fa-arrow-left"></i> Вернуться в каталог</button>
         </div>
     </div>
 
@@ -421,78 +364,36 @@
             }
         }
 
-        function updateLinks() {
-            const l = SETTINGS.manager_telegram || 'https://t.me/manager';
-            document.querySelectorAll('#managerLink, #supportLink').forEach(e => e.href = l);
-        }
-
-        function getFilteredProducts() {
-            const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-            let f = PRODUCTS;
-            if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter);
-            if (q) f = f.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
-            return f;
-        }
-
+        function updateLinks() { const l = SETTINGS.manager_telegram || 'https://t.me/manager'; document.querySelectorAll('#managerLink, #supportLink').forEach(e => e.href = l); }
+        function getFilteredProducts() { const q = (document.getElementById('searchInput').value || '').toLowerCase().trim(); let f = PRODUCTS; if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter); if (q) f = f.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)); return f; }
         function resetAndRender() { loadedCount = 0; document.getElementById('productsGrid').innerHTML = ''; loadMoreProducts(); }
 
         function loadMoreProducts() {
             if (isLoading) return;
             const filtered = getFilteredProducts();
             if (loadedCount >= filtered.length) return;
-            isLoading = true;
-            document.getElementById('loader').style.display = 'block';
+            isLoading = true; document.getElementById('loader').style.display = 'block';
             setTimeout(() => {
                 const batch = filtered.slice(loadedCount, loadedCount + ITEMS_PER_LOAD);
-                renderProductBatch(batch);
-                loadedCount += batch.length;
+                renderProductBatch(batch); loadedCount += batch.length;
                 document.getElementById('resultsCount').textContent = `${loadedCount} из ${filtered.length}`;
-                isLoading = false;
-                document.getElementById('loader').style.display = loadedCount >= filtered.length ? 'none' : 'block';
+                isLoading = false; document.getElementById('loader').style.display = loadedCount >= filtered.length ? 'none' : 'block';
             }, 200);
         }
 
         function renderProductBatch(products) {
             const grid = document.getElementById('productsGrid');
-            if (!products.length && loadedCount === 0) {
-                grid.innerHTML = '<div class="no-results"><i class="fa-solid fa-magnifying-glass"></i>Ничего не найдено</div>';
-                return;
-            }
-            grid.insertAdjacentHTML('beforeend', products.map((p, i) => `
-                <div class="product-card" style="animation-delay:${(loadedCount+i)*0.03}s" onclick="openProductModal(${p.id})">
-                    <div class="product-image-wrap"><img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy"><span class="product-badge">${catName(p.category)}</span></div>
-                    <div class="product-info"><h3 class="product-name">${p.name}</h3><p class="product-description">${p.description}</p><div class="product-price">${fmt(p.price)}</div>
-                    <div class="product-buttons"><button class="buy-btn" onclick="event.stopPropagation();buyNow(${p.id})"><i class="fa-solid fa-bolt"></i> Купить</button><button class="cart-btn-sm" onclick="event.stopPropagation();addToCart(${p.id})"><i class="fa-solid fa-cart-plus"></i> В корзину</button></div></div>
-                </div>`).join(''));
+            if (!products.length && loadedCount === 0) { grid.innerHTML = '<div class="no-results"><i class="fa-solid fa-magnifying-glass"></i>Ничего не найдено</div>'; return; }
+            grid.insertAdjacentHTML('beforeend', products.map((p, i) => `<div class="product-card" style="animation-delay:${(loadedCount+i)*0.03}s" onclick="openProductModal(${p.id})"><div class="product-image-wrap"><img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy"><span class="product-badge">${catName(p.category)}</span></div><div class="product-info"><h3 class="product-name">${p.name}</h3><p class="product-description">${p.description}</p><div class="product-price">${fmt(p.price)}</div><div class="product-buttons"><button class="buy-btn" onclick="event.stopPropagation();buyNow(${p.id})"><i class="fa-solid fa-bolt"></i> Купить</button><button class="cart-btn-sm" onclick="event.stopPropagation();addToCart(${p.id})"><i class="fa-solid fa-cart-plus"></i> В корзину</button></div></div></div>`).join(''));
         }
 
-        window.addEventListener('scroll', () => {
-            const loader = document.getElementById('loader');
-            if (loader && loader.style.display !== 'none') {
-                const rect = loader.getBoundingClientRect();
-                if (rect.top < window.innerHeight + 200) loadMoreProducts();
-            }
-        });
-
+        window.addEventListener('scroll', () => { const loader = document.getElementById('loader'); if (loader && loader.style.display !== 'none') { const rect = loader.getBoundingClientRect(); if (rect.top < window.innerHeight + 200) loadMoreProducts(); } });
         function setFilter(cat, el) { currentFilter = cat; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); if(el) el.classList.add('active'); resetAndRender(); }
         function onSearchInput() { document.getElementById('searchClear').classList.toggle('visible', document.getElementById('searchInput').value.length > 0); showSuggestions(); }
         function filterAndRender() { closeSuggestions(); resetAndRender(); }
 
-        function showSuggestions() {
-            const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-            const c = document.getElementById('searchSuggestions');
-            if (!q) { c.classList.remove('active'); return; }
-            const m = PRODUCTS.filter(p => p.name.toLowerCase().includes(q)).slice(0, 5);
-            if (!m.length) { c.classList.remove('active'); return; }
-            c.innerHTML = m.map((p, i) => `<div class="suggestion-item" onclick="selectSuggestion('${p.name.replace(/'/g,"\\'")}')"><i class="fa-solid fa-magnifying-glass"></i><span class="suggestion-name">${p.name}</span><span class="suggestion-price">${fmt(p.price)}</span></div>`).join('');
-            c.classList.add('active');
-        }
-
-        function handleSearchKey(e) {
-            if (e.key === 'Escape') closeSuggestions();
-            else if (e.key === 'Enter') { e.preventDefault(); filterAndRender(); }
-        }
-
+        function showSuggestions() { const q = (document.getElementById('searchInput').value || '').toLowerCase().trim(); const c = document.getElementById('searchSuggestions'); if (!q) { c.classList.remove('active'); return; } const m = PRODUCTS.filter(p => p.name.toLowerCase().includes(q)).slice(0, 5); if (!m.length) { c.classList.remove('active'); return; } c.innerHTML = m.map((p, i) => `<div class="suggestion-item" onclick="selectSuggestion('${p.name.replace(/'/g,"\\'")}')"><i class="fa-solid fa-magnifying-glass"></i><span class="suggestion-name">${p.name}</span><span class="suggestion-price">${fmt(p.price)}</span></div>`).join(''); c.classList.add('active'); }
+        function handleSearchKey(e) { if (e.key === 'Escape') closeSuggestions(); else if (e.key === 'Enter') { e.preventDefault(); filterAndRender(); } }
         function selectSuggestion(n) { document.getElementById('searchInput').value = n; document.getElementById('searchClear').classList.add('visible'); closeSuggestions(); resetAndRender(); }
         function closeSuggestions() { document.getElementById('searchSuggestions').classList.remove('active'); }
         function clearSearch() { document.getElementById('searchInput').value = ''; document.getElementById('searchClear').classList.remove('visible'); closeSuggestions(); resetAndRender(); }
@@ -502,190 +403,69 @@
         window.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20));
         document.addEventListener('click', e => { if (!e.target.closest('.search-wrap')) closeSuggestions(); });
 
-        function openProductModal(id) {
-            const p = PRODUCTS.find(x => x.id === id); if (!p) return;
-            document.getElementById('modalImage').src = p.image;
-            document.getElementById('modalCategory').textContent = catName(p.category);
-            document.getElementById('modalName').textContent = p.name;
-            document.getElementById('modalPrice').textContent = fmt(p.price);
-            document.getElementById('modalDescription').textContent = p.description;
-            document.getElementById('modalBuyBtn').onclick = () => { closeProductModal(); buyNow(id); };
-            document.getElementById('modalCartBtn').onclick = () => { closeProductModal(); addToCart(id); };
-            document.getElementById('productModal').style.display = 'block'; document.body.style.overflow = 'hidden';
-        }
+        function openProductModal(id) { const p = PRODUCTS.find(x => x.id === id); if (!p) return; document.getElementById('modalImage').src = p.image; document.getElementById('modalCategory').textContent = catName(p.category); document.getElementById('modalName').textContent = p.name; document.getElementById('modalPrice').textContent = fmt(p.price); document.getElementById('modalDescription').textContent = p.description; document.getElementById('modalBuyBtn').onclick = () => { closeProductModal(); buyNow(id); }; document.getElementById('modalCartBtn').onclick = () => { closeProductModal(); addToCart(id); }; document.getElementById('productModal').style.display = 'block'; document.body.style.overflow = 'hidden'; }
         function closeProductModal() { document.getElementById('productModal').style.display = 'none'; document.body.style.overflow = ''; }
-
-        function buyNow(id) {
-            const p = PRODUCTS.find(x => x.id === id); if (!p) return;
-            document.getElementById('orderSummary').innerHTML = `Товар: <strong>${p.name}</strong><br>Сумма: <strong>${fmt(p.price)}</strong>`;
-            document.getElementById('orderModal').style.display = 'block'; document.body.style.overflow = 'hidden';
-        }
-
-        function addToCart(id) {
-            const p = PRODUCTS.find(x => x.id === id); if (!p) return;
-            const ex = cart.find(x => x.product.id === id);
-            ex ? ex.quantity++ : cart.push({ product: p, quantity: 1 });
-            updateCartDisplay(); showFloatingCart(); showNotification(p.name + ' добавлен в корзину');
-        }
+        function buyNow(id) { const p = PRODUCTS.find(x => x.id === id); if (!p) return; document.getElementById('orderSummary').innerHTML = `Товар: <strong>${p.name}</strong><br>Сумма: <strong>${fmt(p.price)}</strong>`; document.getElementById('orderModal').style.display = 'block'; document.body.style.overflow = 'hidden'; }
+        function addToCart(id) { const p = PRODUCTS.find(x => x.id === id); if (!p) return; const ex = cart.find(x => x.product.id === id); ex ? ex.quantity++ : cart.push({ product: p, quantity: 1 }); updateCartDisplay(); showFloatingCart(); showNotification(p.name + ' добавлен в корзину'); }
         function removeFromCart(i) { cart.splice(i, 1); updateCartDisplay(); renderCart(); }
-        function updateCartDisplay() {
-            const cnt = cart.reduce((s, i) => s + i.quantity, 0), total = cart.reduce((s, i) => s + i.product.price * i.quantity, 0);
-            document.getElementById('cartCount').textContent = cnt;
-            document.getElementById('floatCartCount').textContent = cnt;
-            document.getElementById('cartAmount').textContent = fmt(total);
-            const el = document.getElementById('cartCount'); el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 300);
-            if (cnt === 0) hideFloatingCart();
-        }
+        function updateCartDisplay() { const cnt = cart.reduce((s, i) => s + i.quantity, 0), total = cart.reduce((s, i) => s + i.product.price * i.quantity, 0); document.getElementById('cartCount').textContent = cnt; document.getElementById('floatCartCount').textContent = cnt; document.getElementById('cartAmount').textContent = fmt(total); const el = document.getElementById('cartCount'); el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 300); if (cnt === 0) hideFloatingCart(); }
         function showFloatingCart() { document.getElementById('floatingCart').classList.add('visible'); }
         function hideFloatingCart() { document.getElementById('floatingCart').classList.remove('visible'); }
 
-        function renderCart() {
-            const c = document.getElementById('cartItems'), t = document.getElementById('cartTotal');
-            if (!cart.length) { c.innerHTML = '<div class="cart-empty"><i class="fa-solid fa-bag-shopping"></i>Корзина пуста</div>'; t.textContent = '0 ₽'; return; }
-            let total = 0;
-            c.innerHTML = cart.map((item, i) => {
-                const st = item.product.price * item.quantity; total += st;
-                return `<div class="cart-item"><div><div class="cart-item-name">${item.product.name}</div><div class="cart-item-price">${item.quantity} × ${fmt(item.product.price)}</div></div><div style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;">${fmt(st)}</span><button class="cart-item-remove" onclick="removeFromCart(${i})"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
-            }).join('');
-            t.textContent = fmt(total);
-        }
-
+        function renderCart() { const c = document.getElementById('cartItems'), t = document.getElementById('cartTotal'); if (!cart.length) { c.innerHTML = '<div class="cart-empty"><i class="fa-solid fa-bag-shopping"></i>Корзина пуста</div>'; t.textContent = '0 ₽'; return; } let total = 0; c.innerHTML = cart.map((item, i) => { const st = item.product.price * item.quantity; total += st; return `<div class="cart-item"><div><div class="cart-item-name">${item.product.name}</div><div class="cart-item-price">${item.quantity} × ${fmt(item.product.price)}</div></div><div style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;">${fmt(st)}</span><button class="cart-item-remove" onclick="removeFromCart(${i})"><i class="fa-solid fa-trash-can"></i></button></div></div>`; }).join(''); t.textContent = fmt(total); }
         function openCart() { renderCart(); document.getElementById('cartModal').style.display = 'block'; document.body.style.overflow = 'hidden'; }
         function closeCart() { document.getElementById('cartModal').style.display = 'none'; document.body.style.overflow = ''; }
-        
-        function checkout() {
-            if (!cart.length) { showNotification('Корзина пуста'); return; }
-            closeCart();
-            document.getElementById('orderSummary').innerHTML = `Сумма заказа: <strong>${fmt(cart.reduce((s,i)=>s+i.product.price*i.quantity,0))}</strong>`;
-            document.getElementById('orderModal').style.display = 'block'; document.body.style.overflow = 'hidden';
-        }
-
+        function checkout() { if (!cart.length) { showNotification('Корзина пуста'); return; } closeCart(); document.getElementById('orderSummary').innerHTML = `Сумма заказа: <strong>${fmt(cart.reduce((s,i)=>s+i.product.price*i.quantity,0))}</strong>`; document.getElementById('orderModal').style.display = 'block'; document.body.style.overflow = 'hidden'; }
         function closeOrder() { document.getElementById('orderModal').style.display = 'none'; document.body.style.overflow = ''; }
 
         document.getElementById('orderForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const form = e.target;
-            lastOrderData = {
-                orderNumber: 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase(),
-                lastName: form.querySelector('input[placeholder="Фамилия"]').value,
-                firstName: form.querySelector('input[placeholder="Имя"]').value,
-                middleName: form.querySelector('input[placeholder="Отчество (при наличии)"]').value || '—',
-                phone: form.querySelector('input[type="tel"]').value,
-                email: form.querySelector('input[type="email"]').value || '—',
-                address: form.querySelector('textarea').value,
-                delivery: form.querySelector('select').value,
-                items: [...cart],
-                total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0),
-                date: new Date().toLocaleString('ru-RU')
-            };
-            closeOrder();
-            openPaymentModal();
+            e.preventDefault(); const form = e.target;
+            lastOrderData = { orderNumber: 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase(), lastName: form.querySelector('input[placeholder="Фамилия"]').value, firstName: form.querySelector('input[placeholder="Имя"]').value, middleName: form.querySelector('input[placeholder="Отчество (при наличии)"]').value || '—', phone: form.querySelector('input[type="tel"]').value, email: form.querySelector('input[type="email"]').value || '—', address: form.querySelector('textarea').value, delivery: form.querySelector('select').value, items: [...cart], total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0), date: new Date().toLocaleString('ru-RU') };
+            closeOrder(); openPaymentModal();
         });
 
-        function openPaymentModal() {
-            document.getElementById('qrImage').src = SETTINGS.payment_qr || 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg';
-            document.getElementById('paymentModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            selectedFile = null;
-            document.getElementById('sendReceiptBtn').disabled = true;
-            const wrap = document.getElementById('fileUploadWrap');
-            wrap.classList.remove('has-file');
-            wrap.querySelector('.upload-text').textContent = 'Нажмите для загрузки чека';
-            wrap.querySelector('i').className = 'fa-solid fa-cloud-arrow-up';
-        }
+        function openPaymentModal() { document.getElementById('qrImage').src = SETTINGS.payment_qr || 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg'; document.getElementById('paymentModal').style.display = 'block'; document.body.style.overflow = 'hidden'; selectedFile = null; document.getElementById('sendReceiptBtn').disabled = true; const wrap = document.getElementById('fileUploadWrap'); wrap.classList.remove('has-file'); wrap.querySelector('.upload-text').textContent = 'Нажмите для загрузки чека'; wrap.querySelector('i').className = 'fa-solid fa-cloud-arrow-up'; }
+        function closePayment() { document.getElementById('paymentModal').style.display = 'none'; document.body.style.overflow = ''; selectedFile = null; }
+        function openPaymentLink() { const link = SETTINGS.payment_link; if (link) window.open(link, '_blank'); else showNotification('Ссылка для оплаты не настроена'); }
 
-        function closePayment() {
-            document.getElementById('paymentModal').style.display = 'none';
-            document.body.style.overflow = '';
-            selectedFile = null;
-        }
-
-        function openPaymentLink() {
-            const link = SETTINGS.payment_link;
-            if (link) window.open(link, '_blank');
-            else showNotification('Ссылка для оплаты не настроена');
-        }
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            selectedFile = file;
-            const wrap = document.getElementById('fileUploadWrap');
-            wrap.classList.add('has-file');
-            wrap.querySelector('.upload-text').textContent = file.name;
-            wrap.querySelector('i').className = 'fa-solid fa-file-circle-check';
-            document.getElementById('sendReceiptBtn').disabled = false;
-        }
+        function handleFileSelect(event) { const file = event.target.files[0]; if (!file) return; selectedFile = file; const wrap = document.getElementById('fileUploadWrap'); wrap.classList.add('has-file'); wrap.querySelector('.upload-text').textContent = file.name; wrap.querySelector('i').className = 'fa-solid fa-file-circle-check'; document.getElementById('sendReceiptBtn').disabled = false; }
 
         function sendReceiptToManager() {
             if (!lastOrderData || !selectedFile) return;
-            
             const btn = document.getElementById('sendReceiptBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Отправка...';
-            
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Отправка...';
+            const formData = new FormData();
+            formData.append('document', selectedFile);
             const order = lastOrderData;
-            const itemsText = order.items.map(item => 
-                `• ${item.product.name} ×${item.quantity} = ${fmt(item.product.price * item.quantity)}`
-            ).join('\n');
-            
-            const receipt = `
-🧾 *ЧЕК ОПЛАТЫ* #${order.orderNumber}
-📅 ${order.date}
-👤 ${order.lastName} ${order.firstName} ${order.middleName}
-📞 ${order.phone}
-📧 ${order.email}
-🚚 ${order.delivery}
-📍 ${order.address}
-🛍 Товары:
-${itemsText}
-💰 ИТОГО: ${fmt(order.total)}
-            `.trim();
-            
-            const managerLink = SETTINGS.manager_telegram || 'https://t.me/manager';
-            const encodedText = encodeURIComponent(receipt + '\n\n📎 Чек прикреплён к заказу. Отправьте файл чека в этот чат.');
-            
-            if (managerLink.includes('t.me')) {
-                window.open(`${managerLink}?text=${encodedText}`, '_blank');
-            } else {
-                window.open(`https://t.me/${managerLink.replace('@','')}?text=${encodedText}`, '_blank');
-            }
-            
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Отправлено!';
-                btn.style.background = 'var(--green)';
-                showNotification('Данные отправлены менеджеру');
-                setTimeout(() => {
-                    closePayment();
-                    showThankYouPage();
-                }, 1500);
-            }, 1000);
+            const itemsText = order.items.map(item => `• ${item.product.name} ×${item.quantity} = ${fmt(item.product.price * item.quantity)}`).join('\n');
+            const caption = `🧾 *ЧЕК ОПЛАТЫ* #${order.orderNumber}\n📅 ${order.date}\n👤 ${order.lastName} ${order.firstName} ${order.middleName !== '—' ? order.middleName : ''}\n📞 ${order.phone}\n📧 ${order.email}\n🚚 ${order.delivery}\n📍 ${order.address}\n\n🛍 *Товары:*\n${itemsText}\n\n💰 *ИТОГО: ${fmt(order.total)}*`;
+            formData.append('caption', caption);
+            const botToken = SETTINGS.bot_token || '';
+            const chatId = (SETTINGS.manager_telegram || '').replace('https://t.me/','').replace('@','');
+            if (botToken && chatId) {
+                formData.append('chat_id', chatId);
+                fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.ok) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Чек отправлен!'; btn.style.background = 'var(--green)'; showNotification('Чек отправлен менеджеру'); setTimeout(() => { closePayment(); showThankYouPage(true); }, 1500); }
+                    else { fallbackSend(btn, caption); }
+                }).catch(() => fallbackSend(btn, caption));
+            } else { fallbackSend(btn, caption); }
         }
 
-        function showThankYouPage() {
+        function fallbackSend(btn, caption) {
+            const link = SETTINGS.manager_telegram || 'https://t.me/manager';
+            window.open(`${link}?text=${encodeURIComponent(caption + '\n\n📎 Чек прикреплён. Отправьте файл чека в этот чат.')}`, '_blank');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Отправлено!'; btn.style.background = 'var(--green)';
+            setTimeout(() => { closePayment(); showThankYouPage(true); }, 1000);
+        }
+
+        function showThankYouPage(receiptSent = false) {
             if (!lastOrderData) return;
             cart = []; updateCartDisplay(); hideFloatingCart();
-            const order = lastOrderData;
-            const details = document.getElementById('thankYouOrderDetails');
-            details.innerHTML = `
-                <h3>Детали заказа</h3>
-                <div class="order-detail-row"><span class="order-detail-label">Номер заказа</span><span class="order-detail-value" style="color:var(--blue);">${order.orderNumber}</span></div>
-                <div class="order-detail-row"><span class="order-detail-label">Дата</span><span class="order-detail-value">${order.date}</span></div>
-                <div class="order-detail-row"><span class="order-detail-label">Клиент</span><span class="order-detail-value">${order.lastName} ${order.firstName} ${order.middleName !== '—' ? order.middleName : ''}</span></div>
-                <div class="order-detail-row"><span class="order-detail-label">Телефон</span><span class="order-detail-value">${order.phone}</span></div>
-                <div class="order-detail-row"><span class="order-detail-label">Доставка</span><span class="order-detail-value">${order.delivery}</span></div>
-                ${order.items.map(item => `<div class="order-detail-row"><span class="order-detail-label">${item.product.name} ×${item.quantity}</span><span class="order-detail-value">${fmt(item.product.price * item.quantity)}</span></div>`).join('')}
-                <div class="order-detail-row" style="font-weight:700;font-size:16px;border-top:2px solid var(--dark);padding-top:10px;"><span>Итого</span><span>${fmt(order.total)}</span></div>
-            `;
-            document.getElementById('thankYouPage').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function goToCatalog() {
-            document.getElementById('thankYouPage').style.display = 'none';
-            document.body.style.overflow = '';
-            lastOrderData = null;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const orderParam = encodeURIComponent(JSON.stringify(lastOrderData));
+            const receiptParam = receiptSent ? '&receipt=uploaded' : '';
+            window.location.href = `thankyou.html?order=${orderParam}${receiptParam}`;
         }
 
         function contactManager() { window.open(SETTINGS.manager_telegram || 'https://t.me/manager', '_blank'); }
@@ -694,17 +474,9 @@ ${itemsText}
         const burgerBtn = document.getElementById('burgerBtn'), navLinks = document.getElementById('navLinks'), overlay = document.getElementById('overlay');
         burgerBtn.addEventListener('click', () => { burgerBtn.classList.toggle('active'); navLinks.classList.toggle('active'); overlay.classList.toggle('active'); document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : ''; });
         overlay.addEventListener('click', () => { burgerBtn.classList.remove('active'); navLinks.classList.remove('active'); overlay.classList.remove('active'); document.body.style.overflow = ''; });
+        document.querySelectorAll('.modal,.product-modal').forEach(m => { m.addEventListener('click', function(e) { if (e.target === this) { this.style.display = 'none'; document.body.style.overflow = ''; } }); });
 
-        document.querySelectorAll('.modal,.product-modal').forEach(m => {
-            m.addEventListener('click', function(e) { if (e.target === this) { this.style.display = 'none'; document.body.style.overflow = ''; } });
-        });
-
-        function showNotification(msg) {
-            const old = document.querySelector('.notification'); if (old) old.remove();
-            const n = document.createElement('div'); n.className = 'notification'; n.textContent = msg;
-            document.body.appendChild(n); setTimeout(() => { n.style.opacity = '0'; n.style.transition = 'opacity 0.3s'; setTimeout(() => n.remove(), 300); }, 2000);
-        }
-
+        function showNotification(msg) { const old = document.querySelector('.notification'); if (old) old.remove(); const n = document.createElement('div'); n.className = 'notification'; n.textContent = msg; document.body.appendChild(n); setTimeout(() => { n.style.opacity = '0'; n.style.transition = 'opacity 0.3s'; setTimeout(() => n.remove(), 300); }, 2000); }
         document.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>
