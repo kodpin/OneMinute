@@ -195,40 +195,18 @@
         .notification{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--dark);color:white;padding:12px 24px;border-radius:26px;font-size:13px;font-weight:600;z-index:4000;box-shadow:0 10px 36px rgba(0,0,0,0.3);animation:notifIn 0.5s cubic-bezier(0.34,1.56,0.64,1);}
         @keyframes notifIn{from{bottom:-50px;opacity:0;transform:translateX(-50%) scale(0.85)}to{bottom:90px;opacity:1;transform:translateX(-50%) scale(1)}}
 
-        @media(max-width:480px){
-            .section-title{font-size:28px;}
-            .products-grid{grid-template-columns:1fr;gap:14px;}
-            .product-buttons{flex-direction:column;}
-            .search-filter-bar{flex-direction:column;}
-            .search-wrap{min-width:100%;}
-            .filter-chips{justify-content:center;}
-            .form-row{flex-direction:column;}
-        }
+        @media(max-width:480px){.section-title{font-size:28px;}.products-grid{grid-template-columns:1fr;gap:14px;}.product-buttons{flex-direction:column;}.search-filter-bar{flex-direction:column;}.search-wrap{min-width:100%;}.filter-chips{justify-content:center;}.form-row{flex-direction:column;}}
     </style>
 </head>
 <body>
     <div class="bg-ambient"></div>
     <div class="overlay" id="overlay"></div>
 
-    <nav class="navbar" id="navbar">
-        <div class="nav-container">
-            <div class="nav-left"><button class="burger-menu" id="burgerBtn" aria-label="Меню"><span></span><span></span><span></span></button><div class="logo" onclick="location.reload()">One<span>Minute</span></div></div>
-            <div class="nav-right"><div class="nav-links" id="navLinks"><a href="#catalog">Каталог</a><a href="#footer">Контакты</a><button class="manager-btn" onclick="contactManager()"><i class="fa-solid fa-headset"></i> <span>Менеджер</span></button><button class="cart-btn" onclick="openCart()"><span class="cart-icon-wrap"><i class="fa-solid fa-bag-shopping"></i><span class="cart-count" id="cartCount">0</span></span><span>Корзина</span><span class="cart-amount" id="cartAmount">0 ₽</span></button></div></div>
-        </div>
-    </nav>
+    <nav class="navbar" id="navbar"><div class="nav-container"><div class="nav-left"><button class="burger-menu" id="burgerBtn" aria-label="Меню"><span></span><span></span><span></span></button><div class="logo" onclick="location.reload()">One<span>Minute</span></div></div><div class="nav-right"><div class="nav-links" id="navLinks"><a href="#catalog">Каталог</a><a href="#footer">Контакты</a><button class="manager-btn" onclick="contactManager()"><i class="fa-solid fa-headset"></i> <span>Менеджер</span></button><button class="cart-btn" onclick="openCart()"><span class="cart-icon-wrap"><i class="fa-solid fa-bag-shopping"></i><span class="cart-count" id="cartCount">0</span></span><span>Корзина</span><span class="cart-amount" id="cartAmount">0 ₽</span></button></div></div></div></nav>
 
     <button class="floating-cart" id="floatingCart" onclick="openCart()"><i class="fa-solid fa-bag-shopping"></i><span class="float-cart-count" id="floatCartCount">0</span></button>
 
-    <main class="catalog" id="catalog">
-        <h2 class="section-title">Каталог часов</h2><p class="section-subtitle">Найдите идеальные часы для любого момента</p>
-        <div class="search-filter-bar">
-            <div class="search-wrap"><input type="text" class="search-input" id="searchInput" placeholder="Поиск по названию..." oninput="onSearchInput()" onfocus="showSuggestions()" onkeydown="handleSearchKey(event)"><button class="search-clear" id="searchClear" onclick="clearSearch()"><i class="fa-solid fa-xmark"></i></button><button class="search-icon" onclick="filterAndRender()"><i class="fa-solid fa-magnifying-glass"></i></button><div class="search-suggestions" id="searchSuggestions"></div></div>
-            <div class="filter-chips"><button class="filter-chip active" onclick="setFilter('all',this)"><i class="fa-solid fa-grid-2"></i> Все</button><button class="filter-chip" onclick="setFilter('smart',this)"><i class="fa-solid fa-microchip"></i> Smart</button><button class="filter-chip" onclick="setFilter('classic',this)"><i class="fa-solid fa-clock"></i> Classic</button><button class="filter-chip" onclick="setFilter('luxury',this)"><i class="fa-solid fa-gem"></i> Luxury</button></div>
-            <span class="results-count" id="resultsCount"></span>
-        </div>
-        <div class="products-grid" id="productsGrid"></div>
-        <div class="loader" id="loader" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</div>
-    </main>
+    <main class="catalog" id="catalog"><h2 class="section-title">Каталог часов</h2><p class="section-subtitle">Найдите идеальные часы для любого момента</p><div class="search-filter-bar"><div class="search-wrap"><input type="text" class="search-input" id="searchInput" placeholder="Поиск по названию..." oninput="onSearchInput()" onfocus="showSuggestions()" onkeydown="handleSearchKey(event)"><button class="search-clear" id="searchClear" onclick="clearSearch()"><i class="fa-solid fa-xmark"></i></button><button class="search-icon" onclick="filterAndRender()"><i class="fa-solid fa-magnifying-glass"></i></button><div class="search-suggestions" id="searchSuggestions"></div></div><div class="filter-chips"><button class="filter-chip active" onclick="setFilter('all',this)"><i class="fa-solid fa-grid-2"></i> Все</button><button class="filter-chip" onclick="setFilter('smart',this)"><i class="fa-solid fa-microchip"></i> Smart</button><button class="filter-chip" onclick="setFilter('classic',this)"><i class="fa-solid fa-clock"></i> Classic</button><button class="filter-chip" onclick="setFilter('luxury',this)"><i class="fa-solid fa-gem"></i> Luxury</button></div><span class="results-count" id="resultsCount"></span></div><div class="products-grid" id="productsGrid"></div><div class="loader" id="loader" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</div></main>
 
     <div class="product-modal" id="productModal"><div class="product-modal-content"><button class="product-modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button><div class="product-modal-image-wrap"><img src="" alt="" class="product-modal-image" id="modalImage"></div><div class="product-modal-body"><span class="product-modal-category" id="modalCategory"></span><h2 class="product-modal-name" id="modalName"></h2><div class="product-modal-price" id="modalPrice"></div><p class="product-modal-description" id="modalDescription"></p><div class="product-modal-features"><div class="feature-item"><i class="fa-solid fa-truck-fast"></i><div class="feature-label">Доставка</div><div class="feature-value">По всей РФ</div></div><div class="feature-item"><i class="fa-solid fa-shield-halved"></i><div class="feature-label">Гарантия</div><div class="feature-value">2 года</div></div><div class="feature-item"><i class="fa-solid fa-credit-card"></i><div class="feature-label">Оплата</div><div class="feature-value">QR / Ссылка</div></div><div class="feature-item"><i class="fa-solid fa-rotate-left"></i><div class="feature-label">Возврат</div><div class="feature-value">14 дней</div></div></div><div class="product-modal-buttons"><button class="product-modal-buy" id="modalBuyBtn"><i class="fa-solid fa-bolt"></i> Купить</button><button class="product-modal-cart" id="modalCartBtn"><i class="fa-solid fa-cart-plus"></i> В корзину</button></div></div></div></div>
 
@@ -236,27 +214,7 @@
 
     <div class="modal" id="orderModal"><div class="modal-content"><button class="modal-close" onclick="closeOrder()"><i class="fa-solid fa-xmark"></i></button><h2><i class="fa-solid fa-clipboard-list" style="margin-right:8px;"></i>Оформление заказа</h2><form id="orderForm"><div class="form-row"><input type="text" placeholder="Фамилия" required><input type="text" placeholder="Имя" required></div><input type="text" placeholder="Отчество (при наличии)"><input type="tel" placeholder="Номер телефона" required><input type="email" placeholder="Email"><textarea placeholder="Адрес доставки" required></textarea><select required><option value="" disabled selected>Предпочитаемый способ доставки</option><option value="Почта России">Почта России</option><option value="СДЭК">СДЭК</option><option value="Boxberry">Boxberry</option></select><div class="order-summary" id="orderSummary"></div><button type="submit" class="submit-btn">Перейти к оплате</button><button type="button" class="manager-order-btn" onclick="contactManager()"><i class="fa-solid fa-headset"></i> Заказать через менеджера</button></form></div></div>
 
-    <div class="modal" id="paymentModal">
-        <div class="modal-content payment-content">
-            <button class="modal-close" onclick="closePayment()"><i class="fa-solid fa-xmark"></i></button>
-            <h2><i class="fa-solid fa-wallet" style="margin-right:8px;"></i>Способ оплаты</h2>
-            <div class="payment-instruction">
-                <p><span class="step-num">1</span> Отсканируйте QR-код для оплаты</p>
-                <p><span class="step-num">2</span> Или нажмите на кнопку ниже — выберите ваш банк</p>
-                <p><span class="step-num">3</span> Укажите сумму: <strong id="paymentAmount">0 ₽</strong></p>
-                <p><span class="step-num">4</span> После оплаты отправьте чек</p>
-            </div>
-            <div class="payment-qr-section"><img id="qrImage" src="" alt="QR-код оплаты" style="max-width:200px;"></div>
-            <button class="payment-link-btn" onclick="openPaymentLink()"><i class="fa-solid fa-arrow-up-right-from-square"></i> Нажмите для оплаты</button>
-            <div class="payment-divider"><span>или</span></div>
-            <div class="payment-receipt-section">
-                <p class="payment-receipt-label">Отправьте чек об оплате на проверку:</p>
-                <div class="file-upload-wrap" id="fileUploadWrap" onclick="document.getElementById('fileInput').click()"><i class="fa-solid fa-cloud-arrow-up"></i><span class="upload-text">Нажмите для загрузки чека</span><span class="upload-hint">Фото или PDF файл</span></div>
-                <input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFileSelect(event)">
-                <button class="send-receipt-btn" id="sendReceiptBtn" disabled onclick="sendReceiptToManager()"><i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру</button>
-            </div>
-        </div>
-    </div>
+    <div class="modal" id="paymentModal"><div class="modal-content payment-content"><button class="modal-close" onclick="closePayment()"><i class="fa-solid fa-xmark"></i></button><h2><i class="fa-solid fa-wallet" style="margin-right:8px;"></i>Способ оплаты</h2><div class="payment-instruction"><p><span class="step-num">1</span> Отсканируйте QR-код для оплаты</p><p><span class="step-num">2</span> Или нажмите на кнопку ниже — выберите ваш банк</p><p><span class="step-num">3</span> Укажите сумму: <strong id="paymentAmount">0 ₽</strong></p><p><span class="step-num">4</span> После оплаты отправьте чек</p></div><div class="payment-qr-section"><img id="qrImage" src="" alt="QR-код оплаты" style="max-width:200px;"></div><button class="payment-link-btn" onclick="openPaymentLink()"><i class="fa-solid fa-arrow-up-right-from-square"></i> Нажмите для оплаты</button><div class="payment-divider"><span>или</span></div><div class="payment-receipt-section"><p class="payment-receipt-label">Отправьте чек об оплате на проверку:</p><div class="file-upload-wrap" id="fileUploadWrap" onclick="document.getElementById('fileInput').click()"><i class="fa-solid fa-cloud-arrow-up"></i><span class="upload-text">Нажмите для загрузки чека</span><span class="upload-hint">Фото или PDF файл</span></div><input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFileSelect(event)"><button class="send-receipt-btn" id="sendReceiptBtn" disabled onclick="sendReceiptToManager()"><i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру</button></div></div></div>
 
     <button class="manager-fab" onclick="contactManager()" title="Менеджер"><i class="fa-solid fa-headset"></i></button>
     <footer class="footer" id="footer"><div class="footer-content"><div class="footer-info" id="ipInfo">Загрузка...</div><div class="footer-links"><a href="#catalog">Каталог</a><a href="#" id="supportLink">Поддержка</a></div></div></footer>
@@ -266,19 +224,11 @@
         let loadedCount = 0, isLoading = false, lastOrderData = null, selectedFile = null;
         const ITEMS_PER_LOAD = 6;
 
-        async function loadData() {
-            try { const r = await fetch('data/products.json'); if (!r.ok) throw new Error('no data'); const d = await r.json(); PRODUCTS = d.products || []; SETTINGS = d.settings || {}; resetAndRender(); updateFooter(); updateLinks(); }
-            catch(e) { document.getElementById('productsGrid').innerHTML = '<p style="text-align:center;color:var(--gray);padding:50px 0;grid-column:1/-1;">Ошибка загрузки</p>'; }
-        }
+        async function loadData() { try { const r = await fetch('data/products.json'); if (!r.ok) throw new Error('no data'); const d = await r.json(); PRODUCTS = d.products || []; SETTINGS = d.settings || {}; resetAndRender(); updateFooter(); updateLinks(); } catch(e) { document.getElementById('productsGrid').innerHTML = '<p style="text-align:center;color:var(--gray);padding:50px 0;grid-column:1/-1;">Ошибка загрузки</p>'; } }
         function updateLinks() { const l = SETTINGS.manager_telegram || 'https://t.me/manager'; document.querySelectorAll('#managerLink, #supportLink').forEach(e => e.href = l); }
         function getFilteredProducts() { const q = (document.getElementById('searchInput').value || '').toLowerCase().trim(); let f = PRODUCTS; if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter); if (q) f = f.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)); return f; }
         function resetAndRender() { loadedCount = 0; document.getElementById('productsGrid').innerHTML = ''; loadMoreProducts(); }
-
-        function loadMoreProducts() {
-            if (isLoading) return; const filtered = getFilteredProducts(); if (loadedCount >= filtered.length) return;
-            isLoading = true; document.getElementById('loader').style.display = 'block';
-            setTimeout(() => { const batch = filtered.slice(loadedCount, loadedCount + ITEMS_PER_LOAD); renderProductBatch(batch); loadedCount += batch.length; document.getElementById('resultsCount').textContent = `${loadedCount} из ${filtered.length}`; isLoading = false; document.getElementById('loader').style.display = loadedCount >= filtered.length ? 'none' : 'block'; }, 200);
-        }
+        function loadMoreProducts() { if (isLoading) return; const filtered = getFilteredProducts(); if (loadedCount >= filtered.length) return; isLoading = true; document.getElementById('loader').style.display = 'block'; setTimeout(() => { const batch = filtered.slice(loadedCount, loadedCount + ITEMS_PER_LOAD); renderProductBatch(batch); loadedCount += batch.length; document.getElementById('resultsCount').textContent = `${loadedCount} из ${filtered.length}`; isLoading = false; document.getElementById('loader').style.display = loadedCount >= filtered.length ? 'none' : 'block'; }, 200); }
         function renderProductBatch(products) { const grid = document.getElementById('productsGrid'); if (!products.length && loadedCount === 0) { grid.innerHTML = '<div class="no-results"><i class="fa-solid fa-magnifying-glass"></i>Ничего не найдено</div>'; return; } grid.insertAdjacentHTML('beforeend', products.map((p, i) => `<div class="product-card" style="animation-delay:${(loadedCount+i)*0.03}s" onclick="openProductModal(${p.id})"><div class="product-image-wrap"><img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy"><span class="product-badge">${catName(p.category)}</span></div><div class="product-info"><h3 class="product-name">${p.name}</h3><p class="product-description">${p.description}</p><div class="product-price">${fmt(p.price)}</div><div class="product-buttons"><button class="buy-btn" onclick="event.stopPropagation();buyNow(${p.id})"><i class="fa-solid fa-bolt"></i> Купить</button><button class="cart-btn-sm" onclick="event.stopPropagation();addToCart(${p.id})"><i class="fa-solid fa-cart-plus"></i> В корзину</button></div></div></div>`).join('')); }
         window.addEventListener('scroll', () => { const loader = document.getElementById('loader'); if (loader && loader.style.display !== 'none') { const rect = loader.getBoundingClientRect(); if (rect.top < window.innerHeight + 200) loadMoreProducts(); } });
         function setFilter(cat, el) { currentFilter = cat; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); if(el) el.classList.add('active'); resetAndRender(); }
@@ -310,21 +260,20 @@
 
         document.getElementById('orderForm').addEventListener('submit', function(e) { e.preventDefault(); const form = e.target; lastOrderData = { orderNumber: 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase(), lastName: form.querySelector('input[placeholder="Фамилия"]').value, firstName: form.querySelector('input[placeholder="Имя"]').value, middleName: form.querySelector('input[placeholder="Отчество (при наличии)"]').value || '—', phone: form.querySelector('input[type="tel"]').value, email: form.querySelector('input[type="email"]').value || '—', address: form.querySelector('textarea').value, delivery: form.querySelector('select').value, items: [...cart], total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0), date: new Date().toLocaleString('ru-RU') }; closeOrder(); openPaymentModal(); });
 
-        function openPaymentModal() { document.getElementById('qrImage').src = SETTINGS.payment_qr || 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg'; document.getElementById('paymentAmount').textContent = lastOrderData ? fmt(lastOrderData.total) : '0 ₽'; document.getElementById('paymentModal').style.display = 'block'; document.body.style.overflow = 'hidden'; selectedFile = null; document.getElementById('sendReceiptBtn').disabled = true; const wrap = document.getElementById('fileUploadWrap'); wrap.classList.remove('has-file'); wrap.querySelector('.upload-text').textContent = 'Нажмите для загрузки чека'; wrap.querySelector('i').className = 'fa-solid fa-cloud-arrow-up'; }
+        function openPaymentModal() {
+            document.getElementById('qrImage').src = SETTINGS.payment_qr || 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg';
+            const total = lastOrderData ? lastOrderData.total : cart.reduce((s,i) => s + i.product.price * i.quantity, 0);
+            document.getElementById('paymentAmount').textContent = total > 0 ? fmt(total) : 'сумму заказа';
+            document.getElementById('paymentModal').style.display = 'block'; document.body.style.overflow = 'hidden';
+            selectedFile = null; document.getElementById('sendReceiptBtn').disabled = true;
+            const wrap = document.getElementById('fileUploadWrap'); wrap.classList.remove('has-file');
+            wrap.querySelector('.upload-text').textContent = 'Нажмите для загрузки чека'; wrap.querySelector('i').className = 'fa-solid fa-cloud-arrow-up';
+        }
         function closePayment() { document.getElementById('paymentModal').style.display = 'none'; document.body.style.overflow = ''; selectedFile = null; }
         function openPaymentLink() { const link = SETTINGS.payment_link; if (link) window.open(link, '_blank'); else showNotification('Ссылка для оплаты не настроена'); }
         function handleFileSelect(event) { const file = event.target.files[0]; if (!file) return; selectedFile = file; const wrap = document.getElementById('fileUploadWrap'); wrap.classList.add('has-file'); wrap.querySelector('.upload-text').textContent = file.name; wrap.querySelector('i').className = 'fa-solid fa-file-circle-check'; document.getElementById('sendReceiptBtn').disabled = false; }
 
-        function sendReceiptToManager() {
-            if (!lastOrderData || !selectedFile) return; const btn = document.getElementById('sendReceiptBtn'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Отправка...';
-            const formData = new FormData(); formData.append('document', selectedFile);
-            const order = lastOrderData; const itemsText = order.items.map(item => `• ${item.product.name} ×${item.quantity} = ${fmt(item.product.price * item.quantity)}`).join('\n');
-            const caption = `🧾 *ЧЕК ОПЛАТЫ* #${order.orderNumber}\n📅 ${order.date}\n👤 ${order.lastName} ${order.firstName} ${order.middleName !== '—' ? order.middleName : ''}\n📞 ${order.phone}\n📧 ${order.email}\n🚚 ${order.delivery}\n📍 ${order.address}\n\n🛍 *Товары:*\n${itemsText}\n\n💰 *ИТОГО: ${fmt(order.total)}*`;
-            formData.append('caption', caption);
-            const botToken = SETTINGS.bot_token || ''; const chatId = (SETTINGS.manager_telegram || '').replace('https://t.me/','').replace('@','');
-            if (botToken && chatId) { formData.append('chat_id', chatId); fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, { method: 'POST', body: formData }).then(r => r.json()).then(data => { if (data.ok) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Чек отправлен!'; btn.style.background = 'var(--green)'; showNotification('Чек отправлен менеджеру'); setTimeout(() => { closePayment(); showThankYouPage(true); }, 1500); } else { fallbackSend(btn, caption); } }).catch(() => fallbackSend(btn, caption)); }
-            else { fallbackSend(btn, caption); }
-        }
+        function sendReceiptToManager() { if (!lastOrderData || !selectedFile) return; const btn = document.getElementById('sendReceiptBtn'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Отправка...'; const formData = new FormData(); formData.append('document', selectedFile); const order = lastOrderData; const itemsText = order.items.map(item => `• ${item.product.name} ×${item.quantity} = ${fmt(item.product.price * item.quantity)}`).join('\n'); const caption = `🧾 *ЧЕК ОПЛАТЫ* #${order.orderNumber}\n📅 ${order.date}\n👤 ${order.lastName} ${order.firstName} ${order.middleName !== '—' ? order.middleName : ''}\n📞 ${order.phone}\n📧 ${order.email}\n🚚 ${order.delivery}\n📍 ${order.address}\n\n🛍 *Товары:*\n${itemsText}\n\n💰 *ИТОГО: ${fmt(order.total)}*`; formData.append('caption', caption); const botToken = SETTINGS.bot_token || ''; const chatId = (SETTINGS.manager_telegram || '').replace('https://t.me/','').replace('@',''); if (botToken && chatId) { formData.append('chat_id', chatId); fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, { method: 'POST', body: formData }).then(r => r.json()).then(data => { if (data.ok) { btn.innerHTML = '<i class="fa-solid fa-check"></i> Чек отправлен!'; btn.style.background = 'var(--green)'; showNotification('Чек отправлен менеджеру'); setTimeout(() => { closePayment(); showThankYouPage(true); }, 1500); } else { fallbackSend(btn, caption); } }).catch(() => fallbackSend(btn, caption)); } else { fallbackSend(btn, caption); } }
         function fallbackSend(btn, caption) { const link = SETTINGS.manager_telegram || 'https://t.me/manager'; window.open(`${link}?text=${encodeURIComponent(caption + '\n\n📎 Чек прикреплён. Отправьте файл чека в этот чат.')}`, '_blank'); btn.innerHTML = '<i class="fa-solid fa-check"></i> Отправлено!'; btn.style.background = 'var(--green)'; setTimeout(() => { closePayment(); showThankYouPage(true); }, 1000); }
         function showThankYouPage(receiptSent = false) { if (!lastOrderData) return; cart = []; updateCartDisplay(); hideFloatingCart(); const orderParam = encodeURIComponent(JSON.stringify(lastOrderData)); const receiptParam = receiptSent ? '&receipt=uploaded' : ''; window.location.href = `thankyou.html?order=${orderParam}${receiptParam}`; }
 
