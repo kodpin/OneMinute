@@ -130,7 +130,6 @@ def process_update(update):
     text = msg.get('text', '')
     state = user_states.get(chat_id)
 
-    # Игнорируем фото – больше не принимаем
     if text == '/start':
         send_main_menu(chat_id)
     elif state and state.get('action') == 'waiting_text':
@@ -143,7 +142,7 @@ def send_main_menu(chat_id):
 
 def start_add_product(chat_id):
     user_states[chat_id] = {'action': 'waiting_text', 'step': 'name', 'data': {}}
-    send_message(chat_id, '➕ <b>Шаг 1/5:</b> Введите <b>название</b> товара:', cancel_kb())
+    send_message(chat_id, '➕ <b>Шаг 1/6:</b> Введите <b>название</b> товара:', cancel_kb())
 
 def handle_text_step(chat_id, text):
     state = user_states.get(chat_id)
@@ -152,29 +151,35 @@ def handle_text_step(chat_id, text):
     if step == 'name':
         state['data']['name'] = text
         state['step'] = 'price'
-        send_message(chat_id, f'✅ <b>{text}</b>\n\n💰 <b>Шаг 2/5:</b> Введите <b>цену</b> (только цифры):', cancel_kb())
+        send_message(chat_id, f'✅ <b>{text}</b>\n\n💰 <b>Шаг 2/6:</b> Введите <b>цену</b> (только цифры):', cancel_kb())
     elif step == 'price':
         try:
             price = int(text.replace(' ', '').replace('₽', '').replace(',', ''))
             state['data']['price'] = price
             state['step'] = 'description'
-            send_message(chat_id, f'✅ <b>{price:,} ₽</b>\n\n📝 <b>Шаг 3/5:</b> Введите <b>описание</b>:', cancel_kb())
+            send_message(chat_id, f'✅ <b>{price:,} ₽</b>\n\n📝 <b>Шаг 3/6:</b> Введите <b>описание</b>:', cancel_kb())
         except:
             send_message(chat_id, '❌ Введите цену цифрами!')
     elif step == 'description':
         state['data']['description'] = text
         state['step'] = 'category'
-        send_message(chat_id, '🏷 <b>Шаг 4/5:</b> Выберите <b>категорию</b>:', category_kb())
+        send_message(chat_id, '🏷 <b>Шаг 4/6:</b> Выберите <b>категорию</b>:', category_kb())
     elif step == 'image':
-        # Принимаем ссылку на фото
-        if not text.startswith('http'):
-            send_message(chat_id, '❌ Отправьте прямую ссылку на фото (начинается с http)')
+        # Принимаем ссылки (одна или несколько через запятую)
+        links = [link.strip() for link in text.split(',') if link.strip()]
+        if not links:
+            send_message(chat_id, '❌ Отправьте хотя бы одну ссылку')
             return
-        state['data']['image'] = text
-        # Показываем превью с кнопками
-        caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 <a href='{text}'>Фото</a>"
-        send_photo(chat_id, text, caption, confirm_kb())
-        state['step'] = 'confirm'  # чтобы дальше не реагировать
+        # Проверяем, что ссылки рабочие (начинаются с http)
+        for link in links:
+            if not link.startswith('http'):
+                send_message(chat_id, f'❌ Ссылка должна начинаться с http: {link}')
+                return
+        state['data']['image'] = links if len(links) > 1 else links[0]  # массив или строка
+        # Показываем первое фото как превью
+        caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 Фото: {len(links)} шт."
+        send_photo(chat_id, links[0], caption, confirm_kb())
+        state['step'] = 'confirm'  # чтобы не реагировать на дальнейший текст
     elif step == 'edit_setting':
         save_setting(chat_id, text)
 
@@ -183,7 +188,7 @@ def set_category(chat_id, category):
     if not state: return
     state['data']['category'] = category
     state['step'] = 'image'
-    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n🖼 <b>Шаг 5/5:</b> Отправьте <b>прямую ссылку</b> на фото товара:\n<i>Загрузите фото на imgur.com или любой хостинг и скопируйте ссылку</i>', cancel_kb())
+    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n🖼 <b>Шаг 5/6:</b> Отправьте <b>прямые ссылки</b> на фото (можно несколько через запятую):\n<i>Загрузите фото на imgur.com, скопируйте прямую ссылку (оканчивается на .jpg) и пришлите сюда</i>', cancel_kb())
 
 def save_product(chat_id):
     state = user_states.get(chat_id)
@@ -200,7 +205,7 @@ def save_product(chat_id):
             'name': state['data']['name'],
             'price': state['data']['price'],
             'description': state['data']['description'],
-            'image': state['data']['image'],
+            'image': state['data']['image'],  # строка или массив
             'category': state['data']['category']
         }
         data['products'].append(new_product)
