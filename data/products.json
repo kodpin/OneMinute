@@ -87,17 +87,6 @@
       "description": "Djdjdjdk",
       "image": "https://i.imgur.com/MnV7zV7.jpeg\nhttps://i.imgur.com/5wHW0Ii.jpeg",
       "category": "tactical"
-    },
-    {
-      "id": 12,
-      "name": "Gagaga",
-      "price": 2,
-      "description": "Sjsjbd",
-      "image": [
-        "https://i.imgur.com/5wHW0Ii.jpeg",
-        "https://i.imgur.com/x8Rh3WO.jpeg"
-      ],
-      "category": "tactical"
     }
   ],
   "settings": {
