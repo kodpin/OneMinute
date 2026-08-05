@@ -2,6 +2,7 @@ import json
 import os
 import requests
 import base64
+import traceback
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -16,10 +17,10 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 ADMIN_IDS_STR = os.environ.get('ADMIN_IDS', '')
 ADMIN_IDS = [int(id.strip()) for id in ADMIN_IDS_STR.split(',') if id.strip()]
 
-# Cloudinary
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
 CLOUDINARY_UPLOAD_PRESET = os.environ.get('CLOUDINARY_UPLOAD_PRESET', 'oneminute_upload')
 
+print(f"Cloudinary: name={CLOUDINARY_CLOUD_NAME}, preset={CLOUDINARY_UPLOAD_PRESET}")
 user_states = {}
 
 # ============== GitHub API ==============
@@ -31,6 +32,7 @@ def get_github_file():
         data = response.json()
         content = base64.b64decode(data['content']).decode('utf-8')
         return json.loads(content), data['sha']
+    print(f"GitHub get error: {response.status_code} {response.text}")
     return None, None
 
 def save_github_file(data, sha=None):
@@ -42,6 +44,8 @@ def save_github_file(data, sha=None):
     if sha:
         payload['sha'] = sha
     response = requests.put(url, headers=headers, json=payload)
+    if response.status_code not in [200, 201]:
+        print(f"GitHub save error: {response.status_code} {response.text}")
     return response.status_code in [200, 201]
 
 # ============== Telegram API ==============
@@ -72,84 +76,78 @@ def answer_callback(callback_id, text=None, show_alert=False):
 
 # ============== Cloudinary Upload ==============
 def upload_to_cloudinary(photo_url):
-    """Загружает фото из Telegram в Cloudinary и возвращает прямую ссылку"""
-    if not CLOUDINARY_CLOUD_NAME or not CLOUDINARY_UPLOAD_PRESET:
-        # Если Cloudinary не настроен, возвращаем исходный URL (Telegram)
+    if not CLOUDINARY_CLOUD_NAME:
+        print("Cloudinary not configured, using Telegram URL")
         return photo_url
 
-    # Сначала скачиваем фото из Telegram
+    print(f"Downloading from Telegram: {photo_url[:80]}...")
     try:
-        file_response = requests.get(photo_url)
+        file_response = requests.get(photo_url, timeout=15)
         if file_response.status_code != 200:
+            print(f"Failed to download photo: {file_response.status_code}")
             return photo_url
-    except:
+    except Exception as e:
+        print(f"Download error: {e}")
         return photo_url
 
-    # Загружаем в Cloudinary
     upload_url = f'https://api.cloudinary.com/v1_1/{CLOUDINARY_CLOUD_NAME}/image/upload'
     files = {'file': ('image.jpg', file_response.content, 'image/jpeg')}
     data = {'upload_preset': CLOUDINARY_UPLOAD_PRESET}
 
+    print(f"Uploading to Cloudinary with preset {CLOUDINARY_UPLOAD_PRESET}")
     try:
-        response = requests.post(upload_url, files=files, data=data)
+        response = requests.post(upload_url, files=files, data=data, timeout=20)
+        print(f"Cloudinary response: {response.status_code} {response.text[:200]}")
         if response.status_code == 200:
             result = response.json()
-            return result.get('secure_url', photo_url)
-    except:
-        pass
+            secure_url = result.get('secure_url')
+            if secure_url:
+                print(f"Success! Cloudinary URL: {secure_url}")
+                return secure_url
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
     return photo_url
 
 # ============== Клавиатуры ==============
 def main_menu_kb():
-    return {
-        "inline_keyboard": [
-            [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
-            [{"text": "📋 Список товаров", "callback_data": "list_products"}],
-            [{"text": "⚙️ Настройки", "callback_data": "settings_menu"}],
-            [{"text": "🌐 Открыть сайт", "url": f"https://{REPO_OWNER}.github.io/{REPO_NAME}/"}]
-        ]
-    }
+    return {"inline_keyboard": [
+        [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
+        [{"text": "📋 Список товаров", "callback_data": "list_products"}],
+        [{"text": "⚙️ Настройки", "callback_data": "settings_menu"}]
+    ]}
 
 def cancel_kb():
     return {"inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]}
 
 def category_kb():
-    return {
-        "inline_keyboard": [
-            [{"text": "Тактические", "callback_data": "cat_tactical"},
-             {"text": "Для путешествий", "callback_data": "cat_travel"}],
-            [{"text": "Для бега", "callback_data": "cat_running"},
-             {"text": "Для дайвинга", "callback_data": "cat_diving"}],
-            [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
-        ]
-    }
+    return {"inline_keyboard": [
+        [{"text": "Тактические", "callback_data": "cat_tactical"}, {"text": "Для путешествий", "callback_data": "cat_travel"}],
+        [{"text": "Для бега", "callback_data": "cat_running"}, {"text": "Для дайвинга", "callback_data": "cat_diving"}],
+        [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
+    ]}
 
 def confirm_kb():
-    return {
-        "inline_keyboard": [
-            [{"text": "✅ Сохранить", "callback_data": "confirm_product"}],
-            [{"text": "🔄 Заново", "callback_data": "add_product"}],
-            [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
-        ]
-    }
+    return {"inline_keyboard": [
+        [{"text": "✅ Сохранить", "callback_data": "confirm_product"}],
+        [{"text": "🔄 Заново", "callback_data": "add_product"}],
+        [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
+    ]}
 
 def settings_kb():
-    return {
-        "inline_keyboard": [
-            [{"text": "📝 Изменить ИП", "callback_data": "edit_ip"}],
-            [{"text": "📱 Изменить QR-код", "callback_data": "edit_qr"}],
-            [{"text": "🔗 Изменить ссылку оплаты", "callback_data": "edit_link"}],
-            [{"text": "👤 Изменить менеджера", "callback_data": "edit_manager"}],
-            [{"text": "🔙 Назад", "callback_data": "main_menu"}]
-        ]
-    }
+    return {"inline_keyboard": [
+        [{"text": "📝 Изменить ИП", "callback_data": "edit_ip"}],
+        [{"text": "📱 Изменить QR-код", "callback_data": "edit_qr"}],
+        [{"text": "🔗 Изменить ссылку оплаты", "callback_data": "edit_link"}],
+        [{"text": "👤 Изменить менеджера", "callback_data": "edit_manager"}],
+        [{"text": "🔙 Назад", "callback_data": "main_menu"}]
+    ]}
 
 def products_list_kb(products):
     keyboard = [[{"text": f"❌ {p['name']} - {p['price']:,}₽", "callback_data": f"delete_{p['id']}"}] for p in products]
     keyboard.append([{"text": "🔙 Назад", "callback_data": "main_menu"}])
     return {"inline_keyboard": keyboard}
 
-# ============== Обработка обновлений ==============
+# ============== Обработка ==============
 def process_update(update):
     if 'callback_query' in update:
         callback = update['callback_query']
@@ -159,7 +157,6 @@ def process_update(update):
             answer_callback(callback['id'], '🚫 Нет доступа', True)
             return
         answer_callback(callback['id'])
-
         if data == 'main_menu': send_main_menu(chat_id)
         elif data == 'add_product': start_add_product(chat_id)
         elif data == 'cancel_add': cancel_action(chat_id)
@@ -179,7 +176,6 @@ def process_update(update):
     chat_id = message['chat']['id']
     if chat_id not in ADMIN_IDS: return
 
-    # Обработка фото
     if 'photo' in message:
         state = user_states.get(chat_id)
         if state and state.get('step') == 'photo':
@@ -188,7 +184,6 @@ def process_update(update):
             send_message(chat_id, 'Сначала начните добавление товара командой /add')
         return
 
-    # Обработка текста
     text = message.get('text', '')
     state = user_states.get(chat_id)
     if text == '/start':
@@ -198,11 +193,9 @@ def process_update(update):
     else:
         send_main_menu(chat_id)
 
-# ============== Меню ==============
 def send_main_menu(chat_id):
     send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>\nВыберите действие:', main_menu_kb())
 
-# ============== Добавление товара ==============
 def start_add_product(chat_id):
     user_states[chat_id] = {'action': 'waiting_text', 'step': 'name', 'data': {}}
     send_message(chat_id, '➕ <b>Шаг 1/5:</b> Введите <b>название</b> товара:', cancel_kb())
@@ -211,7 +204,6 @@ def handle_text_step(chat_id, text):
     state = user_states.get(chat_id)
     if not state: return
     step = state['step']
-
     if step == 'name':
         state['data']['name'] = text
         state['step'] = 'price'
@@ -244,29 +236,31 @@ def handle_photo(chat_id, message):
     try:
         photo = message['photo']
         file_id = photo[-1]['file_id']
-        # Получаем URL фото из Telegram
         get_url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}'
         resp = requests.get(get_url).json()
         if not resp.get('ok'):
+            print(f"getFile error: {resp}")
             send_message(chat_id, '❌ Ошибка получения фото.')
             return
         file_path = resp['result']['file_path']
         telegram_photo_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
+        print(f"Telegram photo URL: {telegram_photo_url}")
 
-        # Загружаем в Cloudinary
         send_message(chat_id, '☁️ Загружаю фото в облако...')
         cloud_url = upload_to_cloudinary(telegram_photo_url)
+        print(f"Final photo URL: {cloud_url}")
         state['data']['image'] = cloud_url
 
-        # Показываем подтверждение
         caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 Фото загружено"
         send_photo(chat_id, cloud_url, caption, confirm_kb())
     except Exception as e:
+        print(f"handle_photo error: {traceback.format_exc()}")
         send_message(chat_id, f'❌ Ошибка обработки фото: {e}')
 
 def save_product(chat_id):
     state = user_states.get(chat_id)
     if not state: return
+    print(f"Saving product: {state['data']}")
     try:
         data, sha = get_github_file()
         if data is None:
@@ -284,15 +278,15 @@ def save_product(chat_id):
         }
         data['products'].append(new_product)
         if save_github_file(data, sha):
-            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nСсылка на фото: {new_product["image"]}')
+            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽')
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
     except Exception as e:
+        print(f"save_product error: {traceback.format_exc()}")
         send_message(chat_id, f'❌ Ошибка: {e}')
     finally:
         if chat_id in user_states: del user_states[chat_id]
 
-# ============== Список товаров ==============
 def show_products(chat_id):
     data, _ = get_github_file()
     if not data or not data.get('products'):
@@ -318,7 +312,6 @@ def delete_product(chat_id, pid):
     else:
         send_message(chat_id, '❌ Ошибка сохранения')
 
-# ============== Настройки ==============
 def show_settings(chat_id):
     data, _ = get_github_file()
     s = data.get('settings', {}) if data else {}
