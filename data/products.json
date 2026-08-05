@@ -1,0 +1,90 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Apple Watch Ultra 2",
+      "price": 79900,
+      "description": "Титановый корпус 49 мм. Экран Retina LTPO2. Водонепроницаемость WR100. Точный двухчастотный GPS. Идеален для экстремального спорта и дайвинга.",
+      "image": "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-ultra2-202409?wid=800&hei=800&fmt=jpeg",
+      "category": "diving"
+    },
+    {
+      "id": 2,
+      "name": "Apple Watch Series 9",
+      "price": 49900,
+      "description": "Алюминиевый корпус 45 мм. Всегда включенный дисплей Retina. Чип S9. Жест Double Tap. Идеальный компаньон на каждый день.",
+      "image": "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-s9-202409?wid=800&hei=800&fmt=jpeg",
+      "category": "running"
+    },
+    {
+      "id": 3,
+      "name": "Apple Watch SE (2-го поколения)",
+      "price": 29900,
+      "description": "Лёгкий алюминиевый корпус 44 мм. Чип S8. Отслеживание сна и тренировок. Отличный выбор для тех, кто начинает знакомство с Apple Watch.",
+      "image": "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/watch-se-202409?wid=800&hei=800&fmt=jpeg",
+      "category": "travel"
+    },
+    {
+      "id": 4,
+      "name": "Rolex Submariner Date",
+      "price": 1250000,
+      "description": "Швейцарский автоматический механизм. Сталь Oystersteel 41 мм. Водонепроницаемость 300 м. Чёрный циферблат с люминесцентными метками.",
+      "image": "https://www.rolex.com/content/dam/rolex/watches/submariner/m126610ln-0001.png",
+      "category": "diving"
+    },
+    {
+      "id": 5,
+      "name": "Tissot PRX Powermatic 80",
+      "price": 75000,
+      "description": "Швейцарский автоматический механизм с запасом хода 80 часов. Сапфировое стекло. Корпус 40 мм с интегрированным браслетом. Стиль 70-х.",
+      "image": "https://www.tissotwatches.com/media/catalog/product/T/1/T137.407.11.051.00.png",
+      "category": "travel"
+    },
+    {
+      "id": 6,
+      "name": "Casio G-Shock GA-2100",
+      "price": 12900,
+      "description": "Ударопрочная конструкция Carbon Core Guard. Водонепроницаемость 200 м. Мировое время. Суперкомпактный корпус. Легендарная надёжность.",
+      "image": "https://www.casio.com/content/dam/casio/productimages/watches/gshock/ga2100/GA-2100-1A.png",
+      "category": "tactical"
+    },
+    {
+      "id": 7,
+      "name": "Samsung Galaxy Watch 6 Classic",
+      "price": 44900,
+      "description": "Вращающийся безель. Биоактивный датчик. Измерение ЭКГ и давления. Wear OS. Сапфировое стекло. Элегантный дизайн с классическим циферблатом.",
+      "image": "https://images.samsung.com/ru/watches/galaxy-watch6-classic/images/galaxy-watch6-classic-share.jpg",
+      "category": "running"
+    },
+    {
+      "id": 8,
+      "name": "Omega Speedmaster Moonwatch",
+      "price": 680000,
+      "description": "Легендарные часы, побывавшие на Луне. Ручной механический завод. Сталь 42 мм. Сертификация Master Chronometer. История в каждом элементе.",
+      "image": "https://www.omegawatches.com/media/catalog/product/o/m/omega-speedmaster-moonwatch-professional-31030425001001.png",
+      "category": "travel"
+    },
+    {
+      "id": 9,
+      "name": "Seiko Prospex Diver's",
+      "price": 45000,
+      "description": "Японский автоматический механизм. Водонепроницаемость 200 м. Стальной корпус 42 мм. Люминесцентные метки. Надёжный дайверский инструмент.",
+      "image": "https://www.seikowatches.com/content/dam/seiko/images/products/S/SR/SRPD/SRPD55K1.png",
+      "category": "diving"
+    },
+    {
+      "id": 10,
+      "name": "Hublot Big Bang Unico",
+      "price": 2200000,
+      "description": "Керамический корпус 42 мм. Собственный мануфактурный калибр Unico. Скелетонированный циферблат. 72 часа запаса хода. Авангардный дизайн.",
+      "image": "https://www.hublot.com/content/dam/hublot/products/big-bang/big-bang-unico/441.CI.1171.RX.png",
+      "category": "tactical"
+    }
+  ],
+  "settings": {
+    "ip_info": "ИП Иванов Иван Иванович\nИНН: 123456789012\nОГРНИП: 123456789012345\nг. Москва, ул. Часовая, д. 1\nТелефон: +7 (999) 123-45-67\nEmail: info@oneminute.ru",
+    "payment_qr": "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg",
+    "payment_link": "https://example.com/pay",
+    "manager_telegram": "https://t.me/manager"
+  }
+}
