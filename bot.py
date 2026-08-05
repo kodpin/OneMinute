@@ -192,12 +192,12 @@ def handle_photo(chat_id, message):
             send_message(chat_id, '❌ Ошибка получения фото.')
             return
         file_path = resp['result']['file_path']
-        img_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
-        img_data = requests.get(img_url).content
-        b64 = "data:image/jpeg;base64," + base64.b64encode(img_data).decode('utf-8')
-        state['data']['image'] = b64
+        # Прямая ссылка на фото в Telegram (работает всегда)
+        photo_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
+        state['data']['image'] = photo_url
+
         caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 Фото загружено"
-        send_photo(chat_id, b64, caption, confirm_kb())
+        send_photo(chat_id, photo_url, caption, confirm_kb())
     except Exception as e:
         send_message(chat_id, '❌ Ошибка обработки фото.')
 
