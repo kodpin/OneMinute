@@ -74,38 +74,33 @@ def answer_callback(callback_id, text=None, show_alert=False):
         payload['show_alert'] = show_alert
     requests.post(url, json=payload)
 
-# ============== Cloudinary Upload ==============
+# ============== Cloudinary Upload (исправлено) ==============
 def upload_to_cloudinary(photo_url):
+    """Загружает фото в Cloudinary напрямую по URL (без скачивания)"""
     if not CLOUDINARY_CLOUD_NAME:
-        print("Cloudinary not configured, using Telegram URL")
+        print("Cloudinary not configured")
         return photo_url
 
-    print(f"Downloading from Telegram: {photo_url[:80]}...")
-    try:
-        file_response = requests.get(photo_url, timeout=15)
-        if file_response.status_code != 200:
-            print(f"Failed to download photo: {file_response.status_code}")
-            return photo_url
-    except Exception as e:
-        print(f"Download error: {e}")
-        return photo_url
-
+    print(f"Uploading to Cloudinary from URL: {photo_url[:80]}...")
     upload_url = f'https://api.cloudinary.com/v1_1/{CLOUDINARY_CLOUD_NAME}/image/upload'
-    files = {'file': ('image.jpg', file_response.content, 'image/jpeg')}
-    data = {'upload_preset': CLOUDINARY_UPLOAD_PRESET}
-
-    print(f"Uploading to Cloudinary with preset {CLOUDINARY_UPLOAD_PRESET}")
+    data = {
+        'file': photo_url,
+        'upload_preset': CLOUDINARY_UPLOAD_PRESET
+    }
     try:
-        response = requests.post(upload_url, files=files, data=data, timeout=20)
+        response = requests.post(upload_url, data=data, timeout=20)
         print(f"Cloudinary response: {response.status_code} {response.text[:200]}")
         if response.status_code == 200:
             result = response.json()
             secure_url = result.get('secure_url')
             if secure_url:
-                print(f"Success! Cloudinary URL: {secure_url}")
+                print(f"Cloudinary success: {secure_url}")
                 return secure_url
+        else:
+            print(f"Cloudinary error: {response.text}")
     except Exception as e:
-        print(f"Cloudinary upload error: {e}")
+        print(f"Cloudinary exception: {e}")
+    # Если не получилось — возвращаем исходный URL Telegram
     return photo_url
 
 # ============== Клавиатуры ==============
@@ -147,7 +142,7 @@ def products_list_kb(products):
     keyboard.append([{"text": "🔙 Назад", "callback_data": "main_menu"}])
     return {"inline_keyboard": keyboard}
 
-# ============== Обработка ==============
+# ============== Обработка обновлений ==============
 def process_update(update):
     if 'callback_query' in update:
         callback = update['callback_query']
@@ -176,6 +171,7 @@ def process_update(update):
     chat_id = message['chat']['id']
     if chat_id not in ADMIN_IDS: return
 
+    # Обработка фото
     if 'photo' in message:
         state = user_states.get(chat_id)
         if state and state.get('step') == 'photo':
@@ -184,6 +180,7 @@ def process_update(update):
             send_message(chat_id, 'Сначала начните добавление товара командой /add')
         return
 
+    # Обработка текста
     text = message.get('text', '')
     state = user_states.get(chat_id)
     if text == '/start':
@@ -193,9 +190,11 @@ def process_update(update):
     else:
         send_main_menu(chat_id)
 
+# ============== Главное меню ==============
 def send_main_menu(chat_id):
     send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>\nВыберите действие:', main_menu_kb())
 
+# ============== Добавление товара ==============
 def start_add_product(chat_id):
     user_states[chat_id] = {'action': 'waiting_text', 'step': 'name', 'data': {}}
     send_message(chat_id, '➕ <b>Шаг 1/5:</b> Введите <b>название</b> товара:', cancel_kb())
@@ -287,6 +286,7 @@ def save_product(chat_id):
     finally:
         if chat_id in user_states: del user_states[chat_id]
 
+# ============== Список товаров ==============
 def show_products(chat_id):
     data, _ = get_github_file()
     if not data or not data.get('products'):
@@ -312,6 +312,7 @@ def delete_product(chat_id, pid):
     else:
         send_message(chat_id, '❌ Ошибка сохранения')
 
+# ============== Настройки ==============
 def show_settings(chat_id):
     data, _ = get_github_file()
     s = data.get('settings', {}) if data else {}
@@ -340,6 +341,7 @@ def cancel_action(chat_id):
     if chat_id in user_states: del user_states[chat_id]
     send_message(chat_id, '❌ Отменено', main_menu_kb())
 
+# ============== Webhook ==============
 @app.route('/webhook', methods=['POST'])
 def webhook():
     if request.is_json:
