@@ -23,9 +23,9 @@ def send_message(chat_id, text, reply_markup=None):
         payload['reply_markup'] = json.dumps(reply_markup)
     requests.post(url, json=payload)
 
-def send_photo(chat_id, photo, caption=None, reply_markup=None):
+def send_photo(chat_id, photo_url, caption=None, reply_markup=None):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto'
-    payload = {'chat_id': chat_id, 'photo': photo}
+    payload = {'chat_id': chat_id, 'photo': photo_url}
     if caption:
         payload['caption'] = caption
         payload['parse_mode'] = 'HTML'
@@ -127,16 +127,10 @@ def process_update(update):
     chat_id = msg['chat']['id']
     if chat_id not in ADMIN_IDS: return
 
-    if 'photo' in msg:
-        state = user_states.get(chat_id)
-        if state and state.get('step') == 'photo':
-            handle_photo(chat_id, msg)
-        else:
-            send_message(chat_id, 'Сначала начните добавление товара командой /add')
-        return
-
     text = msg.get('text', '')
     state = user_states.get(chat_id)
+
+    # Игнорируем фото – больше не принимаем
     if text == '/start':
         send_main_menu(chat_id)
     elif state and state.get('action') == 'waiting_text':
@@ -171,6 +165,16 @@ def handle_text_step(chat_id, text):
         state['data']['description'] = text
         state['step'] = 'category'
         send_message(chat_id, '🏷 <b>Шаг 4/5:</b> Выберите <b>категорию</b>:', category_kb())
+    elif step == 'image':
+        # Принимаем ссылку на фото
+        if not text.startswith('http'):
+            send_message(chat_id, '❌ Отправьте прямую ссылку на фото (начинается с http)')
+            return
+        state['data']['image'] = text
+        # Показываем превью с кнопками
+        caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 <a href='{text}'>Фото</a>"
+        send_photo(chat_id, text, caption, confirm_kb())
+        state['step'] = 'confirm'  # чтобы дальше не реагировать
     elif step == 'edit_setting':
         save_setting(chat_id, text)
 
@@ -178,28 +182,8 @@ def set_category(chat_id, category):
     state = user_states.get(chat_id)
     if not state: return
     state['data']['category'] = category
-    state['step'] = 'photo'
-    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n📸 <b>Шаг 5/5:</b> Отправьте <b>фото</b> товара:', cancel_kb())
-
-def handle_photo(chat_id, message):
-    state = user_states.get(chat_id)
-    if not state: return
-    try:
-        file_id = message['photo'][-1]['file_id']
-        get_url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}'
-        resp = requests.get(get_url).json()
-        if not resp.get('ok'):
-            send_message(chat_id, '❌ Ошибка получения фото.')
-            return
-        file_path = resp['result']['file_path']
-        # Прямая ссылка на фото в Telegram (работает всегда)
-        photo_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
-        state['data']['image'] = photo_url
-
-        caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 Фото загружено"
-        send_photo(chat_id, photo_url, caption, confirm_kb())
-    except Exception as e:
-        send_message(chat_id, '❌ Ошибка обработки фото.')
+    state['step'] = 'image'
+    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n🖼 <b>Шаг 5/5:</b> Отправьте <b>прямую ссылку</b> на фото товара:\n<i>Загрузите фото на imgur.com или любой хостинг и скопируйте ссылку</i>', cancel_kb())
 
 def save_product(chat_id):
     state = user_states.get(chat_id)
