@@ -140,10 +140,10 @@ def process_update(update):
         elif data == 'export_csv': export_csv(chat_id)
         elif data == 'import_csv': prompt_import(chat_id)
         elif data == 'mass_price': start_mass_price(chat_id)
-        elif data.startswith('massprice_'):  # выбор категории для массового изменения
+        elif data.startswith('massprice_'):
             cat = data.replace('massprice_', '')
             ask_mass_price_percent(chat_id, cat)
-        elif data.startswith('masspct_'):  # применение процента
+        elif data.startswith('masspct_'):
             pct = float(data.replace('masspct_', ''))
             apply_mass_price(chat_id, pct)
         elif data == 'edit_product': start_edit_product(chat_id)
@@ -153,7 +153,6 @@ def process_update(update):
         elif data == 'edit_product_back': start_edit_product(chat_id)
         elif data.startswith('edit_field_'):
             field = data.replace('edit_field_', '')
-            # Защита: проверяем, что состояние редактирования существует
             if chat_id in user_states and user_states[chat_id].get('action') == 'edit_product':
                 handle_edit_field(chat_id, field)
             else:
@@ -171,7 +170,6 @@ def process_update(update):
     chat_id = msg['chat']['id']
     if chat_id not in ADMIN_IDS: return
 
-    # Обработка документа (импорт CSV)
     if 'document' in msg:
         handle_csv_import(chat_id, msg['document'])
         return
@@ -340,7 +338,7 @@ def cancel_action(chat_id):
     if chat_id in user_states: del user_states[chat_id]
     send_message(chat_id, '❌ Отменено', main_menu_kb())
 
-# ---------- Редактирование товара (включая скидки) ----------
+# ---------- Редактирование товара (исправлено) ----------
 def start_edit_product(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
@@ -356,7 +354,11 @@ def start_edit_field(chat_id, product_id):
     if not product:
         send_message(chat_id, '❌ Товар не найден.')
         return
+    # Сохраняем сессию редактирования
     user_states[chat_id] = {'action': 'edit_product', 'product_id': product_id, 'product': product}
+    show_edit_menu(chat_id, product)
+
+def show_edit_menu(chat_id, product):
     keyboard = [
         [{"text": "📱 Название", "callback_data": "edit_field_name"}],
         [{"text": "💰 Цена", "callback_data": "edit_field_price"}],
@@ -370,10 +372,10 @@ def start_edit_field(chat_id, product_id):
     send_message(chat_id, f'✏️ Редактирование: <b>{product["name"]}</b>\nВыберите поле:', {"inline_keyboard": keyboard})
 
 def handle_edit_field(chat_id, field):
-    if chat_id not in user_states:
-        send_message(chat_id, '⚠️ Сессия редактирования не найдена. Начните заново.')
+    state = user_states.get(chat_id)
+    if not state:
+        send_message(chat_id, '⚠️ Сессия редактирования не найдена.')
         return
-    state = user_states[chat_id]
     state['edit_field'] = field
     prompts = {
         'name': '📱 Введите новое название:',
@@ -426,9 +428,12 @@ def save_edit(chat_id, new_value):
     product[field] = new_value
     if save_data(data, sha):
         send_message(chat_id, f'✅ Поле <b>{field}</b> обновлено!')
+        # После успешного изменения возвращаемся к меню редактирования этого же товара
+        show_edit_menu(chat_id, product)
     else:
         send_message(chat_id, '❌ Ошибка сохранения.')
-    del user_states[chat_id]
+        # Всё равно показываем меню, чтобы можно было попробовать ещё раз
+        show_edit_menu(chat_id, product)
 
 def get_product_by_id(pid):
     data, _ = get_data()
