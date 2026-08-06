@@ -7,10 +7,10 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
-REPO = os.environ.get('GITHUB_REPOSITORY', 'kodpin/OneMinute')
-REPO_OWNER = REPO.split('/')[0]
-REPO_NAME = REPO.split('/')[1] if '/' in REPO else 'OneMinute'
-DATA_FILE = 'data/products.json'
+# Склад, где бот хранит товары
+DATA_REPO = 'kodpin/OneMinute-data'   # ← замени kodpin на свой логин, если надо
+# Витрина, куда бот загружает фото
+SITE_REPO = os.environ.get('GITHUB_REPOSITORY', 'kodpin/OneMinute')
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(',') if id.strip()]
 
@@ -41,7 +41,9 @@ def answer_callback(callback_id, text=None):
     requests.post(url, json=payload)
 
 def get_data():
-    url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{DATA_FILE}'
+    """Читает товары из DATA_REPO (склад)"""
+    owner, repo = DATA_REPO.split('/')
+    url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
     headers = {'Authorization': f'token {GITHUB_TOKEN}'}
     resp = requests.get(url, headers=headers)
     if resp.status_code == 200:
@@ -51,7 +53,9 @@ def get_data():
     return None, None
 
 def save_data(data, sha=None):
-    url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{DATA_FILE}'
+    """Сохраняет товары в DATA_REPO (склад)"""
+    owner, repo = DATA_REPO.split('/')
+    url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
     headers = {'Authorization': f'token {GITHUB_TOKEN}'}
     content = json.dumps(data, ensure_ascii=False, indent=2)
     encoded = base64.b64encode(content.encode('utf-8')).decode('utf-8')
@@ -60,6 +64,19 @@ def save_data(data, sha=None):
         payload['sha'] = sha
     resp = requests.put(url, headers=headers, json=payload)
     return resp
+
+def upload_image_to_site(image_bytes, filename):
+    """Загружает фото в SITE_REPO/images/ (витрина)"""
+    owner, repo = SITE_REPO.split('/')
+    path = f'images/{filename}'
+    url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
+    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    encoded_content = base64.b64encode(image_bytes).decode('utf-8')
+    payload = {'message': f'Upload {filename}', 'content': encoded_content}
+    resp = requests.put(url, headers=headers, json=payload)
+    if resp.status_code in [200, 201]:
+        return f'https://{owner}.github.io/{repo}/{path}'
+    return None
 
 def main_menu_kb():
     return {"inline_keyboard": [
@@ -165,7 +182,6 @@ def handle_text_step(chat_id, text):
         state['step'] = 'category'
         send_message(chat_id, '🏷 <b>Шаг 4/5:</b> Выберите <b>категорию</b>:', category_kb())
     elif step == 'image':
-        # Принимаем ссылки (одна или несколько через запятую)
         links = [link.strip() for link in text.split(',') if link.strip()]
         if not links:
             send_message(chat_id, '❌ Отправьте хотя бы одну ссылку')
@@ -175,7 +191,6 @@ def handle_text_step(chat_id, text):
                 send_message(chat_id, f'❌ Ссылка должна начинаться с http: {link}')
                 return
         state['photos'] = links
-        # Показываем превью первой ссылки
         caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 Фото: {len(links)} шт."
         send_photo(chat_id, links[0], caption, confirm_kb())
         state['step'] = 'confirm'
