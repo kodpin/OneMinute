@@ -153,7 +153,11 @@ def process_update(update):
         elif data == 'edit_product_back': start_edit_product(chat_id)
         elif data.startswith('edit_field_'):
             field = data.replace('edit_field_', '')
-            handle_edit_field(chat_id, field)
+            # Защита: проверяем, что состояние редактирования существует
+            if chat_id in user_states and user_states[chat_id].get('action') == 'edit_product':
+                handle_edit_field(chat_id, field)
+            else:
+                send_message(chat_id, '⚠️ Сессия редактирования устарела. Начните заново.')
         elif data == 'manage_categories': manage_categories(chat_id)
         elif data == 'add_category': add_category_prompt(chat_id)
         elif data == 'delete_category': delete_category_prompt(chat_id)
@@ -366,7 +370,11 @@ def start_edit_field(chat_id, product_id):
     send_message(chat_id, f'✏️ Редактирование: <b>{product["name"]}</b>\nВыберите поле:', {"inline_keyboard": keyboard})
 
 def handle_edit_field(chat_id, field):
-    user_states[chat_id]['edit_field'] = field
+    if chat_id not in user_states:
+        send_message(chat_id, '⚠️ Сессия редактирования не найдена. Начните заново.')
+        return
+    state = user_states[chat_id]
+    state['edit_field'] = field
     prompts = {
         'name': '📱 Введите новое название:',
         'price': '💰 Введите новую цену (цифры):',
@@ -378,10 +386,10 @@ def handle_edit_field(chat_id, field):
     }
     if field == 'category':
         send_message(chat_id, '🏷 Выберите новую категорию:', category_kb())
-        user_states[chat_id]['step'] = 'edit_category'
+        state['step'] = 'edit_category'
         return
     send_message(chat_id, prompts[field], cancel_kb())
-    user_states[chat_id]['step'] = 'edit_value'
+    state['step'] = 'edit_value'
 
 def save_edit(chat_id, new_value):
     state = user_states.get(chat_id)
@@ -531,7 +539,6 @@ def handle_csv_import(chat_id, document):
 
 # ---------- Массовое изменение цен ----------
 def start_mass_price(chat_id):
-    # Показываем кнопки с категориями + "все товары"
     kb = {
         "inline_keyboard": [
             [{"text": "Все товары", "callback_data": "massprice_all"}],
@@ -554,6 +561,7 @@ def ask_mass_price_percent(chat_id, category):
 def apply_mass_price(chat_id, percent):
     state = user_states.get(chat_id)
     if not state:
+        send_message(chat_id, '❌ Сессия устарела.')
         return
     cat = state.get('mass_price_category')
     data, sha = get_data()
