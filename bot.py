@@ -2,6 +2,7 @@ import json
 import os
 import requests
 import base64
+import time
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -51,6 +52,7 @@ def get_data():
     return None, None
 
 def save_data(data, sha=None):
+    """Сохраняет файл на GitHub и возвращает ответ API"""
     url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{DATA_FILE}'
     headers = {'Authorization': f'token {GITHUB_TOKEN}'}
     content = json.dumps(data, ensure_ascii=False, indent=2)
@@ -59,7 +61,18 @@ def save_data(data, sha=None):
     if sha:
         payload['sha'] = sha
     resp = requests.put(url, headers=headers, json=payload)
-    return resp.status_code in [200, 201]
+    return resp  # <-- теперь возвращаем полный ответ
+
+def upload_image_to_github(image_bytes, filename):
+    path = f'images/{filename}'
+    url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{path}'
+    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    encoded_content = base64.b64encode(image_bytes).decode('utf-8')
+    payload = {'message': f'Upload {filename}', 'content': encoded_content}
+    resp = requests.put(url, headers=headers, json=payload)
+    if resp.status_code in [200, 201]:
+        return f'https://{REPO_OWNER}.github.io/{REPO_NAME}/{path}'
+    return None
 
 def main_menu_kb():
     return {"inline_keyboard": [
@@ -78,10 +91,9 @@ def category_kb():
         [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
     ]}
 
-def confirm_kb():
+def photo_step_kb():
     return {"inline_keyboard": [
-        [{"text": "✅ Сохранить", "callback_data": "confirm_product"}],
-        [{"text": "🔄 Заново", "callback_data": "add_product"}],
+        [{"text": "✅ Завершить", "callback_data": "confirm_product"}],
         [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
     ]}
 
@@ -127,9 +139,16 @@ def process_update(update):
     chat_id = msg['chat']['id']
     if chat_id not in ADMIN_IDS: return
 
+    if 'photo' in msg:
+        state = user_states.get(chat_id)
+        if state and state.get('step') == 'photo':
+            handle_photo(chat_id, msg)
+        else:
+            send_message(chat_id, 'Сейчас не ожидаю фото.')
+        return
+
     text = msg.get('text', '')
     state = user_states.get(chat_id)
-
     if text == '/start':
         send_main_menu(chat_id)
     elif state and state.get('action') == 'waiting_text':
@@ -141,8 +160,8 @@ def send_main_menu(chat_id):
     send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>\nВыберите действие:', main_menu_kb())
 
 def start_add_product(chat_id):
-    user_states[chat_id] = {'action': 'waiting_text', 'step': 'name', 'data': {}}
-    send_message(chat_id, '➕ <b>Шаг 1/6:</b> Введите <b>название</b> товара:', cancel_kb())
+    user_states[chat_id] = {'action': 'waiting_text', 'step': 'name', 'data': {}, 'photos': []}
+    send_message(chat_id, '➕ <b>Шаг 1/5:</b> Введите <b>название</b> товара:', cancel_kb())
 
 def handle_text_step(chat_id, text):
     state = user_states.get(chat_id)
@@ -151,35 +170,19 @@ def handle_text_step(chat_id, text):
     if step == 'name':
         state['data']['name'] = text
         state['step'] = 'price'
-        send_message(chat_id, f'✅ <b>{text}</b>\n\n💰 <b>Шаг 2/6:</b> Введите <b>цену</b> (только цифры):', cancel_kb())
+        send_message(chat_id, f'✅ <b>{text}</b>\n\n💰 <b>Шаг 2/5:</b> Введите <b>цену</b> (только цифры):', cancel_kb())
     elif step == 'price':
         try:
             price = int(text.replace(' ', '').replace('₽', '').replace(',', ''))
             state['data']['price'] = price
             state['step'] = 'description'
-            send_message(chat_id, f'✅ <b>{price:,} ₽</b>\n\n📝 <b>Шаг 3/6:</b> Введите <b>описание</b>:', cancel_kb())
+            send_message(chat_id, f'✅ <b>{price:,} ₽</b>\n\n📝 <b>Шаг 3/5:</b> Введите <b>описание</b>:', cancel_kb())
         except:
             send_message(chat_id, '❌ Введите цену цифрами!')
     elif step == 'description':
         state['data']['description'] = text
         state['step'] = 'category'
-        send_message(chat_id, '🏷 <b>Шаг 4/6:</b> Выберите <b>категорию</b>:', category_kb())
-    elif step == 'image':
-        # Принимаем ссылки (одна или несколько через запятую)
-        links = [link.strip() for link in text.split(',') if link.strip()]
-        if not links:
-            send_message(chat_id, '❌ Отправьте хотя бы одну ссылку')
-            return
-        # Проверяем, что ссылки рабочие (начинаются с http)
-        for link in links:
-            if not link.startswith('http'):
-                send_message(chat_id, f'❌ Ссылка должна начинаться с http: {link}')
-                return
-        state['data']['image'] = links if len(links) > 1 else links[0]  # массив или строка
-        # Показываем первое фото как превью
-        caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 Фото: {len(links)} шт."
-        send_photo(chat_id, links[0], caption, confirm_kb())
-        state['step'] = 'confirm'  # чтобы не реагировать на дальнейший текст
+        send_message(chat_id, '🏷 <b>Шаг 4/5:</b> Выберите <b>категорию</b>:', category_kb())
     elif step == 'edit_setting':
         save_setting(chat_id, text)
 
@@ -187,17 +190,46 @@ def set_category(chat_id, category):
     state = user_states.get(chat_id)
     if not state: return
     state['data']['category'] = category
-    state['step'] = 'image'
-    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n🖼 <b>Шаг 5/6:</b> Отправьте <b>прямые ссылки</b> на фото (можно несколько через запятую):\n<i>Загрузите фото на imgur.com, скопируйте прямую ссылку (оканчивается на .jpg) и пришлите сюда</i>', cancel_kb())
+    state['step'] = 'photo'
+    state['action'] = 'waiting_photo'
+    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n📸 <b>Шаг 5/5:</b> Отправьте <b>фото</b> (можно несколько по одному).\nКогда закончите, нажмите <b>✅ Завершить</b>.', photo_step_kb())
+
+def handle_photo(chat_id, message):
+    state = user_states.get(chat_id)
+    if not state: return
+    try:
+        file_id = message['photo'][-1]['file_id']
+        get_url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}'
+        resp = requests.get(get_url).json()
+        if not resp.get('ok'):
+            send_message(chat_id, '❌ Ошибка получения фото.')
+            return
+        file_path = resp['result']['file_path']
+        img_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
+        img_data = requests.get(img_url).content
+
+        filename = f"watch_{int(time.time())}.jpg"
+        github_url = upload_image_to_github(img_data, filename)
+        if github_url:
+            state.setdefault('photos', []).append(github_url)
+            send_message(chat_id, f'✅ Фото добавлено ({len(state["photos"])} шт.).\nОтправьте ещё или нажмите <b>✅ Завершить</b>.', photo_step_kb())
+        else:
+            send_message(chat_id, '❌ Не удалось загрузить фото в репозиторий. Проверьте GITHUB_TOKEN.', photo_step_kb())
+    except Exception as e:
+        send_message(chat_id, f'❌ Ошибка обработки фото: {e}')
 
 def save_product(chat_id):
     state = user_states.get(chat_id)
     if not state: return
+    photos = state.get('photos', [])
+    if not photos:
+        send_message(chat_id, '❌ Нужно хотя бы одно фото.')
+        return
     try:
         data, sha = get_data()
         if data is None:
-            send_message(chat_id, '❌ Ошибка доступа к базе.')
-            return
+            data = {"products": [], "settings": {}}
+            sha = None
         if 'products' not in data: data['products'] = []
         new_id = max([p['id'] for p in data['products']], default=0) + 1
         new_product = {
@@ -205,14 +237,18 @@ def save_product(chat_id):
             'name': state['data']['name'],
             'price': state['data']['price'],
             'description': state['data']['description'],
-            'image': state['data']['image'],  # строка или массив
+            'image': photos if len(photos) > 1 else photos[0],
             'category': state['data']['category']
         }
         data['products'].append(new_product)
-        if save_data(data, sha):
-            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽')
+
+        # Попытка сохранения с отправкой ответа в чат
+        resp = save_data(data, sha)
+        if resp.status_code in [200, 201]:
+            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.')
         else:
-            send_message(chat_id, '❌ Ошибка сохранения.')
+            # Отправляем диагностику
+            send_message(chat_id, f'❌ Ошибка сохранения!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     except Exception as e:
         send_message(chat_id, f'❌ Ошибка: {e}')
     finally:
@@ -237,11 +273,12 @@ def delete_product(chat_id, pid):
         send_message(chat_id, '❌ Товар не найден')
         return
     data['products'] = [p for p in data['products'] if p['id'] != pid]
-    if save_data(data, sha):
+    resp = save_data(data, sha)
+    if resp.status_code in [200, 201]:
         send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!')
         show_products(chat_id)
     else:
-        send_message(chat_id, '❌ Ошибка сохранения')
+        send_message(chat_id, f'❌ Ошибка удаления!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
 
 def show_settings(chat_id):
     data, _ = get_data()
@@ -261,10 +298,11 @@ def save_setting(chat_id, value):
     if not data: return
     if 'settings' not in data: data['settings'] = {}
     data['settings'][key] = value
-    if save_data(data, sha):
+    resp = save_data(data, sha)
+    if resp.status_code in [200, 201]:
         send_message(chat_id, '✅ Настройка обновлена!')
     else:
-        send_message(chat_id, '❌ Ошибка сохранения')
+        send_message(chat_id, f'❌ Ошибка сохранения настройки!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     if chat_id in user_states: del user_states[chat_id]
 
 def cancel_action(chat_id):
