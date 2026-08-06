@@ -2,7 +2,6 @@ import json
 import os
 import requests
 import base64
-import time
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -52,7 +51,6 @@ def get_data():
     return None, None
 
 def save_data(data, sha=None):
-    """Сохраняет файл на GitHub и возвращает ответ API"""
     url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{DATA_FILE}'
     headers = {'Authorization': f'token {GITHUB_TOKEN}'}
     content = json.dumps(data, ensure_ascii=False, indent=2)
@@ -61,18 +59,7 @@ def save_data(data, sha=None):
     if sha:
         payload['sha'] = sha
     resp = requests.put(url, headers=headers, json=payload)
-    return resp  # <-- теперь возвращаем полный ответ
-
-def upload_image_to_github(image_bytes, filename):
-    path = f'images/{filename}'
-    url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{path}'
-    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
-    encoded_content = base64.b64encode(image_bytes).decode('utf-8')
-    payload = {'message': f'Upload {filename}', 'content': encoded_content}
-    resp = requests.put(url, headers=headers, json=payload)
-    if resp.status_code in [200, 201]:
-        return f'https://{REPO_OWNER}.github.io/{REPO_NAME}/{path}'
-    return None
+    return resp
 
 def main_menu_kb():
     return {"inline_keyboard": [
@@ -91,9 +78,10 @@ def category_kb():
         [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
     ]}
 
-def photo_step_kb():
+def confirm_kb():
     return {"inline_keyboard": [
-        [{"text": "✅ Завершить", "callback_data": "confirm_product"}],
+        [{"text": "✅ Сохранить", "callback_data": "confirm_product"}],
+        [{"text": "🔄 Заново", "callback_data": "add_product"}],
         [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
     ]}
 
@@ -139,16 +127,9 @@ def process_update(update):
     chat_id = msg['chat']['id']
     if chat_id not in ADMIN_IDS: return
 
-    if 'photo' in msg:
-        state = user_states.get(chat_id)
-        if state and state.get('step') == 'photo':
-            handle_photo(chat_id, msg)
-        else:
-            send_message(chat_id, 'Сейчас не ожидаю фото.')
-        return
-
     text = msg.get('text', '')
     state = user_states.get(chat_id)
+
     if text == '/start':
         send_main_menu(chat_id)
     elif state and state.get('action') == 'waiting_text':
@@ -183,6 +164,21 @@ def handle_text_step(chat_id, text):
         state['data']['description'] = text
         state['step'] = 'category'
         send_message(chat_id, '🏷 <b>Шаг 4/5:</b> Выберите <b>категорию</b>:', category_kb())
+    elif step == 'image':
+        # Принимаем ссылки (одна или несколько через запятую)
+        links = [link.strip() for link in text.split(',') if link.strip()]
+        if not links:
+            send_message(chat_id, '❌ Отправьте хотя бы одну ссылку')
+            return
+        for link in links:
+            if not link.startswith('http'):
+                send_message(chat_id, f'❌ Ссылка должна начинаться с http: {link}')
+                return
+        state['photos'] = links
+        # Показываем превью первой ссылки
+        caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 Фото: {len(links)} шт."
+        send_photo(chat_id, links[0], caption, confirm_kb())
+        state['step'] = 'confirm'
     elif step == 'edit_setting':
         save_setting(chat_id, text)
 
@@ -190,33 +186,9 @@ def set_category(chat_id, category):
     state = user_states.get(chat_id)
     if not state: return
     state['data']['category'] = category
-    state['step'] = 'photo'
-    state['action'] = 'waiting_photo'
-    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n📸 <b>Шаг 5/5:</b> Отправьте <b>фото</b> (можно несколько по одному).\nКогда закончите, нажмите <b>✅ Завершить</b>.', photo_step_kb())
-
-def handle_photo(chat_id, message):
-    state = user_states.get(chat_id)
-    if not state: return
-    try:
-        file_id = message['photo'][-1]['file_id']
-        get_url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}'
-        resp = requests.get(get_url).json()
-        if not resp.get('ok'):
-            send_message(chat_id, '❌ Ошибка получения фото.')
-            return
-        file_path = resp['result']['file_path']
-        img_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
-        img_data = requests.get(img_url).content
-
-        filename = f"watch_{int(time.time())}.jpg"
-        github_url = upload_image_to_github(img_data, filename)
-        if github_url:
-            state.setdefault('photos', []).append(github_url)
-            send_message(chat_id, f'✅ Фото добавлено ({len(state["photos"])} шт.).\nОтправьте ещё или нажмите <b>✅ Завершить</b>.', photo_step_kb())
-        else:
-            send_message(chat_id, '❌ Не удалось загрузить фото в репозиторий. Проверьте GITHUB_TOKEN.', photo_step_kb())
-    except Exception as e:
-        send_message(chat_id, f'❌ Ошибка обработки фото: {e}')
+    state['step'] = 'image'
+    state['action'] = 'waiting_text'
+    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n🖼 <b>Шаг 5/5:</b> Отправьте <b>прямые ссылки</b> на фото (можно несколько через запятую):\n<i>Пример: https://i.imgur.com/abc.jpg, https://i.imgur.com/def.jpg</i>', cancel_kb())
 
 def save_product(chat_id):
     state = user_states.get(chat_id)
@@ -242,12 +214,10 @@ def save_product(chat_id):
         }
         data['products'].append(new_product)
 
-        # Попытка сохранения с отправкой ответа в чат
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
             send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.')
         else:
-            # Отправляем диагностику
             send_message(chat_id, f'❌ Ошибка сохранения!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     except Exception as e:
         send_message(chat_id, f'❌ Ошибка: {e}')
