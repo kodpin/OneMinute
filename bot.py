@@ -76,7 +76,6 @@ def save_data(data, sha=None):
     return resp
 
 def upload_image_to_site(image_bytes, filename):
-    """Загружает сжатое фото в SITE_REPO/images/ и возвращает публичную ссылку"""
     owner, repo = SITE_REPO.split('/')
     path = f'images/{filename}'
     url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
@@ -91,7 +90,6 @@ def upload_image_to_site(image_bytes, filename):
     return None
 
 def compress_image(image_bytes, max_width=800):
-    """Сжимает фото до указанной ширины, сохраняя пропорции"""
     try:
         img = Image.open(BytesIO(image_bytes))
         if img.mode in ('RGBA', 'P'):
@@ -106,7 +104,7 @@ def compress_image(image_bytes, max_width=800):
     except Exception:
         return image_bytes
 
-# ---------- Быстрые кнопки (ReplyKeyboard) ----------
+# ---------- Быстрые кнопки ----------
 def main_reply_kb():
     return {
         "keyboard": [
@@ -116,18 +114,6 @@ def main_reply_kb():
         "resize_keyboard": True,
         "one_time_keyboard": False
     }
-
-# ---------- Inline-клавиатуры ----------
-def main_menu_kb():
-    return {"inline_keyboard": [
-        [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
-        [{"text": "📋 Список товаров", "callback_data": "list_products"}],
-        [{"text": "✏️ Редактировать товар", "callback_data": "edit_product"}],
-        [{"text": "📥 Экспорт товаров", "callback_data": "export_csv"}],
-        [{"text": "📤 Импорт товаров", "callback_data": "import_csv"}],
-        [{"text": "📊 Массовое изменение цен", "callback_data": "mass_price"}],
-        [{"text": "⚙️ Настройки", "callback_data": "settings_menu"}]
-    ]}
 
 def cancel_kb():
     return {"inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]}
@@ -219,18 +205,19 @@ def process_update(update):
         handle_csv_import(chat_id, msg['document'])
         return
 
-    if 'photo' in msg:
+    # Обработка фото (и как photo, и как документ-изображение)
+    if 'photo' in msg or (msg.get('document') and msg['document'].get('mime_type', '').startswith('image/')):
         state = user_states.get(chat_id)
         if state and state.get('step') == 'photo':
             handle_photo(chat_id, msg)
         else:
-            send_message(chat_id, 'Сейчас фото не ожидается.')
+            send_message(chat_id, '📸 Сначала начните добавление товара (➕ Добавить товар) и дойдите до шага фото.')
         return
 
     text = msg.get('text', '')
     state = user_states.get(chat_id)
 
-    # Сначала проверяем, не находимся ли мы в процессе (приоритет состояния)
+    # Приоритет: если есть активное состояние
     if state:
         if state.get('action') == 'waiting_text':
             handle_text_step(chat_id, text)
@@ -249,7 +236,7 @@ def process_update(update):
                 send_message(chat_id, '❌ Введите число (например, 10 или -5).')
             return
 
-    # Если нет активного состояния — реагируем на кнопки
+    # Кнопки
     if text == '/start' or text == '🏠 Главное меню':
         send_main_menu(chat_id)
     elif text == '➕ Добавить товар':
@@ -264,7 +251,7 @@ def process_update(update):
         send_main_menu(chat_id)
 
 def send_main_menu(chat_id):
-    send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>\nВыберите действие или используйте кнопки меню:', main_reply_kb())
+    send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>\nИспользуйте кнопки меню:', main_reply_kb())
 
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
@@ -306,7 +293,10 @@ def handle_photo(chat_id, message):
     state = user_states.get(chat_id)
     if not state: return
     try:
-        file_id = message['photo'][-1]['file_id']
+        if 'photo' in message:
+            file_id = message['photo'][-1]['file_id']
+        else:
+            file_id = message['document']['file_id']
         get_url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}'
         resp = requests.get(get_url).json()
         if not resp.get('ok'):
@@ -545,7 +535,7 @@ def export_csv(chat_id):
 
 # ---------- Импорт CSV ----------
 def prompt_import(chat_id):
-    send_message(chat_id, '📤 Отправьте CSV-файл с товарами. Формат: id,name,price,description,image,category,discount_percent,discount_end')
+    send_message(chat_id, '📤 Отправьте CSV-файл с товарами.')
 
 def handle_csv_import(chat_id, document):
     file_id = document['file_id']
@@ -560,7 +550,6 @@ def handle_csv_import(chat_id, document):
     if file_resp.status_code != 200:
         send_message(chat_id, '❌ Не удалось скачать файл.')
         return
-
     try:
         content = file_resp.content.decode('utf-8-sig')
         reader = csv.DictReader(io.StringIO(content))
@@ -569,8 +558,7 @@ def handle_csv_import(chat_id, document):
             data = {"products": [], "settings": {}}
             sha = None
         if 'products' not in data: data['products'] = []
-        updated = 0
-        added = 0
+        updated = added = 0
         for row in reader:
             pid = row.get('id', '').strip()
             name = row.get('name', '').strip()
@@ -580,42 +568,30 @@ def handle_csv_import(chat_id, document):
             category = row.get('category', '').strip()
             discount_percent = row.get('discount_percent', '0').strip()
             discount_end = row.get('discount_end', '').strip()
-
-            if not name or not price:
-                continue
+            if not name or not price: continue
             price = int(price)
             discount_percent = int(discount_percent) if discount_percent else 0
-
             if pid and pid.isdigit():
                 existing = next((p for p in data['products'] if p['id'] == int(pid)), None)
                 if existing:
                     existing.update({
-                        'name': name,
-                        'price': price,
-                        'description': description,
-                        'image': image,
-                        'category': category,
-                        'discount_percent': discount_percent,
-                        'discount_end': discount_end
+                        'name': name, 'price': price, 'description': description,
+                        'image': image, 'category': category,
+                        'discount_percent': discount_percent, 'discount_end': discount_end
                     })
                     updated += 1
                     continue
             new_id = max([p['id'] for p in data['products']], default=0) + 1
             data['products'].append({
-                'id': new_id,
-                'name': name,
-                'price': price,
-                'description': description,
-                'image': image,
-                'category': category,
-                'discount_percent': discount_percent,
-                'discount_end': discount_end
+                'id': new_id, 'name': name, 'price': price, 'description': description,
+                'image': image, 'category': category,
+                'discount_percent': discount_percent, 'discount_end': discount_end
             })
             added += 1
         if save_data(data, sha):
             send_message(chat_id, f'✅ Импорт завершён! Добавлено: {added}, обновлено: {updated}.')
         else:
-            send_message(chat_id, '❌ Ошибка сохранения импортированных данных.')
+            send_message(chat_id, '❌ Ошибка сохранения.')
     except Exception as e:
         send_message(chat_id, f'❌ Ошибка обработки CSV: {e}')
 
@@ -631,34 +607,23 @@ def start_mass_price(chat_id):
             [{"text": "🔙 Отмена", "callback_data": "main_menu"}]
         ]
     }
-    send_message(chat_id, '📊 <b>Выберите категорию товаров</b> для изменения цен:', kb)
+    send_message(chat_id, '📊 <b>Выберите категорию</b>:', kb)
 
 def ask_mass_price_percent(chat_id, category):
-    user_states[chat_id] = {
-        'action': 'mass_price_percent',
-        'mass_price_category': category
-    }
-    send_message(chat_id, '📊 Введите процент изменения (например, <b>10</b> для повышения на 10%, <b>-5</b> для понижения на 5%):', cancel_kb())
+    user_states[chat_id] = {'action': 'mass_price_percent', 'mass_price_category': category}
+    send_message(chat_id, '📊 Введите процент изменения (например, <b>10</b> или <b>-5</b>):', cancel_kb())
 
 def apply_mass_price(chat_id, percent):
     state = user_states.get(chat_id)
-    if not state:
-        send_message(chat_id, '❌ Сессия устарела.')
-        return
+    if not state: return
     cat = state.get('mass_price_category')
     data, sha = get_data()
-    if not data:
-        send_message(chat_id, '❌ Нет данных.')
-        return
+    if not data: return
     if 'products' not in data: data['products'] = []
     count = 0
     for p in data['products']:
         if cat == 'all' or p.get('category') == cat:
-            old_price = p['price']
-            new_price = int(old_price * (1 + percent / 100))
-            if new_price < 0:
-                new_price = 0
-            p['price'] = new_price
+            p['price'] = max(0, int(p['price'] * (1 + percent / 100)))
             count += 1
     if count > 0:
         if save_data(data, sha):
@@ -668,8 +633,7 @@ def apply_mass_price(chat_id, percent):
             send_message(chat_id, '❌ Ошибка сохранения.')
     else:
         send_message(chat_id, 'ℹ️ Нет товаров в выбранной категории.')
-    if chat_id in user_states:
-        del user_states[chat_id]
+    if chat_id in user_states: del user_states[chat_id]
 
 # ---------- Управление категориями ----------
 def manage_categories(chat_id):
@@ -677,15 +641,15 @@ def manage_categories(chat_id):
     cats = data.get('settings', {}).get('categories', ["tactical", "travel", "running", "diving"])
     text = "🗂 <b>Текущие категории:</b>\n" + "\n".join([f"• {c}" for c in cats])
     keyboard = [
-        [{"text": "➕ Добавить категорию", "callback_data": "add_category"}],
-        [{"text": "❌ Удалить категорию", "callback_data": "delete_category"}],
+        [{"text": "➕ Добавить", "callback_data": "add_category"}],
+        [{"text": "❌ Удалить", "callback_data": "delete_category"}],
         [{"text": "🔙 Назад", "callback_data": "settings_menu"}]
     ]
     send_message(chat_id, text, {"inline_keyboard": keyboard})
 
 def add_category_prompt(chat_id):
     user_states[chat_id] = {'action': 'add_category'}
-    send_message(chat_id, '🗂 Введите название новой категории (латиницей, без пробелов):', cancel_kb())
+    send_message(chat_id, '🗂 Введите название категории (латиницей, без пробелов):', cancel_kb())
 
 def save_new_category(chat_id, name):
     name = name.strip().lower()
