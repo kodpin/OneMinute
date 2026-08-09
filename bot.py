@@ -4,32 +4,29 @@ import requests
 import base64
 import csv
 import io
+import time
 from datetime import datetime
+from io import BytesIO
+from PIL import Image
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
-DATA_REPO = 'kodpin/OneMinute-data'   # ← замените kodpin на свой логин при необходимости
+DATA_REPO = 'kodpin/OneMinute-data'        # ← замените kodpin на свой логин
 SITE_REPO = os.environ.get('GITHUB_REPOSITORY', 'kodpin/OneMinute')
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(',') if id.strip()]
 
 user_states = {}
 
-# ---------- Вспомогательные функции ----------
+# ---------- Telegram helpers ----------
 def send_message(chat_id, text, reply_markup=None):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
     payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}
     if reply_markup:
         payload['reply_markup'] = json.dumps(reply_markup)
     requests.post(url, json=payload)
-
-def send_document(chat_id, file_data, filename):
-    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendDocument'
-    files = {'document': (filename, file_data, 'text/csv')}
-    data = {'chat_id': chat_id}
-    requests.post(url, files=files, data=data)
 
 def send_photo(chat_id, photo_url, caption=None, reply_markup=None):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto'
@@ -41,6 +38,12 @@ def send_photo(chat_id, photo_url, caption=None, reply_markup=None):
         payload['reply_markup'] = json.dumps(reply_markup)
     requests.post(url, json=payload)
 
+def send_document(chat_id, file_data, filename):
+    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendDocument'
+    files = {'document': (filename, file_data, 'text/csv')}
+    data = {'chat_id': chat_id}
+    requests.post(url, files=files, data=data)
+
 def answer_callback(callback_id, text=None):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/answerCallbackQuery'
     payload = {'callback_query_id': callback_id}
@@ -48,6 +51,7 @@ def answer_callback(callback_id, text=None):
         payload['text'] = text
     requests.post(url, json=payload)
 
+# ---------- GitHub API ----------
 def get_data():
     owner, repo = DATA_REPO.split('/')
     url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
@@ -71,6 +75,37 @@ def save_data(data, sha=None):
     resp = requests.put(url, headers=headers, json=payload)
     return resp
 
+def upload_image_to_site(image_bytes, filename):
+    """Загружает сжатое фото в SITE_REPO/images/ и возвращает публичную ссылку"""
+    owner, repo = SITE_REPO.split('/')
+    path = f'images/{filename}'
+    url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
+    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    encoded_content = base64.b64encode(image_bytes).decode('utf-8')
+    payload = {'message': f'Upload {filename}', 'content': encoded_content}
+    for attempt in range(2):
+        resp = requests.put(url, headers=headers, json=payload)
+        if resp.status_code in [200, 201]:
+            return f'https://{owner}.github.io/{repo}/{path}'
+        time.sleep(1)
+    return None
+
+def compress_image(image_bytes, max_width=800):
+    """Сжимает фото до указанной ширины, сохраняя пропорции"""
+    try:
+        img = Image.open(BytesIO(image_bytes))
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+        width, height = img.size
+        if width > max_width:
+            new_height = int(height * max_width / width)
+            img = img.resize((max_width, new_height), Image.LANCZOS)
+        output = BytesIO()
+        img.save(output, format='JPEG', quality=85, optimize=True)
+        return output.getvalue()
+    except Exception:
+        return image_bytes
+
 # ---------- Клавиатуры ----------
 def main_menu_kb():
     return {"inline_keyboard": [
@@ -93,10 +128,9 @@ def category_kb():
         [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
     ]}
 
-def confirm_kb():
+def photo_step_kb():
     return {"inline_keyboard": [
-        [{"text": "✅ Сохранить", "callback_data": "confirm_product"}],
-        [{"text": "🔄 Заново", "callback_data": "add_product"}],
+        [{"text": "✅ Завершить", "callback_data": "confirm_product"}],
         [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
     ]}
 
@@ -115,7 +149,7 @@ def products_list_kb(products):
     keyboard.append([{"text": "🔙 Назад", "callback_data": "main_menu"}])
     return {"inline_keyboard": keyboard}
 
-# ---------- Обработка обновлений ----------
+# ---------- Главный обработчик ----------
 def process_update(update):
     if 'callback_query' in update:
         cb = update['callback_query']
@@ -174,6 +208,14 @@ def process_update(update):
         handle_csv_import(chat_id, msg['document'])
         return
 
+    if 'photo' in msg:
+        state = user_states.get(chat_id)
+        if state and state.get('step') == 'photo':
+            handle_photo(chat_id, msg)
+        else:
+            send_message(chat_id, 'Сейчас фото не ожидается.')
+        return
+
     text = msg.get('text', '')
     state = user_states.get(chat_id)
 
@@ -222,19 +264,6 @@ def handle_text_step(chat_id, text):
         state['data']['description'] = text
         state['step'] = 'category'
         send_message(chat_id, '🏷 <b>Шаг 4/5:</b> Выберите <b>категорию</b>:', category_kb())
-    elif step == 'image':
-        links = [link.strip() for link in text.split(',') if link.strip()]
-        if not links:
-            send_message(chat_id, '❌ Отправьте хотя бы одну ссылку')
-            return
-        for link in links:
-            if not link.startswith('http'):
-                send_message(chat_id, f'❌ Ссылка должна начинаться с http: {link}')
-                return
-        state['photos'] = links
-        caption = f"📋 <b>Проверьте товар:</b>\n📱 {state['data']['name']}\n💰 {state['data']['price']:,} ₽\n📝 {state['data']['description']}\n🏷 {state['data']['category']}\n🖼 Фото: {len(links)} шт."
-        send_photo(chat_id, links[0], caption, confirm_kb())
-        state['step'] = 'confirm'
     elif step == 'edit_setting':
         save_setting(chat_id, text)
 
@@ -242,9 +271,35 @@ def set_category(chat_id, category):
     state = user_states.get(chat_id)
     if not state: return
     state['data']['category'] = category
-    state['step'] = 'image'
-    state['action'] = 'waiting_text'
-    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n🖼 <b>Шаг 5/5:</b> Отправьте <b>прямые ссылки</b> на фото (можно несколько через запятую):\n<i>Пример: https://i.imgur.com/abc.jpg, https://i.imgur.com/def.jpg</i>', cancel_kb())
+    state['step'] = 'photo'
+    state['action'] = 'waiting_photo'
+    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n📸 <b>Шаг 5/5:</b> Отправьте <b>фото</b> (можно несколько по одному).\nКогда закончите, нажмите <b>✅ Завершить</b>.', photo_step_kb())
+
+def handle_photo(chat_id, message):
+    state = user_states.get(chat_id)
+    if not state: return
+    try:
+        file_id = message['photo'][-1]['file_id']
+        get_url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}'
+        resp = requests.get(get_url).json()
+        if not resp.get('ok'):
+            send_message(chat_id, '❌ Не удалось получить файл от Telegram.')
+            return
+        file_path = resp['result']['file_path']
+        img_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
+        img_data = requests.get(img_url).content
+
+        compressed = compress_image(img_data, max_width=800)
+        filename = f"watch_{int(time.time())}.jpg"
+        github_url = upload_image_to_site(compressed, filename)
+
+        if github_url:
+            state.setdefault('photos', []).append(github_url)
+            send_message(chat_id, f'✅ Фото добавлено ({len(state["photos"])} шт.).\nОтправьте ещё или нажмите <b>✅ Завершить</b>.', photo_step_kb())
+        else:
+            send_message(chat_id, '❌ Не удалось загрузить фото в репозиторий. Проверьте GITHUB_TOKEN или папку images.', photo_step_kb())
+    except Exception as e:
+        send_message(chat_id, f'❌ Ошибка обработки фото: {e}')
 
 def save_product(chat_id):
     state = user_states.get(chat_id)
@@ -338,7 +393,7 @@ def cancel_action(chat_id):
     if chat_id in user_states: del user_states[chat_id]
     send_message(chat_id, '❌ Отменено', main_menu_kb())
 
-# ---------- Редактирование товара (исправлено) ----------
+# ---------- Редактирование товара ----------
 def start_edit_product(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
@@ -354,7 +409,6 @@ def start_edit_field(chat_id, product_id):
     if not product:
         send_message(chat_id, '❌ Товар не найден.')
         return
-    # Сохраняем сессию редактирования
     user_states[chat_id] = {'action': 'edit_product', 'product_id': product_id, 'product': product}
     show_edit_menu(chat_id, product)
 
@@ -373,9 +427,7 @@ def show_edit_menu(chat_id, product):
 
 def handle_edit_field(chat_id, field):
     state = user_states.get(chat_id)
-    if not state:
-        send_message(chat_id, '⚠️ Сессия редактирования не найдена.')
-        return
+    if not state: return
     state['edit_field'] = field
     prompts = {
         'name': '📱 Введите новое название:',
@@ -428,11 +480,9 @@ def save_edit(chat_id, new_value):
     product[field] = new_value
     if save_data(data, sha):
         send_message(chat_id, f'✅ Поле <b>{field}</b> обновлено!')
-        # После успешного изменения возвращаемся к меню редактирования этого же товара
         show_edit_menu(chat_id, product)
     else:
         send_message(chat_id, '❌ Ошибка сохранения.')
-        # Всё равно показываем меню, чтобы можно было попробовать ещё раз
         show_edit_menu(chat_id, product)
 
 def get_product_by_id(pid):
