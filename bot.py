@@ -13,7 +13,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
-DATA_REPO = 'kodpin/OneMinute-data'        # ← замените kodpin на свой логин
+DATA_REPO = 'kodpin/OneMinute-data'        # ← замените kodpin на свой логин при необходимости
 SITE_REPO = os.environ.get('GITHUB_REPOSITORY', 'kodpin/OneMinute')
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(',') if id.strip()]
@@ -106,7 +106,18 @@ def compress_image(image_bytes, max_width=800):
     except Exception:
         return image_bytes
 
-# ---------- Клавиатуры ----------
+# ---------- Быстрые кнопки (ReplyKeyboard) ----------
+def main_reply_kb():
+    return {
+        "keyboard": [
+            ["➕ Добавить товар", "📋 Список товаров"],
+            ["✏️ Редактировать товар", "⚙️ Настройки"]
+        ],
+        "resize_keyboard": True,
+        "one_time_keyboard": False
+    }
+
+# ---------- Inline-клавиатуры (оставлены для внутренних шагов) ----------
 def main_menu_kb():
     return {"inline_keyboard": [
         [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
@@ -219,8 +230,17 @@ def process_update(update):
     text = msg.get('text', '')
     state = user_states.get(chat_id)
 
-    if text == '/start':
+    # Обработка текстовых команд с быстрых кнопок
+    if text == '/start' or text == '🏠 Главное меню':
         send_main_menu(chat_id)
+    elif text == '➕ Добавить товар':
+        start_add_product(chat_id)
+    elif text == '📋 Список товаров':
+        show_products(chat_id)
+    elif text == '✏️ Редактировать товар':
+        start_edit_product(chat_id)
+    elif text == '⚙️ Настройки':
+        show_settings(chat_id)
     elif state and state.get('action') == 'waiting_text':
         handle_text_step(chat_id, text)
     elif state and state.get('action') == 'edit_product' and state.get('step') == 'edit_value':
@@ -237,7 +257,7 @@ def process_update(update):
         send_main_menu(chat_id)
 
 def send_main_menu(chat_id):
-    send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>\nВыберите действие:', main_menu_kb())
+    send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>\nВыберите действие или используйте кнопки меню:', main_reply_kb())
 
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
@@ -328,7 +348,7 @@ def save_product(chat_id):
         data['products'].append(new_product)
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
-            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.')
+            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.', main_reply_kb())
         else:
             send_message(chat_id, f'❌ Ошибка сохранения!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     except Exception as e:
@@ -340,7 +360,7 @@ def save_product(chat_id):
 def show_products(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
-        send_message(chat_id, '📋 Товаров пока нет.')
+        send_message(chat_id, '📋 Товаров пока нет.', main_reply_kb())
         return
     prods = data['products']
     text = f'📋 <b>Товары ({len(prods)}):</b>\n\n'
@@ -358,7 +378,7 @@ def delete_product(chat_id, pid):
     data['products'] = [p for p in data['products'] if p['id'] != pid]
     resp = save_data(data, sha)
     if resp.status_code in [200, 201]:
-        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!')
+        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_reply_kb())
         show_products(chat_id)
     else:
         send_message(chat_id, f'❌ Ошибка удаления!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
@@ -384,20 +404,20 @@ def save_setting(chat_id, value):
     data['settings'][key] = value
     resp = save_data(data, sha)
     if resp.status_code in [200, 201]:
-        send_message(chat_id, '✅ Настройка обновлена!')
+        send_message(chat_id, '✅ Настройка обновлена!', main_reply_kb())
     else:
         send_message(chat_id, f'❌ Ошибка сохранения настройки!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     if chat_id in user_states: del user_states[chat_id]
 
 def cancel_action(chat_id):
     if chat_id in user_states: del user_states[chat_id]
-    send_message(chat_id, '❌ Отменено', main_menu_kb())
+    send_message(chat_id, '❌ Отменено', main_reply_kb())
 
 # ---------- Редактирование товара ----------
 def start_edit_product(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
-        send_message(chat_id, '📋 Нет товаров для редактирования.')
+        send_message(chat_id, '📋 Нет товаров для редактирования.', main_reply_kb())
         return
     prods = data['products']
     keyboard = [[{"text": f"✏️ {p['name']} (ID {p['id']})", "callback_data": f"edit_{p['id']}"}] for p in prods]
@@ -636,7 +656,7 @@ def apply_mass_price(chat_id, percent):
     if count > 0:
         if save_data(data, sha):
             word = 'повышены' if percent > 0 else 'понижены'
-            send_message(chat_id, f'✅ Цены {word} на {abs(percent)}% для {count} товаров.')
+            send_message(chat_id, f'✅ Цены {word} на {abs(percent)}% для {count} товаров.', main_reply_kb())
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
     else:
@@ -670,7 +690,7 @@ def save_new_category(chat_id, name):
     else:
         cats.append(name)
         if save_data(data, sha):
-            send_message(chat_id, f'✅ Категория <b>{name}</b> добавлена!')
+            send_message(chat_id, f'✅ Категория <b>{name}</b> добавлена!', main_reply_kb())
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
     del user_states[chat_id]
@@ -689,7 +709,7 @@ def delete_category(chat_id, cat_name):
     if cat_name in cats:
         cats.remove(cat_name)
         if save_data(data, sha):
-            send_message(chat_id, f'✅ Категория <b>{cat_name}</b> удалена!')
+            send_message(chat_id, f'✅ Категория <b>{cat_name}</b> удалена!', main_reply_kb())
         else:
             send_message(chat_id, '❌ Ошибка.')
     manage_categories(chat_id)
