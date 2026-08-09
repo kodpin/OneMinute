@@ -117,7 +117,7 @@ def main_reply_kb():
         "one_time_keyboard": False
     }
 
-# ---------- Inline-клавиатуры (оставлены для внутренних шагов) ----------
+# ---------- Inline-клавиатуры ----------
 def main_menu_kb():
     return {"inline_keyboard": [
         [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
@@ -230,7 +230,26 @@ def process_update(update):
     text = msg.get('text', '')
     state = user_states.get(chat_id)
 
-    # Обработка текстовых команд с быстрых кнопок
+    # Сначала проверяем, не находимся ли мы в процессе (приоритет состояния)
+    if state:
+        if state.get('action') == 'waiting_text':
+            handle_text_step(chat_id, text)
+            return
+        elif state.get('action') == 'edit_product' and state.get('step') == 'edit_value':
+            save_edit(chat_id, text)
+            return
+        elif state.get('action') == 'add_category':
+            save_new_category(chat_id, text)
+            return
+        elif state.get('action') == 'mass_price_percent':
+            try:
+                pct = float(text.replace(',', '.'))
+                apply_mass_price(chat_id, pct)
+            except:
+                send_message(chat_id, '❌ Введите число (например, 10 или -5).')
+            return
+
+    # Если нет активного состояния — реагируем на кнопки
     if text == '/start' or text == '🏠 Главное меню':
         send_main_menu(chat_id)
     elif text == '➕ Добавить товар':
@@ -241,18 +260,6 @@ def process_update(update):
         start_edit_product(chat_id)
     elif text == '⚙️ Настройки':
         show_settings(chat_id)
-    elif state and state.get('action') == 'waiting_text':
-        handle_text_step(chat_id, text)
-    elif state and state.get('action') == 'edit_product' and state.get('step') == 'edit_value':
-        save_edit(chat_id, text)
-    elif state and state.get('action') == 'add_category':
-        save_new_category(chat_id, text)
-    elif state and state.get('action') == 'mass_price_percent':
-        try:
-            pct = float(text.replace(',', '.'))
-            apply_mass_price(chat_id, pct)
-        except:
-            send_message(chat_id, '❌ Введите число (например, 10 или -5).')
     else:
         send_main_menu(chat_id)
 
