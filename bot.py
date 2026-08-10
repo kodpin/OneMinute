@@ -76,6 +76,7 @@ def save_data(data, sha=None):
     return resp
 
 def upload_image_to_site(image_bytes, filename):
+    """Загружает сжатое фото в SITE_REPO/images/ и возвращает публичную ссылку"""
     owner, repo = SITE_REPO.split('/')
     path = f'images/{filename}'
     url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
@@ -104,12 +105,13 @@ def compress_image(image_bytes, max_width=800):
     except Exception:
         return image_bytes
 
-# ---------- Быстрые кнопки ----------
+# ---------- Клавиатуры ----------
 def main_reply_kb():
     return {
         "keyboard": [
             ["➕ Добавить товар", "📋 Список товаров"],
-            ["✏️ Редактировать товар", "⚙️ Настройки"]
+            ["✏️ Редактировать товар", "⚙️ Настройки"],
+            ["🏠 Главное меню"]
         ],
         "resize_keyboard": True,
         "one_time_keyboard": False
@@ -119,15 +121,31 @@ def cancel_kb():
     return {"inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]}
 
 def category_kb():
-    return {"inline_keyboard": [
-        [{"text": "Тактические", "callback_data": "cat_tactical"}, {"text": "Для путешествий", "callback_data": "cat_travel"}],
-        [{"text": "Для бега", "callback_data": "cat_running"}, {"text": "Для дайвинга", "callback_data": "cat_diving"}],
-        [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
-    ]}
+    """Динамически формирует клавиатуру категорий из настроек"""
+    data, _ = get_data()
+    cats = data.get('settings', {}).get('categories', ["tactical", "travel", "running", "diving"])
+    # Группируем по две в строке
+    buttons = []
+    row = []
+    for cat in cats:
+        row.append({"text": cat.capitalize(), "callback_data": f"cat_{cat}"})
+        if len(row) == 2:
+            buttons.append(row)
+            row = []
+    if row:
+        buttons.append(row)
+    buttons.append([{"text": "❌ Отмена", "callback_data": "cancel_add"}])
+    return {"inline_keyboard": buttons}
 
 def photo_step_kb():
     return {"inline_keyboard": [
         [{"text": "✅ Завершить", "callback_data": "confirm_product"}],
+        [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
+    ]}
+
+def edit_photo_step_kb():
+    return {"inline_keyboard": [
+        [{"text": "✅ Завершить", "callback_data": "confirm_edit_photo"}],
         [{"text": "❌ Отмена", "callback_data": "cancel_add"}]
     ]}
 
@@ -163,6 +181,7 @@ def process_update(update):
         elif data == 'settings_menu': show_settings(chat_id)
         elif data.startswith('cat_'): set_category(chat_id, data.replace('cat_', ''))
         elif data == 'confirm_product': save_product(chat_id)
+        elif data == 'confirm_edit_photo': confirm_edit_photo(chat_id)
         elif data.startswith('delete_'): delete_product(chat_id, int(data.replace('delete_', '')))
         elif data == 'edit_ip': start_edit(chat_id, 'ip_info', '📝 Введите информацию об ИП:')
         elif data == 'edit_qr': start_edit(chat_id, 'payment_qr', '📱 Отправьте ссылку на QR-код:')
@@ -201,23 +220,28 @@ def process_update(update):
     chat_id = msg['chat']['id']
     if chat_id not in ADMIN_IDS: return
 
-    if 'document' in msg:
+    if 'document' in msg and not msg['document'].get('mime_type', '').startswith('image/'):
         handle_csv_import(chat_id, msg['document'])
         return
 
-    # Обработка фото (и как photo, и как документ-изображение)
+    # Фото (при добавлении или редактировании)
     if 'photo' in msg or (msg.get('document') and msg['document'].get('mime_type', '').startswith('image/')):
         state = user_states.get(chat_id)
-        if state and state.get('step') == 'photo':
-            handle_photo(chat_id, msg)
+        if state:
+            if state.get('action') == 'edit_product_photo':
+                handle_edit_photo(chat_id, msg)
+            elif state.get('step') == 'photo':
+                handle_photo(chat_id, msg)
+            else:
+                send_message(chat_id, '📸 Сейчас фото не ожидается.')
         else:
-            send_message(chat_id, '📸 Сначала начните добавление товара (➕ Добавить товар) и дойдите до шага фото.')
+            send_message(chat_id, '📸 Начните добавление или редактирование товара.')
         return
 
     text = msg.get('text', '')
     state = user_states.get(chat_id)
 
-    # Приоритет: если есть активное состояние
+    # Активные состояния
     if state:
         if state.get('action') == 'waiting_text':
             handle_text_step(chat_id, text)
@@ -236,7 +260,7 @@ def process_update(update):
                 send_message(chat_id, '❌ Введите число (например, 10 или -5).')
             return
 
-    # Кнопки
+    # Кнопки меню
     if text == '/start' or text == '🏠 Главное меню':
         send_main_menu(chat_id)
     elif text == '➕ Добавить товар':
@@ -251,7 +275,7 @@ def process_update(update):
         send_main_menu(chat_id)
 
 def send_main_menu(chat_id):
-    send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>\nИспользуйте кнопки меню:', main_reply_kb())
+    send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>', main_reply_kb())
 
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
@@ -353,6 +377,78 @@ def save_product(chat_id):
     finally:
         if chat_id in user_states: del user_states[chat_id]
 
+# ---------- Редактирование фото (новое) ----------
+def handle_edit_field(chat_id, field):
+    state = user_states.get(chat_id)
+    if not state: return
+    if field == 'image':
+        # Переход в режим загрузки фото
+        state['action'] = 'edit_product_photo'
+        state['edit_photos'] = []
+        send_message(chat_id, '📸 Отправьте новое фото (можно несколько). Нажмите <b>✅ Завершить</b>, когда закончите.', edit_photo_step_kb())
+        return
+    state['edit_field'] = field
+    prompts = {
+        'name': '📱 Введите новое название:',
+        'price': '💰 Введите новую цену (цифры):',
+        'description': '📝 Введите новое описание:',
+        'discount_percent': '🏷 Введите процент скидки (0-100):',
+        'discount_end': '📅 Введите дату окончания скидки в формате ГГГГ-ММ-ДД (например, 2026-12-31):',
+        'category': None
+    }
+    if field == 'category':
+        send_message(chat_id, '🏷 Выберите новую категорию:', category_kb())
+        state['step'] = 'edit_category'
+        return
+    send_message(chat_id, prompts.get(field, 'Введите значение:'), cancel_kb())
+    state['step'] = 'edit_value'
+
+def handle_edit_photo(chat_id, message):
+    state = user_states.get(chat_id)
+    if not state: return
+    try:
+        if 'photo' in message:
+            file_id = message['photo'][-1]['file_id']
+        else:
+            file_id = message['document']['file_id']
+        get_url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}'
+        resp = requests.get(get_url).json()
+        if not resp.get('ok'):
+            send_message(chat_id, '❌ Не удалось получить файл от Telegram.')
+            return
+        file_path = resp['result']['file_path']
+        img_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
+        img_data = requests.get(img_url).content
+
+        compressed = compress_image(img_data, max_width=800)
+        filename = f"watch_{int(time.time())}.jpg"
+        github_url = upload_image_to_site(compressed, filename)
+
+        if github_url:
+            state.setdefault('edit_photos', []).append(github_url)
+            send_message(chat_id, f'✅ Фото добавлено ({len(state["edit_photos"])} шт.).\nОтправьте ещё или нажмите <b>✅ Завершить</b>.', edit_photo_step_kb())
+        else:
+            send_message(chat_id, '❌ Не удалось загрузить фото в репозиторий. Проверьте GITHUB_TOKEN или папку images.', edit_photo_step_kb())
+    except Exception as e:
+        send_message(chat_id, f'❌ Ошибка обработки фото: {e}')
+
+def confirm_edit_photo(chat_id):
+    state = user_states.get(chat_id)
+    if not state: return
+    photos = state.get('edit_photos', [])
+    if not photos:
+        send_message(chat_id, '❌ Нужно хотя бы одно фото.')
+        return
+    # Применяем как изменение поля image
+    image_value = photos if len(photos) > 1 else photos[0]
+    # Восстанавливаем состояние редактирования
+    state['action'] = 'edit_product'
+    state['edit_field'] = 'image'
+    # Вызываем стандартное сохранение редактирования
+    save_edit(chat_id, image_value)
+    # Удаляем временные данные
+    state.pop('edit_photos', None)
+
 # ---------- Список товаров и удаление ----------
 def show_products(chat_id):
     data, _ = get_data()
@@ -410,7 +506,7 @@ def cancel_action(chat_id):
     if chat_id in user_states: del user_states[chat_id]
     send_message(chat_id, '❌ Отменено', main_reply_kb())
 
-# ---------- Редактирование товара ----------
+# ---------- Редактирование товара (остальные поля) ----------
 def start_edit_product(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
@@ -435,38 +531,21 @@ def show_edit_menu(chat_id, product):
         [{"text": "💰 Цена", "callback_data": "edit_field_price"}],
         [{"text": "📝 Описание", "callback_data": "edit_field_description"}],
         [{"text": "🏷 Категория", "callback_data": "edit_field_category"}],
-        [{"text": "🖼 Фото (ссылки)", "callback_data": "edit_field_image"}],
+        [{"text": "🖼 Фото", "callback_data": "edit_field_image"}],
         [{"text": "🏷 Скидка (%)", "callback_data": "edit_field_discount_percent"}],
         [{"text": "📅 Окончание скидки", "callback_data": "edit_field_discount_end"}],
         [{"text": "🔙 Назад", "callback_data": "edit_product"}]
     ]
     send_message(chat_id, f'✏️ Редактирование: <b>{product["name"]}</b>\nВыберите поле:', {"inline_keyboard": keyboard})
 
-def handle_edit_field(chat_id, field):
-    state = user_states.get(chat_id)
-    if not state: return
-    state['edit_field'] = field
-    prompts = {
-        'name': '📱 Введите новое название:',
-        'price': '💰 Введите новую цену (цифры):',
-        'description': '📝 Введите новое описание:',
-        'image': '🖼 Отправьте новые ссылки на фото (через запятую):',
-        'discount_percent': '🏷 Введите процент скидки (0-100):',
-        'discount_end': '📅 Введите дату окончания скидки в формате ГГГГ-ММ-ДД (например, 2026-12-31):',
-        'category': None
-    }
-    if field == 'category':
-        send_message(chat_id, '🏷 Выберите новую категорию:', category_kb())
-        state['step'] = 'edit_category'
-        return
-    send_message(chat_id, prompts[field], cancel_kb())
-    state['step'] = 'edit_value'
-
 def save_edit(chat_id, new_value):
     state = user_states.get(chat_id)
     if not state: return
     pid = state['product_id']
-    field = state['edit_field']
+    field = state.get('edit_field')
+    if not field:
+        send_message(chat_id, '❌ Ошибка: не выбрано поле.')
+        return
     data, sha = get_data()
     if not data: return
     product = next((p for p in data['products'] if p['id'] == pid), None)
@@ -478,8 +557,8 @@ def save_edit(chat_id, new_value):
             send_message(chat_id, '❌ Неверная цена.')
             return
     elif field == 'image':
-        links = [l.strip() for l in new_value.split(',') if l.strip()]
-        new_value = links if len(links) > 1 else links[0]
+        # new_value уже список или строка
+        pass
     elif field == 'discount_percent':
         try:
             new_value = int(new_value)
@@ -597,21 +676,23 @@ def handle_csv_import(chat_id, document):
 
 # ---------- Массовое изменение цен ----------
 def start_mass_price(chat_id):
-    kb = {
-        "inline_keyboard": [
-            [{"text": "Все товары", "callback_data": "massprice_all"}],
-            [{"text": "Тактические", "callback_data": "massprice_tactical"}],
-            [{"text": "Для путешествий", "callback_data": "massprice_travel"}],
-            [{"text": "Для бега", "callback_data": "massprice_running"}],
-            [{"text": "Для дайвинга", "callback_data": "massprice_diving"}],
-            [{"text": "🔙 Отмена", "callback_data": "main_menu"}]
-        ]
-    }
-    send_message(chat_id, '📊 <b>Выберите категорию</b>:', kb)
+    data, _ = get_data()
+    cats = data.get('settings', {}).get('categories', ["tactical", "travel", "running", "diving"])
+    buttons = [[{"text": "Все товары", "callback_data": "massprice_all"}]]
+    row = []
+    for cat in cats:
+        row.append({"text": cat.capitalize(), "callback_data": f"massprice_{cat}"})
+        if len(row) == 2:
+            buttons.append(row)
+            row = []
+    if row:
+        buttons.append(row)
+    buttons.append([{"text": "🔙 Отмена", "callback_data": "main_menu"}])
+    send_message(chat_id, '📊 <b>Выберите категорию товаров</b> для изменения цен:', {"inline_keyboard": buttons})
 
 def ask_mass_price_percent(chat_id, category):
     user_states[chat_id] = {'action': 'mass_price_percent', 'mass_price_category': category}
-    send_message(chat_id, '📊 Введите процент изменения (например, <b>10</b> или <b>-5</b>):', cancel_kb())
+    send_message(chat_id, '📊 Введите процент изменения (например, <b>10</b> для повышения на 10%, <b>-5</b> для понижения на 5%):', cancel_kb())
 
 def apply_mass_price(chat_id, percent):
     state = user_states.get(chat_id)
