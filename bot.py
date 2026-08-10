@@ -13,7 +13,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
-DATA_REPO = 'kodpin/OneMinute-data'        # ← замените kodpin на свой логин при необходимости
+DATA_REPO = 'kodpin/OneMinute-data'
 SITE_REPO = os.environ.get('GITHUB_REPOSITORY', 'kodpin/OneMinute')
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(',') if id.strip()]
@@ -76,7 +76,6 @@ def save_data(data, sha=None):
     return resp
 
 def upload_image_to_site(image_bytes, filename):
-    """Загружает сжатое фото в SITE_REPO/images/ и возвращает публичную ссылку"""
     owner, repo = SITE_REPO.split('/')
     path = f'images/{filename}'
     url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
@@ -123,12 +122,11 @@ def cancel_kb():
 def category_kb():
     """Динамически формирует клавиатуру категорий из настроек"""
     data, _ = get_data()
-    cats = data.get('settings', {}).get('categories', ["tactical", "travel", "running", "diving"])
-    # Группируем по две в строке
+    cats = data.get('settings', {}).get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
     buttons = []
     row = []
     for cat in cats:
-        row.append({"text": cat.capitalize(), "callback_data": f"cat_{cat}"})
+        row.append({"text": cat, "callback_data": f"cat_{cat}"})
         if len(row) == 2:
             buttons.append(row)
             row = []
@@ -224,7 +222,6 @@ def process_update(update):
         handle_csv_import(chat_id, msg['document'])
         return
 
-    # Фото (при добавлении или редактировании)
     if 'photo' in msg or (msg.get('document') and msg['document'].get('mime_type', '').startswith('image/')):
         state = user_states.get(chat_id)
         if state:
@@ -241,7 +238,6 @@ def process_update(update):
     text = msg.get('text', '')
     state = user_states.get(chat_id)
 
-    # Активные состояния
     if state:
         if state.get('action') == 'waiting_text':
             handle_text_step(chat_id, text)
@@ -260,7 +256,6 @@ def process_update(update):
                 send_message(chat_id, '❌ Введите число (например, 10 или -5).')
             return
 
-    # Кнопки меню
     if text == '/start' or text == '🏠 Главное меню':
         send_main_menu(chat_id)
     elif text == '➕ Добавить товар':
@@ -377,12 +372,11 @@ def save_product(chat_id):
     finally:
         if chat_id in user_states: del user_states[chat_id]
 
-# ---------- Редактирование фото (новое) ----------
+# ---------- Редактирование фото ----------
 def handle_edit_field(chat_id, field):
     state = user_states.get(chat_id)
     if not state: return
     if field == 'image':
-        # Переход в режим загрузки фото
         state['action'] = 'edit_product_photo'
         state['edit_photos'] = []
         send_message(chat_id, '📸 Отправьте новое фото (можно несколько). Нажмите <b>✅ Завершить</b>, когда закончите.', edit_photo_step_kb())
@@ -439,14 +433,10 @@ def confirm_edit_photo(chat_id):
     if not photos:
         send_message(chat_id, '❌ Нужно хотя бы одно фото.')
         return
-    # Применяем как изменение поля image
     image_value = photos if len(photos) > 1 else photos[0]
-    # Восстанавливаем состояние редактирования
     state['action'] = 'edit_product'
     state['edit_field'] = 'image'
-    # Вызываем стандартное сохранение редактирования
     save_edit(chat_id, image_value)
-    # Удаляем временные данные
     state.pop('edit_photos', None)
 
 # ---------- Список товаров и удаление ----------
@@ -506,7 +496,7 @@ def cancel_action(chat_id):
     if chat_id in user_states: del user_states[chat_id]
     send_message(chat_id, '❌ Отменено', main_reply_kb())
 
-# ---------- Редактирование товара (остальные поля) ----------
+# ---------- Редактирование товара ----------
 def start_edit_product(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
@@ -556,9 +546,6 @@ def save_edit(chat_id, new_value):
         except:
             send_message(chat_id, '❌ Неверная цена.')
             return
-    elif field == 'image':
-        # new_value уже список или строка
-        pass
     elif field == 'discount_percent':
         try:
             new_value = int(new_value)
@@ -677,11 +664,11 @@ def handle_csv_import(chat_id, document):
 # ---------- Массовое изменение цен ----------
 def start_mass_price(chat_id):
     data, _ = get_data()
-    cats = data.get('settings', {}).get('categories', ["tactical", "travel", "running", "diving"])
+    cats = data.get('settings', {}).get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
     buttons = [[{"text": "Все товары", "callback_data": "massprice_all"}]]
     row = []
     for cat in cats:
-        row.append({"text": cat.capitalize(), "callback_data": f"massprice_{cat}"})
+        row.append({"text": cat, "callback_data": f"massprice_{cat}"})
         if len(row) == 2:
             buttons.append(row)
             row = []
@@ -719,7 +706,7 @@ def apply_mass_price(chat_id, percent):
 # ---------- Управление категориями ----------
 def manage_categories(chat_id):
     data, _ = get_data()
-    cats = data.get('settings', {}).get('categories', ["tactical", "travel", "running", "diving"])
+    cats = data.get('settings', {}).get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
     text = "🗂 <b>Текущие категории:</b>\n" + "\n".join([f"• {c}" for c in cats])
     keyboard = [
         [{"text": "➕ Добавить", "callback_data": "add_category"}],
@@ -730,13 +717,16 @@ def manage_categories(chat_id):
 
 def add_category_prompt(chat_id):
     user_states[chat_id] = {'action': 'add_category'}
-    send_message(chat_id, '🗂 Введите название категории (латиницей, без пробелов):', cancel_kb())
+    send_message(chat_id, '🗂 Введите название новой категории (можно на русском, с пробелами):', cancel_kb())
 
 def save_new_category(chat_id, name):
-    name = name.strip().lower()
+    name = name.strip()
+    if not name:
+        send_message(chat_id, '❌ Название не может быть пустым.')
+        return
     data, sha = get_data()
     if not data: return
-    cats = data.setdefault('settings', {}).setdefault('categories', ["tactical", "travel", "running", "diving"])
+    cats = data.setdefault('settings', {}).setdefault('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
     if name in cats:
         send_message(chat_id, '❌ Такая категория уже есть.')
     else:
