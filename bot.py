@@ -179,7 +179,12 @@ def process_update(update):
         elif data.startswith('cat_'): set_category(chat_id, data.replace('cat_', ''))
         elif data == 'confirm_product': save_product(chat_id)
         elif data == 'confirm_edit_photo': confirm_edit_photo(chat_id)
-        elif data.startswith('delete_'): delete_product(chat_id, int(data.replace('delete_', '')))
+        elif data.startswith('delete_confirm_'):
+            pid = int(data.replace('delete_confirm_', ''))
+            delete_product(chat_id, pid)
+        elif data.startswith('delete_'):
+            pid = int(data.replace('delete_', ''))
+            confirm_delete_product(chat_id, pid)
         elif data == 'edit_ip': start_edit(chat_id, 'ip_info', '📝 Введите информацию об ИП:')
         elif data == 'edit_qr': start_edit(chat_id, 'payment_qr', '📱 Отправьте ссылку на QR-код:')
         elif data == 'edit_link': start_edit(chat_id, 'payment_link', '🔗 Отправьте ссылку для оплаты:')
@@ -204,9 +209,9 @@ def process_update(update):
                 handle_edit_field(chat_id, field)
             else:
                 send_message(chat_id, '⚠️ Сессия редактирования устарела. Начните заново.')
-        elif data == 'manage_categories': manage_categories(chat_id)
+        elif data == 'manage_categories': show_categories_list(chat_id)
         elif data == 'add_category': add_category_prompt(chat_id)
-        elif data == 'delete_category': delete_category_prompt(chat_id)
+        elif data == 'delete_category': show_delete_category_menu(chat_id)
         elif data.startswith('delcat_'):
             cat_to_del = data.replace('delcat_', '')
             delete_category(chat_id, cat_to_del)
@@ -269,7 +274,14 @@ def process_update(update):
         send_main_menu(chat_id)
 
 def send_main_menu(chat_id):
-    send_message(chat_id, '🎯 <b>OneMinute — Панель управления</b>', main_reply_kb())
+    data, _ = get_data()
+    if data and data.get('products'):
+        count = len(data['products'])
+        total = sum(p['price'] for p in data['products'])
+        info = f'\n📦 Товаров: {count} | 💰 На сумму: {total:,} ₽'
+    else:
+        info = '\n📦 Товаров пока нет'
+    send_message(chat_id, f'🎯 <b>OneMinute — Панель управления</b>{info}', main_reply_kb())
 
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
@@ -363,7 +375,8 @@ def save_product(chat_id):
         data['products'].append(new_product)
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
-            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.', main_reply_kb())
+            site_url = f'https://{SITE_REPO.split("/")[0]}.github.io/{SITE_REPO.split("/")[1]}/'
+            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.\n<a href="{site_url}">Посмотреть на сайте</a>', main_reply_kb())
         else:
             send_message(chat_id, f'❌ Ошибка сохранения!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     except Exception as e:
@@ -371,7 +384,67 @@ def save_product(chat_id):
     finally:
         if chat_id in user_states: del user_states[chat_id]
 
+# ---------- Удаление товара (с подтверждением) ----------
+def confirm_delete_product(chat_id, pid):
+    product = get_product_by_id(pid)
+    if not product:
+        send_message(chat_id, '❌ Товар не найден')
+        return
+    keyboard = {
+        "inline_keyboard": [
+            [{"text": f"✅ Да, удалить {product['name']}", "callback_data": f"delete_confirm_{pid}"}],
+            [{"text": "❌ Отмена", "callback_data": "list_products"}]
+        ]
+    }
+    send_message(chat_id, f'❓ Удалить товар <b>{product["name"]}</b>? Это действие нельзя отменить.', keyboard)
+
+def delete_product(chat_id, pid):
+    data, sha = get_data()
+    if not data: return
+    product = next((p for p in data['products'] if p['id'] == pid), None)
+    if not product:
+        send_message(chat_id, '❌ Товар не найден')
+        return
+    data['products'] = [p for p in data['products'] if p['id'] != pid]
+    resp = save_data(data, sha)
+    if resp.status_code in [200, 201]:
+        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_reply_kb())
+        show_products(chat_id)
+    else:
+        send_message(chat_id, f'❌ Ошибка удаления!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
+
 # ---------- Редактирование товара ----------
+def start_edit_product(chat_id):
+    data, _ = get_data()
+    if not data or not data.get('products'):
+        send_message(chat_id, '📋 Нет товаров для редактирования.', main_reply_kb())
+        return
+    prods = data['products']
+    keyboard = [[{"text": f"✏️ {p['name']} (ID {p['id']})", "callback_data": f"edit_{p['id']}"}] for p in prods]
+    keyboard.append([{"text": "🔙 Назад", "callback_data": "main_menu"}])
+    send_message(chat_id, '✏️ Выберите товар для редактирования:', {"inline_keyboard": keyboard})
+
+def start_edit_field(chat_id, product_id):
+    product = get_product_by_id(product_id)
+    if not product:
+        send_message(chat_id, '❌ Товар не найден.')
+        return
+    user_states[chat_id] = {'action': 'edit_product', 'product_id': product_id, 'product': product}
+    show_edit_menu(chat_id, product)
+
+def show_edit_menu(chat_id, product):
+    keyboard = [
+        [{"text": "📱 Название", "callback_data": "edit_field_name"}],
+        [{"text": "💰 Цена", "callback_data": "edit_field_price"}],
+        [{"text": "📝 Описание", "callback_data": "edit_field_description"}],
+        [{"text": "🏷 Категория", "callback_data": "edit_field_category"}],
+        [{"text": "🖼 Фото", "callback_data": "edit_field_image"}],
+        [{"text": "🏷 Скидка (%)", "callback_data": "edit_field_discount_percent"}],
+        [{"text": "📅 Окончание скидки", "callback_data": "edit_field_discount_end"}],
+        [{"text": "🔙 Назад", "callback_data": "edit_product"}]
+    ]
+    send_message(chat_id, f'✏️ Редактирование: <b>{product["name"]}</b>\nВыберите поле:', {"inline_keyboard": keyboard})
+
 def handle_edit_field(chat_id, field):
     state = user_states.get(chat_id)
     if not state: return
@@ -438,37 +511,6 @@ def confirm_edit_photo(chat_id):
     save_edit(chat_id, image_value)
     state.pop('edit_photos', None)
 
-def start_edit_product(chat_id):
-    data, _ = get_data()
-    if not data or not data.get('products'):
-        send_message(chat_id, '📋 Нет товаров для редактирования.', main_reply_kb())
-        return
-    prods = data['products']
-    keyboard = [[{"text": f"✏️ {p['name']} (ID {p['id']})", "callback_data": f"edit_{p['id']}"}] for p in prods]
-    keyboard.append([{"text": "🔙 Назад", "callback_data": "main_menu"}])
-    send_message(chat_id, '✏️ Выберите товар для редактирования:', {"inline_keyboard": keyboard})
-
-def start_edit_field(chat_id, product_id):
-    product = get_product_by_id(product_id)
-    if not product:
-        send_message(chat_id, '❌ Товар не найден.')
-        return
-    user_states[chat_id] = {'action': 'edit_product', 'product_id': product_id, 'product': product}
-    show_edit_menu(chat_id, product)
-
-def show_edit_menu(chat_id, product):
-    keyboard = [
-        [{"text": "📱 Название", "callback_data": "edit_field_name"}],
-        [{"text": "💰 Цена", "callback_data": "edit_field_price"}],
-        [{"text": "📝 Описание", "callback_data": "edit_field_description"}],
-        [{"text": "🏷 Категория", "callback_data": "edit_field_category"}],
-        [{"text": "🖼 Фото", "callback_data": "edit_field_image"}],
-        [{"text": "🏷 Скидка (%)", "callback_data": "edit_field_discount_percent"}],
-        [{"text": "📅 Окончание скидки", "callback_data": "edit_field_discount_end"}],
-        [{"text": "🔙 Назад", "callback_data": "edit_product"}]
-    ]
-    send_message(chat_id, f'✏️ Редактирование: <b>{product["name"]}</b>\nВыберите поле:', {"inline_keyboard": keyboard})
-
 def save_edit(chat_id, new_value):
     state = user_states.get(chat_id)
     if not state: return
@@ -515,7 +557,7 @@ def get_product_by_id(pid):
         return next((p for p in data['products'] if p['id'] == pid), None)
     return None
 
-# ---------- Список товаров и удаление ----------
+# ---------- Список товаров ----------
 def show_products(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
@@ -526,21 +568,6 @@ def show_products(chat_id):
     for p in prods:
         text += f"🆔 {p['id']} | {p['name']} | {p['price']:,}₽\n"
     send_message(chat_id, text, products_list_kb(prods))
-
-def delete_product(chat_id, pid):
-    data, sha = get_data()
-    if not data: return
-    product = next((p for p in data['products'] if p['id'] == pid), None)
-    if not product:
-        send_message(chat_id, '❌ Товар не найден')
-        return
-    data['products'] = [p for p in data['products'] if p['id'] != pid]
-    resp = save_data(data, sha)
-    if resp.status_code in [200, 201]:
-        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_reply_kb())
-        show_products(chat_id)
-    else:
-        send_message(chat_id, f'❌ Ошибка удаления!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
 
 # ---------- Настройки ----------
 def show_settings(chat_id):
@@ -701,9 +728,12 @@ def apply_mass_price(chat_id, percent):
         send_message(chat_id, 'ℹ️ Нет товаров в выбранной категории.')
     if chat_id in user_states: del user_states[chat_id]
 
-# ---------- Управление категориями ----------
-def manage_categories(chat_id):
+# ---------- Управление категориями (исправлено) ----------
+def show_categories_list(chat_id):
     data, _ = get_data()
+    if not data:
+        send_message(chat_id, '❌ Ошибка загрузки данных.')
+        return
     cats = data.get('settings', {}).get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
     text = "🗂 <b>Текущие категории:</b>\n" + "\n".join([f"• {c}" for c in cats])
     keyboard = [
@@ -726,26 +756,30 @@ def save_new_category(chat_id, name):
     if not data:
         send_message(chat_id, '❌ Не удалось получить данные.')
         return
-    cats = data.setdefault('settings', {}).setdefault('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
+    if 'settings' not in data:
+        data['settings'] = {}
+    cats = data['settings'].get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
     if name in cats:
         send_message(chat_id, '❌ Такая категория уже есть.')
     else:
         cats.append(name)
+        data['settings']['categories'] = cats
         if save_data(data, sha):
-            send_message(chat_id, f'✅ Категория <b>{name}</b> добавлена!', main_reply_kb())
+            send_message(chat_id, f'✅ Категория <b>{name}</b> добавлена!')
+            show_categories_list(chat_id)
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
     if chat_id in user_states:
         del user_states[chat_id]
 
-def delete_category_prompt(chat_id):
+def show_delete_category_menu(chat_id):
     data, _ = get_data()
     if not data:
-        send_message(chat_id, '❌ Ошибка получения категорий.')
+        send_message(chat_id, '❌ Ошибка загрузки данных.')
         return
     cats = data.get('settings', {}).get('categories', [])
     if not cats:
-        send_message(chat_id, '🗂 Нет категорий для удаления.')
+        send_message(chat_id, '🗂 Нет категорий для удаления.', main_reply_kb())
         return
     keyboard = [[{"text": f"❌ {c}", "callback_data": f"delcat_{c}"}] for c in cats]
     keyboard.append([{"text": "🔙 Назад", "callback_data": "manage_categories"}])
@@ -759,13 +793,14 @@ def delete_category(chat_id, cat_name):
     cats = data.get('settings', {}).get('categories', [])
     if cat_name in cats:
         cats.remove(cat_name)
+        data['settings']['categories'] = cats
         if save_data(data, sha):
-            send_message(chat_id, f'✅ Категория <b>{cat_name}</b> удалена!', main_reply_kb())
+            send_message(chat_id, f'✅ Категория <b>{cat_name}</b> удалена!')
+            show_categories_list(chat_id)
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
     else:
         send_message(chat_id, '❌ Категория не найдена.')
-    manage_categories(chat_id)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
