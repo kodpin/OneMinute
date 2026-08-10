@@ -13,7 +13,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
-DATA_REPO = 'kodpin/OneMinute-data'
+DATA_REPO = 'kodpin/OneMinute-data'        # ← замените kodpin на свой логин при необходимости
 SITE_REPO = os.environ.get('GITHUB_REPOSITORY', 'kodpin/OneMinute')
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(',') if id.strip()]
@@ -120,7 +120,6 @@ def cancel_kb():
     return {"inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]}
 
 def category_kb():
-    """Динамически формирует клавиатуру категорий из настроек"""
     data, _ = get_data()
     cats = data.get('settings', {}).get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
     buttons = []
@@ -372,7 +371,7 @@ def save_product(chat_id):
     finally:
         if chat_id in user_states: del user_states[chat_id]
 
-# ---------- Редактирование фото ----------
+# ---------- Редактирование товара ----------
 def handle_edit_field(chat_id, field):
     state = user_states.get(chat_id)
     if not state: return
@@ -422,7 +421,7 @@ def handle_edit_photo(chat_id, message):
             state.setdefault('edit_photos', []).append(github_url)
             send_message(chat_id, f'✅ Фото добавлено ({len(state["edit_photos"])} шт.).\nОтправьте ещё или нажмите <b>✅ Завершить</b>.', edit_photo_step_kb())
         else:
-            send_message(chat_id, '❌ Не удалось загрузить фото в репозиторий. Проверьте GITHUB_TOKEN или папку images.', edit_photo_step_kb())
+            send_message(chat_id, '❌ Не удалось загрузить фото в репозиторий.', edit_photo_step_kb())
     except Exception as e:
         send_message(chat_id, f'❌ Ошибка обработки фото: {e}')
 
@@ -439,64 +438,6 @@ def confirm_edit_photo(chat_id):
     save_edit(chat_id, image_value)
     state.pop('edit_photos', None)
 
-# ---------- Список товаров и удаление ----------
-def show_products(chat_id):
-    data, _ = get_data()
-    if not data or not data.get('products'):
-        send_message(chat_id, '📋 Товаров пока нет.', main_reply_kb())
-        return
-    prods = data['products']
-    text = f'📋 <b>Товары ({len(prods)}):</b>\n\n'
-    for p in prods:
-        text += f"🆔 {p['id']} | {p['name']} | {p['price']:,}₽\n"
-    send_message(chat_id, text, products_list_kb(prods))
-
-def delete_product(chat_id, pid):
-    data, sha = get_data()
-    if not data: return
-    product = next((p for p in data['products'] if p['id'] == pid), None)
-    if not product:
-        send_message(chat_id, '❌ Товар не найден')
-        return
-    data['products'] = [p for p in data['products'] if p['id'] != pid]
-    resp = save_data(data, sha)
-    if resp.status_code in [200, 201]:
-        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_reply_kb())
-        show_products(chat_id)
-    else:
-        send_message(chat_id, f'❌ Ошибка удаления!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
-
-# ---------- Настройки ----------
-def show_settings(chat_id):
-    data, _ = get_data()
-    s = data.get('settings', {}) if data else {}
-    text = f"⚙️ <b>Настройки</b>\n\n📝 ИП: {s.get('ip_info','-')[:100]}\n📱 QR: {s.get('payment_qr','-')[:50]}\n🔗 Ссылка: {s.get('payment_link','-')[:50]}\n👤 Менеджер: {s.get('manager_telegram','-')[:50]}"
-    send_message(chat_id, text, settings_kb())
-
-def start_edit(chat_id, key, prompt):
-    user_states[chat_id] = {'action': 'waiting_text', 'step': 'edit_setting', 'setting_key': key}
-    send_message(chat_id, prompt, cancel_kb())
-
-def save_setting(chat_id, value):
-    state = user_states.get(chat_id)
-    if not state: return
-    key = state['setting_key']
-    data, sha = get_data()
-    if not data: return
-    if 'settings' not in data: data['settings'] = {}
-    data['settings'][key] = value
-    resp = save_data(data, sha)
-    if resp.status_code in [200, 201]:
-        send_message(chat_id, '✅ Настройка обновлена!', main_reply_kb())
-    else:
-        send_message(chat_id, f'❌ Ошибка сохранения настройки!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
-    if chat_id in user_states: del user_states[chat_id]
-
-def cancel_action(chat_id):
-    if chat_id in user_states: del user_states[chat_id]
-    send_message(chat_id, '❌ Отменено', main_reply_kb())
-
-# ---------- Редактирование товара ----------
 def start_edit_product(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
@@ -573,6 +514,63 @@ def get_product_by_id(pid):
     if data:
         return next((p for p in data['products'] if p['id'] == pid), None)
     return None
+
+# ---------- Список товаров и удаление ----------
+def show_products(chat_id):
+    data, _ = get_data()
+    if not data or not data.get('products'):
+        send_message(chat_id, '📋 Товаров пока нет.', main_reply_kb())
+        return
+    prods = data['products']
+    text = f'📋 <b>Товары ({len(prods)}):</b>\n\n'
+    for p in prods:
+        text += f"🆔 {p['id']} | {p['name']} | {p['price']:,}₽\n"
+    send_message(chat_id, text, products_list_kb(prods))
+
+def delete_product(chat_id, pid):
+    data, sha = get_data()
+    if not data: return
+    product = next((p for p in data['products'] if p['id'] == pid), None)
+    if not product:
+        send_message(chat_id, '❌ Товар не найден')
+        return
+    data['products'] = [p for p in data['products'] if p['id'] != pid]
+    resp = save_data(data, sha)
+    if resp.status_code in [200, 201]:
+        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_reply_kb())
+        show_products(chat_id)
+    else:
+        send_message(chat_id, f'❌ Ошибка удаления!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
+
+# ---------- Настройки ----------
+def show_settings(chat_id):
+    data, _ = get_data()
+    s = data.get('settings', {}) if data else {}
+    text = f"⚙️ <b>Настройки</b>\n\n📝 ИП: {s.get('ip_info','-')[:100]}\n📱 QR: {s.get('payment_qr','-')[:50]}\n🔗 Ссылка: {s.get('payment_link','-')[:50]}\n👤 Менеджер: {s.get('manager_telegram','-')[:50]}"
+    send_message(chat_id, text, settings_kb())
+
+def start_edit(chat_id, key, prompt):
+    user_states[chat_id] = {'action': 'waiting_text', 'step': 'edit_setting', 'setting_key': key}
+    send_message(chat_id, prompt, cancel_kb())
+
+def save_setting(chat_id, value):
+    state = user_states.get(chat_id)
+    if not state: return
+    key = state['setting_key']
+    data, sha = get_data()
+    if not data: return
+    if 'settings' not in data: data['settings'] = {}
+    data['settings'][key] = value
+    resp = save_data(data, sha)
+    if resp.status_code in [200, 201]:
+        send_message(chat_id, '✅ Настройка обновлена!', main_reply_kb())
+    else:
+        send_message(chat_id, f'❌ Ошибка сохранения настройки!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
+    if chat_id in user_states: del user_states[chat_id]
+
+def cancel_action(chat_id):
+    if chat_id in user_states: del user_states[chat_id]
+    send_message(chat_id, '❌ Отменено', main_reply_kb())
 
 # ---------- Экспорт CSV ----------
 def export_csv(chat_id):
@@ -725,7 +723,9 @@ def save_new_category(chat_id, name):
         send_message(chat_id, '❌ Название не может быть пустым.')
         return
     data, sha = get_data()
-    if not data: return
+    if not data:
+        send_message(chat_id, '❌ Не удалось получить данные.')
+        return
     cats = data.setdefault('settings', {}).setdefault('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
     if name in cats:
         send_message(chat_id, '❌ Такая категория уже есть.')
@@ -735,25 +735,36 @@ def save_new_category(chat_id, name):
             send_message(chat_id, f'✅ Категория <b>{name}</b> добавлена!', main_reply_kb())
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
-    del user_states[chat_id]
+    if chat_id in user_states:
+        del user_states[chat_id]
 
 def delete_category_prompt(chat_id):
     data, _ = get_data()
+    if not data:
+        send_message(chat_id, '❌ Ошибка получения категорий.')
+        return
     cats = data.get('settings', {}).get('categories', [])
+    if not cats:
+        send_message(chat_id, '🗂 Нет категорий для удаления.')
+        return
     keyboard = [[{"text": f"❌ {c}", "callback_data": f"delcat_{c}"}] for c in cats]
     keyboard.append([{"text": "🔙 Назад", "callback_data": "manage_categories"}])
     send_message(chat_id, '❌ Выберите категорию для удаления:', {"inline_keyboard": keyboard})
 
 def delete_category(chat_id, cat_name):
     data, sha = get_data()
-    if not data: return
+    if not data:
+        send_message(chat_id, '❌ Ошибка доступа к данным.')
+        return
     cats = data.get('settings', {}).get('categories', [])
     if cat_name in cats:
         cats.remove(cat_name)
         if save_data(data, sha):
             send_message(chat_id, f'✅ Категория <b>{cat_name}</b> удалена!', main_reply_kb())
         else:
-            send_message(chat_id, '❌ Ошибка.')
+            send_message(chat_id, '❌ Ошибка сохранения.')
+    else:
+        send_message(chat_id, '❌ Категория не найдена.')
     manage_categories(chat_id)
 
 @app.route('/webhook', methods=['POST'])
