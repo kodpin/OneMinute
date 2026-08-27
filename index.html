@@ -23,16 +23,16 @@
         .bg-ambient { position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 25% 15%, rgba(0,113,227,0.03) 0%, transparent 50%), radial-gradient(ellipse at 75% 80%, rgba(0,113,227,0.02) 0%, transparent 50%); animation: bgShift 25s ease-in-out infinite; }
         @keyframes bgShift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(1%,-0.5%)} 66%{transform:translate(-0.5%,0.8%)} }
 
-        /* НАВБАР — исправлен фон, чтобы не наезжал на контент */
+        /* НАВБАР */
         .navbar {
             position: fixed; top:0; left:0; right:0; z-index:1000;
-            background: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.75);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: background 0.35s ease, box-shadow 0.35s ease;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         .navbar.scrolled {
-            background: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.92);
             box-shadow: 0 1px 6px rgba(0,0,0,0.06);
         }
         .nav-container { max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center; }
@@ -60,13 +60,12 @@
         .manager-btn { background:var(--green);color:white;border:none;border-radius:24px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all var(--transition);display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(52,199,89,0.2);white-space:nowrap; }
         .manager-btn:hover { background:#30b350;transform:translateY(-1px);box-shadow:0 4px 16px rgba(52,199,89,0.3); }
 
-        /* Мобильная навигация */
         @media(max-width:768px){
             .burger-menu{display:flex;}
             .nav-links{
                 position:fixed;top:0;right:-100%;width:78%;max-width:340px;height:100vh;
                 background:rgba(255,255,255,0.97);backdrop-filter:blur(30px);
-                flex-direction:column;padding:100px 28px 40px;gap:20px;
+                flex-direction:column;padding:100px 28px 40px;gap:18px;
                 transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1);
                 box-shadow:-10px 0 60px rgba(0,0,0,0.08);overflow-y:auto;
             }
@@ -117,7 +116,6 @@
             grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
             gap:20px;
         }
-        /* На экранах от 481 до 768 — 2 колонки */
         @media (max-width:768px) and (min-width:481px) {
             .products-grid { grid-template-columns: repeat(2, 1fr); gap:12px; }
             .product-image-wrap { height:180px; }
@@ -127,7 +125,6 @@
             .product-price { font-size:17px; }
             .buy-btn, .cart-btn-sm { font-size:11px; padding:8px 0; }
         }
-        /* На маленьких экранах до 480 — 2 колонки */
         @media (max-width:480px) {
             .section-title { font-size:28px; }
             .products-grid { grid-template-columns: repeat(2, 1fr); gap:8px; }
@@ -159,11 +156,11 @@
         .product-name{font-size:17px;font-weight:700;letter-spacing:-0.2px;margin-bottom:4px;}
         .product-description{color:var(--gray);font-size:12px;line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
         .product-price{font-size:20px;font-weight:800;margin-bottom:12px;}
-        .product-buttons{display:flex;gap:8px;}
-        .buy-btn,.cart-btn-sm{border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;transition:all var(--transition);padding:10px 0;display:flex;align-items:center;justify-content:center;gap:5px;}
-        .buy-btn{background:var(--blue);color:white;flex:1.3;}
-        .buy-btn:hover{background:var(--blue-dark);transform:translateY(-1px);}
-        .cart-btn-sm{background:var(--bg);color:var(--dark);flex:1;border:1px solid transparent;}
+        .product-buttons{display:flex;gap:8px;align-items:stretch;}
+        .buy-btn,.cart-btn-sm{border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;transition:all var(--transition);padding:10px 0;display:flex;align-items:center;justify-content:center;gap:5px;flex:1;}
+        .buy-btn{background:var(--blue);color:white;}
+        .buy-btn:hover{background:var(--blue-dark);}
+        .cart-btn-sm{background:var(--bg);color:var(--dark);border:1px solid transparent;}
         .cart-btn-sm:hover{background:#e0e0e5;border-color:var(--border);}
         .loader{grid-column:1/-1;text-align:center;padding:40px 0;color:var(--gray);}
         .loader i{font-size:28px;display:block;margin-bottom:10px;}
@@ -442,7 +439,6 @@
 
         function buildCategoryFilters() {
             const cats = SETTINGS.categories || ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"];
-            // Фильтр-чипсы
             const chipsContainer = document.getElementById('filterChips');
             chipsContainer.innerHTML = '';
             const allChip = document.createElement('button');
@@ -458,9 +454,13 @@
                 chipsContainer.appendChild(chip);
             });
 
-            // Бургер-меню категорий
             const navCats = document.getElementById('navCategories');
             navCats.innerHTML = '';
+            const aAll = document.createElement('a');
+            aAll.className = 'nav-cat-link';
+            aAll.setAttribute('onclick', "applyFilterAndClose('all')");
+            aAll.textContent = 'Все часы';
+            navCats.appendChild(aAll);
             cats.forEach(cat => {
                 const a = document.createElement('a');
                 a.className = 'nav-cat-link';
@@ -468,12 +468,6 @@
                 a.textContent = cat;
                 navCats.appendChild(a);
             });
-            // добавить "Все часы"
-            const aAll = document.createElement('a');
-            aAll.className = 'nav-cat-link';
-            aAll.setAttribute('onclick', "applyFilterAndClose('all')");
-            aAll.textContent = 'Все часы';
-            navCats.prepend(aAll);
         }
 
         function getFilteredProducts() {
@@ -522,14 +516,14 @@
 
                 const imageUrl = Array.isArray(p.image) ? p.image[0] : p.image;
                 return `<div class="product-card" style="animation-delay:${(loadedCount+i)*0.03}s" onclick="openProductModal(${p.id})">
-                    <div class="product-image-wrap"><img src="${imageUrl}" alt="${p.name}" class="product-image" loading="lazy"><span class="product-badge">${catName(p.category)}</span></div>
+                    <div class="product-image-wrap"><img src="${imageUrl}" alt="${p.name}" class="product-image" loading="lazy"><span class="product-badge">${p.category || ''}</span></div>
                     <div class="product-info">
                         <h3 class="product-name">${p.name}</h3>
                         <p class="product-description">${p.description}</p>
                         <div class="price-block">${priceHTML}</div>
                         <div class="product-buttons">
                             <button class="buy-btn" onclick="event.stopPropagation();buyNow(${p.id})"><i class="fa-solid fa-bolt"></i> Купить</button>
-                            <button class="cart-btn-sm" onclick="event.stopPropagation();addToCart(${p.id})"><i class="fa-solid fa-cart-plus"></i></button>
+                            <button class="cart-btn-sm" onclick="event.stopPropagation();addToCart(${p.id})"><i class="fa-solid fa-cart-plus"></i> В корзину</button>
                         </div>
                     </div>
                 </div>`;
@@ -591,7 +585,6 @@
             resetAndRender();
         }
         function fmt(p) { return p.toLocaleString('ru-RU') + ' ₽'; }
-        function catName(c) { return c || 'Без категории'; }
 
         function openProductModal(id) {
             const p = PRODUCTS.find(x => x.id === id);
@@ -811,7 +804,6 @@
                 if (e.target === this) {
                     this.style.display = 'none';
                     document.body.style.overflow = '';
-                    if (this.id === 'paymentModal') document.getElementById('qrContainer').style.display = 'none';
                 }
             });
         });
