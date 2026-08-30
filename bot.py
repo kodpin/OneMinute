@@ -20,15 +20,23 @@ ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(','
 
 user_states = {}
 
-# Категории по умолчанию (если в настройках не указаны)
-DEFAULT_CATEGORIES = ['спорт', 'для жизни', 'тактические']
+# Нужные категории (только эти три)
+ALLOWED_CATEGORIES = ['спорт', 'для жизни', 'тактические']
+
+# Маппинг старых категорий на новые
+CATEGORY_MAP = {
+    'tactical': 'тактические',
+    'travel': 'для жизни',
+    'running': 'спорт',
+    'diving': 'спорт',
+    'run': 'спорт',
+    'Для жизни': 'для жизни',
+    'Спорт': 'спорт'
+}
 
 def get_categories():
-    """Возвращает текущий список категорий из настроек или стандартный"""
-    data, _ = get_data()
-    if data and 'settings' in data and 'categories' in data['settings']:
-        return data['settings']['categories']
-    return DEFAULT_CATEGORIES.copy()
+    """Возвращает текущий список категорий, но всегда только разрешённые"""
+    return ALLOWED_CATEGORIES.copy()
 
 # ---------- Telegram helpers ----------
 def send_message(chat_id, text, reply_markup=None):
@@ -85,8 +93,34 @@ def save_data(data, sha=None):
     resp = requests.put(url, headers=headers, json=payload)
     return resp
 
+def migrate_categories(data):
+    """Приводит категории товаров и settings к разрешённым"""
+    if 'products' in data:
+        for p in data['products']:
+            cat = p.get('category', '')
+            p['category'] = CATEGORY_MAP.get(cat, cat)
+            # Если категория не входит в разрешённый список, ставим 'спорт'
+            if p['category'] not in ALLOWED_CATEGORIES:
+                p['category'] = 'спорт'
+    if 'settings' in data:
+        data['settings']['categories'] = ALLOWED_CATEGORIES.copy()
+    else:
+        data['settings'] = {'categories': ALLOWED_CATEGORIES.copy()}
+    return data
+
+def ensure_categories_migrated():
+    """Проверяет и обновляет данные при старте"""
+    data, sha = get_data()
+    if data:
+        updated = migrate_categories(data)
+        # Если данные изменились, сохраняем
+        if updated != data:
+            save_data(updated, sha)
+
+# Вызываем миграцию при старте
+ensure_categories_migrated()
+
 def upload_image_to_site(image_bytes, filename):
-    """Загружает сжатое фото в SITE_REPO/images/ и возвращает публичную ссылку"""
     owner, repo = SITE_REPO.split('/')
     path = f'images/{filename}'
     url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
@@ -147,7 +181,6 @@ def category_kb():
     buttons = []
     row = []
     for idx, cat in enumerate(cats):
-        # используем индекс в callback_data, чтобы избежать проблем с кириллицей
         row.append({"text": cat, "callback_data": f"cat_{idx}"})
         if len(row) == 2:
             buttons.append(row)
@@ -223,7 +256,6 @@ def process_update(update):
         elif data == 'import_csv': prompt_import(chat_id)
         elif data == 'mass_price': start_mass_price(chat_id)
         elif data.startswith('massprice_'):
-            # массовое изменение цен, выбираем категорию по индексу или "all"
             part = data.replace('massprice_', '')
             if part == 'all':
                 ask_mass_price_percent(chat_id, 'all')
@@ -246,16 +278,14 @@ def process_update(update):
                 if 0 <= idx < len(cats):
                     ask_mass_discount_percent(chat_id, cats[idx])
         elif data.startswith('massdiscpct_'):
-            # обрабатываем части: massdiscpct_<idx>_<percent>
             parts = data.replace('massdiscpct_', '').split('_')
             if len(parts) == 2:
-                idx_str, pct_str = parts
-                idx = int(idx_str)
-                pct = int(pct_str)
+                idx = int(parts[0])
+                pct = int(parts[1])
                 cats = get_categories()
                 if 0 <= idx < len(cats):
                     ask_mass_discount_end(chat_id, cats[idx], pct)
-                elif idx == -1:  # для "all" используем -1
+                elif idx == -1:
                     ask_mass_discount_end(chat_id, 'all', pct)
         elif data == 'edit_product': start_edit_product(chat_id)
         elif data.startswith('edit_') and data[5:].isdigit():
@@ -285,12 +315,10 @@ def process_update(update):
     chat_id = msg['chat']['id']
     if chat_id not in ADMIN_IDS: return
 
-    # Импорт CSV
     if 'document' in msg and not msg['document'].get('mime_type', '').startswith('image/'):
         handle_csv_import(chat_id, msg['document'])
         return
 
-    # Фото
     if 'photo' in msg or (msg.get('document') and msg['document'].get('mime_type', '').startswith('image/')):
         state = user_states.get(chat_id)
         if state:
@@ -307,7 +335,6 @@ def process_update(update):
     text = msg.get('text', '')
     state = user_states.get(chat_id)
 
-    # Активные состояния
     if state:
         if state.get('action') == 'waiting_text':
             handle_text_step(chat_id, text)
@@ -340,7 +367,6 @@ def process_update(update):
             apply_mass_discount(chat_id, state['mass_discount_category'], state['mass_discount_percent'], discount_end)
             return
 
-    # Кнопки меню
     if text == '/start' or text == '🏠 Главное меню':
         send_main_menu(chat_id)
     elif text == '➕ Добавить товар':
@@ -439,7 +465,7 @@ def save_product(chat_id):
     try:
         data, sha = get_data()
         if data is None:
-            data = {"products": [], "settings": {}}
+            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
             sha = None
         if 'products' not in data: data['products'] = []
         new_id = max([p['id'] for p in data['products']], default=0) + 1
@@ -726,7 +752,7 @@ def handle_csv_import(chat_id, document):
         reader = csv.DictReader(io.StringIO(content))
         data, sha = get_data()
         if data is None:
-            data = {"products": [], "settings": {}}
+            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
             sha = None
         if 'products' not in data: data['products'] = []
         updated = added = 0
@@ -867,17 +893,20 @@ def show_categories_list(chat_id):
 
 def add_category_prompt(chat_id):
     user_states[chat_id] = {'action': 'add_category'}
-    send_message(chat_id, '🗂 Введите название новой категории:', cancel_kb())
+    send_message(chat_id, '🗂 Введите название новой категории (будут разрешены только: спорт, для жизни, тактические):', cancel_kb())
 
 def save_new_category(chat_id, name):
     name = name.strip()
     if not name:
         send_message(chat_id, '❌ Название не может быть пустым.')
         return
+    if name not in ALLOWED_CATEGORIES:
+        send_message(chat_id, f'❌ Разрешены только категории: {", ".join(ALLOWED_CATEGORIES)}')
+        return
     data, sha = get_data()
     if not data: return
     if 'settings' not in data: data['settings'] = {}
-    cats = data['settings'].get('categories', DEFAULT_CATEGORIES.copy())
+    cats = data['settings'].get('categories', ALLOWED_CATEGORIES.copy())
     if name in cats:
         send_message(chat_id, '❌ Такая категория уже есть.')
     else:
@@ -895,7 +924,6 @@ def show_delete_category_menu(chat_id):
     if not cats:
         send_message(chat_id, '🗂 Нет категорий для удаления.', main_reply_kb())
         return
-    # Используем индексы для callback_data
     keyboard = []
     row = []
     for idx, cat in enumerate(cats):
@@ -911,7 +939,7 @@ def show_delete_category_menu(chat_id):
 def delete_category_by_name(chat_id, cat_name):
     data, sha = get_data()
     if not data: return
-    cats = data.get('settings', {}).get('categories', DEFAULT_CATEGORIES.copy())
+    cats = data.get('settings', {}).get('categories', ALLOWED_CATEGORIES.copy())
     if cat_name in cats:
         cats.remove(cat_name)
         data['settings']['categories'] = cats
