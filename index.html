@@ -23,7 +23,13 @@
         .bg-ambient { position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 25% 15%, rgba(0,113,227,0.03) 0%, transparent 50%), radial-gradient(ellipse at 75% 80%, rgba(0,113,227,0.02) 0%, transparent 50%); animation: bgShift 25s ease-in-out infinite; }
         @keyframes bgShift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(1%,-0.5%)} 66%{transform:translate(-0.5%,0.8%)} }
 
-        .navbar { position: fixed; top:0; left:0; right:0; z-index:1000; background: rgba(255,255,255,0.75); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); transition: background 0.3s ease, box-shadow 0.3s ease; }
+        .navbar {
+            position: fixed; top:0; left:0; right:0; z-index:1000;
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
         .navbar.scrolled { background: rgba(255,255,255,0.92); box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
         .nav-container { max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center; }
         .nav-left { display:flex;align-items:center;gap:16px; }
@@ -37,7 +43,13 @@
         .burger-menu.active span:nth-child(2){opacity:0; transform:scaleX(0);}
         .burger-menu.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
         .nav-right { display:flex; align-items:center; gap:12px; }
-        .nav-links { display:flex; flex-direction:column; align-items:flex-start; gap:12px; list-style:none; position: fixed; top:0; right:-100%; width:78%; max-width:340px; height:100vh; background:rgba(255,255,255,0.97); backdrop-filter:blur(30px); padding:100px 28px 40px; transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1); box-shadow:-10px 0 60px rgba(0,0,0,0.08); overflow-y:auto; z-index:1000; }
+        .nav-links {
+            display:flex; flex-direction:column; align-items:flex-start; gap:12px; list-style:none;
+            position: fixed; top:0; right:-100%; width:78%; max-width:340px; height:100vh;
+            background:rgba(255,255,255,0.97); backdrop-filter:blur(30px);
+            padding:100px 28px 40px; transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1);
+            box-shadow:-10px 0 60px rgba(0,0,0,0.08); overflow-y:auto; z-index:1000;
+        }
         .nav-links.active { right:0; }
         .nav-links a, .nav-links .nav-cat-link { text-decoration:none; color:var(--dark); font-size:16px; font-weight:500; transition:color 0.2s; cursor:pointer; display:block; padding:6px 0; }
         .nav-links a:hover, .nav-links .nav-cat-link:hover { color:var(--blue); }
@@ -136,7 +148,7 @@
         .cart-btn-sm { background: var(--bg); color: var(--dark); border: 1px solid transparent; }
         .cart-btn-sm:hover { background: #e0e0e5; border-color: var(--border); }
 
-        /* МОДАЛКИ */
+        /* модальные окна */
         .product-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; background: rgba(0,0,0,0.5); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .product-modal-content { background: var(--white); border-radius: var(--radius-xl); max-width: 500px; width: 94%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.2); animation: modalIn 0.4s ease; }
@@ -408,6 +420,7 @@
         let PRODUCTS = [], SETTINGS = {}, cart = [], currentFilter = 'all', suggestionIndex = -1;
         let lastOrderData = null, selectedFile = null;
         let galleryImages = [], currentSlide = 0;
+        let isDirectBuy = false;
 
         async function loadData() {
             try {
@@ -620,6 +633,7 @@
                 total: p.price,
                 productName: p.name
             };
+            isDirectBuy = true;
             document.getElementById('orderSummary').innerHTML = `Товар: <strong>${p.name}</strong><br>Сумма: <strong>${fmt(p.price)}</strong>`;
             document.getElementById('orderModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
@@ -666,6 +680,7 @@
                 items: [...cart],
                 total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0)
             };
+            isDirectBuy = false;
             document.getElementById('orderSummary').innerHTML = `Сумма заказа: <strong>${fmt(lastOrderData.total)}</strong>`;
             document.getElementById('orderModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
@@ -693,6 +708,17 @@
                 form.reportValidity();
                 return;
             }
+
+            let items = [];
+            let total = 0;
+            if (isDirectBuy && lastOrderData && lastOrderData.items) {
+                items = lastOrderData.items;
+                total = lastOrderData.total;
+            } else {
+                items = cart;
+                total = cart.reduce((s,i) => s + i.product.price * i.quantity, 0);
+            }
+
             lastOrderData = {
                 orderNumber: 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase(),
                 lastName: form.querySelector('input[placeholder="Фамилия"]').value,
@@ -702,8 +728,8 @@
                 email: form.querySelector('input[type="email"]').value || '—',
                 address: form.querySelector('textarea').value,
                 delivery: form.querySelector('select').value,
-                items: cart,
-                total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0),
+                items: items,
+                total: total,
                 date: new Date().toLocaleString('ru-RU')
             };
             submitOrderToBot(lastOrderData);
@@ -717,6 +743,16 @@
                 form.reportValidity();
                 return;
             }
+            let items = [];
+            let total = 0;
+            if (isDirectBuy && lastOrderData && lastOrderData.items) {
+                items = lastOrderData.items;
+                total = lastOrderData.total;
+            } else {
+                items = cart;
+                total = cart.reduce((s,i) => s + i.product.price * i.quantity, 0);
+            }
+
             const orderData = {
                 orderNumber: 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase(),
                 lastName: form.querySelector('input[placeholder="Фамилия"]').value,
@@ -726,8 +762,8 @@
                 email: form.querySelector('input[type="email"]').value || '—',
                 address: form.querySelector('textarea').value,
                 delivery: form.querySelector('select').value,
-                items: cart,
-                total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0),
+                items: items,
+                total: total,
                 date: new Date().toLocaleString('ru-RU')
             };
             submitOrderToBot(orderData).then(success => {
