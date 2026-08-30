@@ -146,8 +146,9 @@ def category_kb():
     cats = get_categories()
     buttons = []
     row = []
-    for cat in cats:
-        row.append({"text": cat, "callback_data": f"cat_{cat}"})
+    for idx, cat in enumerate(cats):
+        # используем индекс в callback_data, чтобы избежать проблем с кириллицей
+        row.append({"text": cat, "callback_data": f"cat_{idx}"})
         if len(row) == 2:
             buttons.append(row)
             row = []
@@ -199,7 +200,13 @@ def process_update(update):
         elif data == 'cancel_add': cancel_action(chat_id)
         elif data == 'list_products': show_products(chat_id)
         elif data == 'settings_menu': show_settings(chat_id)
-        elif data.startswith('cat_'): set_category(chat_id, data.replace('cat_', ''))
+        elif data.startswith('cat_'):
+            idx = int(data.replace('cat_', ''))
+            cats = get_categories()
+            if 0 <= idx < len(cats):
+                set_category(chat_id, cats[idx])
+            else:
+                send_message(chat_id, '❌ Категория не найдена.')
         elif data == 'confirm_product': save_product(chat_id)
         elif data == 'confirm_edit_photo': confirm_edit_photo(chat_id)
         elif data.startswith('delete_confirm_'):
@@ -216,20 +223,40 @@ def process_update(update):
         elif data == 'import_csv': prompt_import(chat_id)
         elif data == 'mass_price': start_mass_price(chat_id)
         elif data.startswith('massprice_'):
-            cat = data.replace('massprice_', '')
-            ask_mass_price_percent(chat_id, cat)
+            # массовое изменение цен, выбираем категорию по индексу или "all"
+            part = data.replace('massprice_', '')
+            if part == 'all':
+                ask_mass_price_percent(chat_id, 'all')
+            else:
+                idx = int(part)
+                cats = get_categories()
+                if 0 <= idx < len(cats):
+                    ask_mass_price_percent(chat_id, cats[idx])
         elif data.startswith('masspct_'):
             pct = float(data.replace('masspct_', ''))
             apply_mass_price(chat_id, pct)
         elif data == 'mass_discount': start_mass_discount(chat_id)
         elif data.startswith('massdiscount_'):
-            cat = data.replace('massdiscount_', '')
-            ask_mass_discount_percent(chat_id, cat)
+            part = data.replace('massdiscount_', '')
+            if part == 'all':
+                ask_mass_discount_percent(chat_id, 'all')
+            else:
+                idx = int(part)
+                cats = get_categories()
+                if 0 <= idx < len(cats):
+                    ask_mass_discount_percent(chat_id, cats[idx])
         elif data.startswith('massdiscpct_'):
+            # обрабатываем части: massdiscpct_<idx>_<percent>
             parts = data.replace('massdiscpct_', '').split('_')
-            cat = parts[0]
-            pct = int(parts[1])
-            ask_mass_discount_end(chat_id, cat, pct)
+            if len(parts) == 2:
+                idx_str, pct_str = parts
+                idx = int(idx_str)
+                pct = int(pct_str)
+                cats = get_categories()
+                if 0 <= idx < len(cats):
+                    ask_mass_discount_end(chat_id, cats[idx], pct)
+                elif idx == -1:  # для "all" используем -1
+                    ask_mass_discount_end(chat_id, 'all', pct)
         elif data == 'edit_product': start_edit_product(chat_id)
         elif data.startswith('edit_') and data[5:].isdigit():
             pid = int(data.split('_')[1])
@@ -245,8 +272,12 @@ def process_update(update):
         elif data == 'add_category': add_category_prompt(chat_id)
         elif data == 'delete_category': show_delete_category_menu(chat_id)
         elif data.startswith('delcat_'):
-            cat_to_del = data.replace('delcat_', '')
-            delete_category(chat_id, cat_to_del)
+            idx = int(data.replace('delcat_', ''))
+            cats = get_categories()
+            if 0 <= idx < len(cats):
+                delete_category_by_name(chat_id, cats[idx])
+            else:
+                send_message(chat_id, '❌ Категория не найдена.')
         return
 
     if 'message' not in update: return
@@ -740,8 +771,8 @@ def start_mass_price(chat_id):
     cats = get_categories()
     buttons = [[{"text": "Все товары", "callback_data": "massprice_all"}]]
     row = []
-    for cat in cats:
-        row.append({"text": cat, "callback_data": f"massprice_{cat}"})
+    for idx, cat in enumerate(cats):
+        row.append({"text": cat, "callback_data": f"massprice_{idx}"})
         if len(row) == 2:
             buttons.append(row)
             row = []
@@ -781,8 +812,8 @@ def start_mass_discount(chat_id):
     cats = get_categories()
     buttons = [[{"text": "Все товары", "callback_data": "massdiscount_all"}]]
     row = []
-    for cat in cats:
-        row.append({"text": cat, "callback_data": f"massdiscount_{cat}"})
+    for idx, cat in enumerate(cats):
+        row.append({"text": cat, "callback_data": f"massdiscount_{idx}"})
         if len(row) == 2:
             buttons.append(row)
             row = []
@@ -864,11 +895,20 @@ def show_delete_category_menu(chat_id):
     if not cats:
         send_message(chat_id, '🗂 Нет категорий для удаления.', main_reply_kb())
         return
-    keyboard = [[{"text": f"❌ {c}", "callback_data": f"delcat_{c}"}] for c in cats]
+    # Используем индексы для callback_data
+    keyboard = []
+    row = []
+    for idx, cat in enumerate(cats):
+        row.append({"text": f"❌ {cat}", "callback_data": f"delcat_{idx}"})
+        if len(row) == 2:
+            keyboard.append(row)
+            row = []
+    if row:
+        keyboard.append(row)
     keyboard.append([{"text": "🔙 Назад", "callback_data": "manage_categories"}])
     send_message(chat_id, '❌ Выберите категорию для удаления:', {"inline_keyboard": keyboard})
 
-def delete_category(chat_id, cat_name):
+def delete_category_by_name(chat_id, cat_name):
     data, sha = get_data()
     if not data: return
     cats = data.get('settings', {}).get('categories', DEFAULT_CATEGORIES.copy())
