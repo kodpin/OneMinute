@@ -24,44 +24,25 @@
         @keyframes bgShift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(1%,-0.5%)} 66%{transform:translate(-0.5%,0.8%)} }
 
         /* НАВБАР */
-        .navbar {
-            position: fixed; top:0; left:0; right:0; z-index:1000;
-            background: rgba(255,255,255,0.75);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-        }
-        .navbar.scrolled {
-            background: rgba(255,255,255,0.92);
-            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-        }
+        .navbar { position: fixed; top:0; left:0; right:0; z-index:1000; background: rgba(255,255,255,0.75); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); transition: background 0.3s ease, box-shadow 0.3s ease; }
+        .navbar.scrolled { background: rgba(255,255,255,0.92); box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
         .nav-container { max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center; }
         .nav-left { display:flex;align-items:center;gap:16px; }
         .logo { font-size:22px;font-weight:900;letter-spacing:-0.8px;cursor:pointer;background:linear-gradient(135deg,var(--dark)0%,#3a3a3c 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;transition:transform 0.2s ease; }
         .logo:hover { transform:scale(1.04); }
         .logo span { background:linear-gradient(135deg,var(--blue)0%,#40a9ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
-
-        /* Бургер-меню виден всегда */
         .burger-menu { display:flex; flex-direction:column; gap:5px; background:none; border:none; cursor:pointer; padding:10px; z-index:1001; border-radius:50%; transition:background 0.2s; }
         .burger-menu:hover { background:rgba(0,0,0,0.04); }
         .burger-menu span { display:block; width:22px; height:2px; background:var(--dark); border-radius:2px; transition:all 0.3s ease; transform-origin:center; }
         .burger-menu.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
         .burger-menu.active span:nth-child(2){opacity:0; transform:scaleX(0);}
         .burger-menu.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
-
         .nav-right { display:flex; align-items:center; gap:12px; }
-        .nav-links {
-            display:flex; flex-direction:column; align-items:flex-start; gap:12px; list-style:none;
-            position: fixed; top:0; right:-100%; width:78%; max-width:340px; height:100vh;
-            background:rgba(255,255,255,0.97); backdrop-filter:blur(30px);
-            padding:100px 28px 40px; transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1);
-            box-shadow:-10px 0 60px rgba(0,0,0,0.08); overflow-y:auto; z-index:1000;
-        }
+        .nav-links { display:flex; flex-direction:column; align-items:flex-start; gap:12px; list-style:none; position: fixed; top:0; right:-100%; width:78%; max-width:340px; height:100vh; background:rgba(255,255,255,0.97); backdrop-filter:blur(30px); padding:100px 28px 40px; transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1); box-shadow:-10px 0 60px rgba(0,0,0,0.08); overflow-y:auto; z-index:1000; }
         .nav-links.active { right:0; }
         .nav-links a, .nav-links .nav-cat-link { text-decoration:none; color:var(--dark); font-size:16px; font-weight:500; transition:color 0.2s; cursor:pointer; display:block; padding:6px 0; }
         .nav-links a:hover, .nav-links .nav-cat-link:hover { color:var(--blue); }
         .nav-section-title { font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--gray); padding-top:8px; margin-bottom:4px; }
-
         .cart-btn { background:var(--bg); border:1px solid rgba(0,0,0,0.04); border-radius:28px; cursor:pointer; color:var(--dark); padding:9px 16px; display:flex; align-items:center; gap:8px; transition:all var(--transition); font-weight:600; font-size:13px; position:relative; white-space:nowrap; }
         .cart-btn:hover { background:var(--blue-light); border-color:rgba(0,113,227,0.15); transform:translateY(-1px); }
         .cart-btn .cart-icon-wrap { position:relative; display:flex; align-items:center; }
@@ -72,38 +53,13 @@
         .manager-btn { background:var(--green); color:white; border:none; border-radius:24px; padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer; transition:all var(--transition); display:flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(52,199,89,0.2); white-space:nowrap; }
         .manager-btn:hover { background:#30b350; transform:translateY(-1px); box-shadow:0 4px 16px rgba(52,199,89,0.3); }
 
-        /* ПЛАВАЮЩАЯ КНОПКА МЕНЕДЖЕРА — теперь видна всегда */
-        .manager-fab {
-            position: fixed; bottom:28px; right:28px; z-index:1500;
-            background: var(--green); color: white; border: none;
-            width: 56px; height: 56px; border-radius: 50%;
-            font-size: 20px; cursor: pointer;
-            box-shadow: 0 8px 28px rgba(52,199,89,0.4);
-            transition: all 0.3s ease;
-            display: flex; align-items: center; justify-content: center;
-        }
+        /* ПЛАВАЮЩИЕ КНОПКИ */
+        .manager-fab { position: fixed; bottom:28px; right:28px; z-index:1500; background: var(--green); color: white; border: none; width: 56px; height: 56px; border-radius: 50%; font-size: 20px; cursor: pointer; box-shadow: 0 8px 28px rgba(52,199,89,0.4); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
         .manager-fab:hover { transform: scale(1.08); background: #30b350; }
-
-        /* ПЛАВАЮЩАЯ КОРЗИНА */
-        .floating-cart {
-            position: fixed; bottom:28px; left:28px; z-index:1500;
-            background: var(--dark); color: white; border: none;
-            border-radius: 50%; width: 56px; height: 56px;
-            font-size: 20px; cursor: pointer;
-            box-shadow: 0 8px 28px rgba(0,0,0,0.3);
-            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
-            display: flex; align-items: center; justify-content: center;
-            transform: scale(0); opacity: 0;
-        }
+        .floating-cart { position: fixed; bottom:28px; left:28px; z-index:1500; background: var(--dark); color: white; border: none; border-radius: 50%; width: 56px; height: 56px; font-size: 20px; cursor: pointer; box-shadow: 0 8px 28px rgba(0,0,0,0.3); transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1); display: flex; align-items: center; justify-content: center; transform: scale(0); opacity: 0; }
         .floating-cart.visible { transform: scale(1); opacity: 1; }
         .floating-cart:hover { transform: scale(1.08); background: #333; }
-        .floating-cart .float-cart-count {
-            position: absolute; top:-4px; right:-4px;
-            background: var(--blue); color: white; border-radius: 50%;
-            min-width: 20px; height: 20px; font-size: 10px; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
-            border: 2px solid var(--dark);
-        }
+        .floating-cart .float-cart-count { position: absolute; top:-4px; right:-4px; background: var(--blue); color: white; border-radius: 50%; min-width: 20px; height: 20px; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--dark); }
 
         /* КАТАЛОГ */
         .catalog { padding: 100px 20px 40px; max-width: 1280px; margin: 0 auto; }
@@ -163,13 +119,7 @@
         .no-results i { font-size: 36px; margin-bottom: 14px; display: block; color: var(--gray-light); }
 
         /* КАРТОЧКА ТОВАРА */
-        .product-card {
-            background: var(--white); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer;
-            box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.03);
-            transition: all 0.35s ease; animation: cardIn 0.5s ease forwards;
-            opacity: 0; transform: translateY(20px);
-            display: flex; flex-direction: column;
-        }
+        .product-card { background: var(--white); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.03); transition: all 0.35s ease; animation: cardIn 0.5s ease forwards; opacity: 0; transform: translateY(20px); display: flex; flex-direction: column; }
         @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
         .product-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
         .product-card:active { transform: scale(0.97); transition: 0.12s ease; }
@@ -185,10 +135,7 @@
         .old-price { font-size: 14px; color: var(--gray); text-decoration: line-through; }
         .discount-badge { background: var(--red); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
         .product-buttons { display: flex; gap: 8px; align-items: stretch; }
-        .buy-btn, .cart-btn-sm {
-            border: none; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer;
-            transition: all var(--transition); padding: 10px 0; display: flex; align-items: center; justify-content: center; gap: 5px; flex: 1;
-        }
+        .buy-btn, .cart-btn-sm { border: none; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); padding: 10px 0; display: flex; align-items: center; justify-content: center; gap: 5px; flex: 1; }
         .buy-btn { background: var(--blue); color: white; }
         .buy-btn:hover { background: var(--blue-dark); }
         .cart-btn-sm { background: var(--bg); color: var(--dark); border: 1px solid transparent; }
@@ -340,7 +287,7 @@
         <div class="products-grid" id="productsGrid"></div>
     </main>
 
-    <!-- Модальные окна -->
+    <!-- Карточка товара -->
     <div class="product-modal" id="productModal">
         <div class="product-modal-content">
             <button class="product-modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -364,6 +311,7 @@
         </div>
     </div>
 
+    <!-- Корзина -->
     <div class="modal" id="cartModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeCart()"><i class="fa-solid fa-xmark"></i></button>
@@ -375,6 +323,7 @@
         </div>
     </div>
 
+    <!-- Оформление -->
     <div class="modal" id="orderModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeOrder()"><i class="fa-solid fa-xmark"></i></button>
@@ -398,6 +347,7 @@
         </div>
     </div>
 
+    <!-- Оплата -->
     <div class="modal" id="paymentModal">
         <div class="modal-content payment-content">
             <button class="modal-close" onclick="closePayment()"><i class="fa-solid fa-xmark"></i></button>
@@ -424,9 +374,10 @@
         </div>
     </div>
 
+    <!-- Футер -->
     <footer class="footer" id="footer">
         <div class="footer-content">
-            <div class="footer-info" id="ipInfo">Загрузка...</div>
+            <div class="footer-info" id="ipInfo"></div>
             <div class="footer-links">
                 <a href="#catalog">Каталог</a>
                 <a href="#" id="supportLink">Поддержка</a>
@@ -435,20 +386,32 @@
     </footer>
 
     <script>
-        // Данные
+        // Категории для отображения (после нормализации)
+        const DISPLAY_CATEGORIES = ['спорт', 'для жизни', 'тактические'];
+
+        // Нормализация категорий товара: старые ключи к новым
+        function normalizeCategory(cat) {
+            const map = {
+                'tactical': 'тактические',
+                'running': 'спорт',
+                'life': 'для жизни',
+                'спорт': 'спорт',
+                'для жизни': 'для жизни',
+                'тактические': 'тактические'
+            };
+            return map[cat] || cat; // если неизвестная категория, оставляем как есть
+        }
+
         let PRODUCTS = [], SETTINGS = {}, cart = [], currentFilter = 'all', suggestionIndex = -1;
         let lastOrderData = null, selectedFile = null;
         let galleryImages = [], currentSlide = 0;
-
-        // Категории жёстко заданы
-        const CATEGORIES = ['спорт', 'для жизни', 'тактические'];
 
         async function loadData() {
             try {
                 const r = await fetch('https://raw.githubusercontent.com/kodpin/OneMinute-data/main/products.json');
                 if (!r.ok) throw new Error('no data');
                 const d = await r.json();
-                PRODUCTS = d.products || [];
+                PRODUCTS = (d.products || []).map(p => ({...p, category: normalizeCategory(p.category)}));
                 SETTINGS = d.settings || {};
                 buildCategoryFilters();
                 renderAllProducts();
@@ -461,7 +424,12 @@
 
         function updateLinks() {
             const l = SETTINGS.manager_telegram || 'https://t.me/manager';
-            document.querySelectorAll('#supportLink').forEach(e => e.href = l);
+            document.getElementById('supportLink').href = l;
+        }
+
+        function updateFooter() {
+            const ip = SETTINGS.ip_info || 'ИП Иванов Иван Иванович\nИНН: 1234567890\nг. Москва, ул. Часовая, 1';
+            document.getElementById('ipInfo').textContent = ip;
         }
 
         function buildCategoryFilters() {
@@ -472,7 +440,7 @@
             allChip.setAttribute('onclick', "setFilter('all', this)");
             allChip.textContent = 'Все часы';
             chipsContainer.appendChild(allChip);
-            CATEGORIES.forEach(cat => {
+            DISPLAY_CATEGORIES.forEach(cat => {
                 const chip = document.createElement('button');
                 chip.className = 'filter-chip';
                 chip.setAttribute('onclick', `setFilter('${cat}', this)`);
@@ -487,7 +455,7 @@
             aAll.setAttribute('onclick', "applyFilterAndClose('all')");
             aAll.textContent = 'Все часы';
             navCats.appendChild(aAll);
-            CATEGORIES.forEach(cat => {
+            DISPLAY_CATEGORIES.forEach(cat => {
                 const a = document.createElement('a');
                 a.className = 'nav-cat-link';
                 a.setAttribute('onclick', `applyFilterAndClose('${cat}')`);
@@ -499,7 +467,9 @@
         function getFilteredProducts() {
             const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
             let f = PRODUCTS;
-            if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter);
+            if (currentFilter !== 'all') {
+                f = f.filter(p => p.category === currentFilter);
+            }
             if (q) f = f.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
             return f;
         }
@@ -792,7 +762,6 @@
             window.location.href = `thankyou.html?order=${orderParam}${receiptParam}`;
         }
         function contactManager() { window.open(SETTINGS.manager_telegram || 'https://t.me/manager', '_blank'); }
-        function updateFooter() { document.getElementById('ipInfo').textContent = SETTINGS.ip_info || 'Информация не указана'; }
 
         const burgerBtn = document.getElementById('burgerBtn'),
               navLinks = document.getElementById('navLinks'),
