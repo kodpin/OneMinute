@@ -23,14 +23,7 @@
         .bg-ambient { position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 25% 15%, rgba(0,113,227,0.03) 0%, transparent 50%), radial-gradient(ellipse at 75% 80%, rgba(0,113,227,0.02) 0%, transparent 50%); animation: bgShift 25s ease-in-out infinite; }
         @keyframes bgShift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(1%,-0.5%)} 66%{transform:translate(-0.5%,0.8%)} }
 
-        /* НАВБАР */
-        .navbar {
-            position: fixed; top:0; left:0; right:0; z-index:1000;
-            background: rgba(255,255,255,0.75);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-        }
+        .navbar { position: fixed; top:0; left:0; right:0; z-index:1000; background: rgba(255,255,255,0.75); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); transition: background 0.3s ease, box-shadow 0.3s ease; }
         .navbar.scrolled { background: rgba(255,255,255,0.92); box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
         .nav-container { max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center; }
         .nav-left { display:flex;align-items:center;gap:16px; }
@@ -44,13 +37,7 @@
         .burger-menu.active span:nth-child(2){opacity:0; transform:scaleX(0);}
         .burger-menu.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
         .nav-right { display:flex; align-items:center; gap:12px; }
-        .nav-links {
-            display:flex; flex-direction:column; align-items:flex-start; gap:12px; list-style:none;
-            position: fixed; top:0; right:-100%; width:78%; max-width:340px; height:100vh;
-            background:rgba(255,255,255,0.97); backdrop-filter:blur(30px);
-            padding:100px 28px 40px; transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1);
-            box-shadow:-10px 0 60px rgba(0,0,0,0.08); overflow-y:auto; z-index:1000;
-        }
+        .nav-links { display:flex; flex-direction:column; align-items:flex-start; gap:12px; list-style:none; position: fixed; top:0; right:-100%; width:78%; max-width:340px; height:100vh; background:rgba(255,255,255,0.97); backdrop-filter:blur(30px); padding:100px 28px 40px; transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1); box-shadow:-10px 0 60px rgba(0,0,0,0.08); overflow-y:auto; z-index:1000; }
         .nav-links.active { right:0; }
         .nav-links a, .nav-links .nav-cat-link { text-decoration:none; color:var(--dark); font-size:16px; font-weight:500; transition:color 0.2s; cursor:pointer; display:block; padding:6px 0; }
         .nav-links a:hover, .nav-links .nav-cat-link:hover { color:var(--blue); }
@@ -65,7 +52,6 @@
         .manager-btn { background:var(--green); color:white; border:none; border-radius:24px; padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer; transition:all var(--transition); display:flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(52,199,89,0.2); white-space:nowrap; }
         .manager-btn:hover { background:#30b350; transform:translateY(-1px); box-shadow:0 4px 16px rgba(52,199,89,0.3); }
 
-        /* ПЛАВАЮЩИЕ КНОПКИ */
         .manager-fab { position: fixed; bottom:28px; right:28px; z-index:1500; background: var(--green); color: white; border: none; width: 56px; height: 56px; border-radius: 50%; font-size: 20px; cursor: pointer; box-shadow: 0 8px 28px rgba(52,199,89,0.4); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
         .manager-fab:hover { transform: scale(1.08); background: #30b350; }
         .floating-cart { position: fixed; bottom:28px; left:28px; z-index:1500; background: var(--dark); color: white; border: none; border-radius: 50%; width: 56px; height: 56px; font-size: 20px; cursor: pointer; box-shadow: 0 8px 28px rgba(0,0,0,0.3); transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1); display: flex; align-items: center; justify-content: center; transform: scale(0); opacity: 0; }
@@ -73,7 +59,6 @@
         .floating-cart:hover { transform: scale(1.08); background: #333; }
         .floating-cart .float-cart-count { position: absolute; top:-4px; right:-4px; background: var(--blue); color: white; border-radius: 50%; min-width: 20px; height: 20px; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--dark); }
 
-        /* КАТАЛОГ */
         .catalog { padding: 100px 20px 40px; max-width: 1280px; margin: 0 auto; }
         .section-title { font-size: 38px; font-weight: 900; letter-spacing: -1px; text-align: center; margin-bottom: 4px; }
         .section-subtitle { text-align: center; color: var(--gray); font-size: 15px; margin-bottom: 32px; }
@@ -100,7 +85,6 @@
         .filter-chip.active { background: var(--dark); color: white; border-color: var(--dark); }
         .results-count { font-size: 12px; color: var(--gray); font-weight: 500; white-space: nowrap; }
 
-        /* СЕТКА ТОВАРОВ */
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         @media (max-width: 768px) and (min-width: 481px) {
             .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -218,52 +202,8 @@
         .form-row { display: flex; gap: 10px; }
         .form-row input, .form-row select { flex: 1; }
 
-        /* СТИЛЬ ДЛЯ ЧЕКБОКСА СОГЛАСИЯ */
-        .consent {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 13px;
-            color: var(--gray);
-            user-select: none;
-        }
-        .consent input[type="checkbox"] {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--gray-light);
-            border-radius: 5px;
-            outline: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            flex-shrink: 0;
-        }
-        .consent input[type="checkbox"]:checked {
-            background-color: var(--blue);
-            border-color: var(--blue);
-        }
-        .consent input[type="checkbox"]:checked::after {
-            content: '\f00c';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            color: white;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 12px;
-        }
-        .consent a {
-            color: var(--blue);
-            text-decoration: underline;
-            cursor: pointer;
-        }
-        .consent a:hover {
-            color: var(--blue-dark);
-        }
+        .consent { font-size: 12px; color: var(--gray); line-height: 1.5; }
+        .consent a { color: var(--blue); text-decoration: underline; cursor: pointer; }
 
         .payment-content { text-align: center; }
         .payment-instruction { text-align: left; background: var(--bg); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; font-size: 13px; color: var(--dark); line-height: 1.8; }
@@ -400,8 +340,7 @@
                 </select>
                 <div class="order-summary" id="orderSummary"></div>
                 <div class="consent">
-                    <input type="checkbox" id="privacyCheck" required>
-                    <label for="privacyCheck">Я согласен с <a href="privacy.html" target="_blank">политикой конфиденциальности</a></label>
+                    Продолжая, вы соглашаетесь с <a href="privacy.html" target="_blank">политикой конфиденциальности</a>
                 </div>
                 <button type="submit" class="submit-btn">Перейти к оплате</button>
                 <button type="button" class="manager-order-btn" onclick="orderViaManager()"><i class="fa-solid fa-headset"></i> Заказать через менеджера</button>
