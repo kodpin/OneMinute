@@ -20,6 +20,16 @@ ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(','
 
 user_states = {}
 
+# Категории по умолчанию (если в настройках не указаны)
+DEFAULT_CATEGORIES = ['спорт', 'для жизни', 'тактические']
+
+def get_categories():
+    """Возвращает текущий список категорий из настроек или стандартный"""
+    data, _ = get_data()
+    if data and 'settings' in data and 'categories' in data['settings']:
+        return data['settings']['categories']
+    return DEFAULT_CATEGORIES.copy()
+
 # ---------- Telegram helpers ----------
 def send_message(chat_id, text, reply_markup=None):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
@@ -76,6 +86,7 @@ def save_data(data, sha=None):
     return resp
 
 def upload_image_to_site(image_bytes, filename):
+    """Загружает сжатое фото в SITE_REPO/images/ и возвращает публичную ссылку"""
     owner, repo = SITE_REPO.split('/')
     path = f'images/{filename}'
     url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
@@ -116,12 +127,23 @@ def main_reply_kb():
         "one_time_keyboard": False
     }
 
+def main_menu_kb():
+    return {"inline_keyboard": [
+        [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
+        [{"text": "📋 Список товаров", "callback_data": "list_products"}],
+        [{"text": "✏️ Редактировать товар", "callback_data": "edit_product"}],
+        [{"text": "📊 Массовое изменение цен", "callback_data": "mass_price"}],
+        [{"text": "🏷 Массовая скидка", "callback_data": "mass_discount"}],
+        [{"text": "📥 Экспорт товаров", "callback_data": "export_csv"}],
+        [{"text": "📤 Импорт товаров", "callback_data": "import_csv"}],
+        [{"text": "⚙️ Настройки", "callback_data": "settings_menu"}]
+    ]}
+
 def cancel_kb():
     return {"inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]}
 
 def category_kb():
-    data, _ = get_data()
-    cats = data.get('settings', {}).get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
+    cats = get_categories()
     buttons = []
     row = []
     for cat in cats:
@@ -171,6 +193,7 @@ def process_update(update):
             answer_callback(cb['id'], 'Нет доступа')
             return
         answer_callback(cb['id'])
+
         if data == 'main_menu': send_main_menu(chat_id)
         elif data == 'add_product': start_add_product(chat_id)
         elif data == 'cancel_add': cancel_action(chat_id)
@@ -198,6 +221,15 @@ def process_update(update):
         elif data.startswith('masspct_'):
             pct = float(data.replace('masspct_', ''))
             apply_mass_price(chat_id, pct)
+        elif data == 'mass_discount': start_mass_discount(chat_id)
+        elif data.startswith('massdiscount_'):
+            cat = data.replace('massdiscount_', '')
+            ask_mass_discount_percent(chat_id, cat)
+        elif data.startswith('massdiscpct_'):
+            parts = data.replace('massdiscpct_', '').split('_')
+            cat = parts[0]
+            pct = int(parts[1])
+            ask_mass_discount_end(chat_id, cat, pct)
         elif data == 'edit_product': start_edit_product(chat_id)
         elif data.startswith('edit_') and data[5:].isdigit():
             pid = int(data.split('_')[1])
@@ -222,10 +254,12 @@ def process_update(update):
     chat_id = msg['chat']['id']
     if chat_id not in ADMIN_IDS: return
 
+    # Импорт CSV
     if 'document' in msg and not msg['document'].get('mime_type', '').startswith('image/'):
         handle_csv_import(chat_id, msg['document'])
         return
 
+    # Фото
     if 'photo' in msg or (msg.get('document') and msg['document'].get('mime_type', '').startswith('image/')):
         state = user_states.get(chat_id)
         if state:
@@ -242,6 +276,7 @@ def process_update(update):
     text = msg.get('text', '')
     state = user_states.get(chat_id)
 
+    # Активные состояния
     if state:
         if state.get('action') == 'waiting_text':
             handle_text_step(chat_id, text)
@@ -259,7 +294,22 @@ def process_update(update):
             except:
                 send_message(chat_id, '❌ Введите число (например, 10 или -5).')
             return
+        elif state.get('action') == 'mass_discount_percent':
+            try:
+                pct = int(text)
+                if 0 <= pct <= 100:
+                    ask_mass_discount_end(chat_id, state['mass_discount_category'], pct)
+                else:
+                    send_message(chat_id, '❌ Процент должен быть от 0 до 100.')
+            except:
+                send_message(chat_id, '❌ Введите целое число от 0 до 100.')
+            return
+        elif state.get('action') == 'mass_discount_end':
+            discount_end = text.strip()
+            apply_mass_discount(chat_id, state['mass_discount_category'], state['mass_discount_percent'], discount_end)
+            return
 
+    # Кнопки меню
     if text == '/start' or text == '🏠 Главное меню':
         send_main_menu(chat_id)
     elif text == '➕ Добавить товар':
@@ -281,7 +331,7 @@ def send_main_menu(chat_id):
         info = f'\n📦 Товаров: {count} | 💰 На сумму: {total:,} ₽'
     else:
         info = '\n📦 Товаров пока нет'
-    send_message(chat_id, f'🎯 <b>OneMinute — Панель управления</b>{info}', main_reply_kb())
+    send_message(chat_id, f'🎯 <b>OneMinute — Панель управления</b>{info}', main_menu_kb())
 
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
@@ -375,8 +425,7 @@ def save_product(chat_id):
         data['products'].append(new_product)
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
-            site_url = f'https://{SITE_REPO.split("/")[0]}.github.io/{SITE_REPO.split("/")[1]}/'
-            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.\n<a href="{site_url}">Посмотреть на сайте</a>', main_reply_kb())
+            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.', main_reply_kb())
         else:
             send_message(chat_id, f'❌ Ошибка сохранения!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     except Exception as e:
@@ -384,18 +433,27 @@ def save_product(chat_id):
     finally:
         if chat_id in user_states: del user_states[chat_id]
 
-# ---------- Удаление товара (с подтверждением) ----------
+# ---------- Список и удаление ----------
+def show_products(chat_id):
+    data, _ = get_data()
+    if not data or not data.get('products'):
+        send_message(chat_id, '📋 Товаров пока нет.', main_reply_kb())
+        return
+    prods = data['products']
+    text = f'📋 <b>Товары ({len(prods)}):</b>\n\n'
+    for p in prods:
+        text += f"🆔 {p['id']} | {p['name']} | {p['price']:,}₽\n"
+    send_message(chat_id, text, products_list_kb(prods))
+
 def confirm_delete_product(chat_id, pid):
     product = get_product_by_id(pid)
     if not product:
         send_message(chat_id, '❌ Товар не найден')
         return
-    keyboard = {
-        "inline_keyboard": [
-            [{"text": f"✅ Да, удалить {product['name']}", "callback_data": f"delete_confirm_{pid}"}],
-            [{"text": "❌ Отмена", "callback_data": "list_products"}]
-        ]
-    }
+    keyboard = {"inline_keyboard": [
+        [{"text": f"✅ Да, удалить {product['name']}", "callback_data": f"delete_confirm_{pid}"}],
+        [{"text": "❌ Отмена", "callback_data": "list_products"}]
+    ]}
     send_message(chat_id, f'❓ Удалить товар <b>{product["name"]}</b>? Это действие нельзя отменить.', keyboard)
 
 def delete_product(chat_id, pid):
@@ -459,7 +517,7 @@ def handle_edit_field(chat_id, field):
         'price': '💰 Введите новую цену (цифры):',
         'description': '📝 Введите новое описание:',
         'discount_percent': '🏷 Введите процент скидки (0-100):',
-        'discount_end': '📅 Введите дату окончания скидки в формате ГГГГ-ММ-ДД (например, 2026-12-31):',
+        'discount_end': '📅 Введите дату окончания скидки в формате ГГГГ-ММ-ДД (или пусто для бессрочной):',
         'category': None
     }
     if field == 'category':
@@ -538,11 +596,14 @@ def save_edit(chat_id, new_value):
             send_message(chat_id, '❌ Процент скидки должен быть числом от 0 до 100.')
             return
     elif field == 'discount_end':
-        try:
-            datetime.strptime(new_value, '%Y-%m-%d')
-        except ValueError:
-            send_message(chat_id, '❌ Неверный формат даты. Используйте ГГГГ-ММ-ДД.')
-            return
+        if new_value.strip() == '':
+            new_value = ''
+        else:
+            try:
+                datetime.strptime(new_value, '%Y-%m-%d')
+            except ValueError:
+                send_message(chat_id, '❌ Неверный формат даты. Используйте ГГГГ-ММ-ДД или оставьте пустым.')
+                return
     product[field] = new_value
     if save_data(data, sha):
         send_message(chat_id, f'✅ Поле <b>{field}</b> обновлено!')
@@ -556,18 +617,6 @@ def get_product_by_id(pid):
     if data:
         return next((p for p in data['products'] if p['id'] == pid), None)
     return None
-
-# ---------- Список товаров ----------
-def show_products(chat_id):
-    data, _ = get_data()
-    if not data or not data.get('products'):
-        send_message(chat_id, '📋 Товаров пока нет.', main_reply_kb())
-        return
-    prods = data['products']
-    text = f'📋 <b>Товары ({len(prods)}):</b>\n\n'
-    for p in prods:
-        text += f"🆔 {p['id']} | {p['name']} | {p['price']:,}₽\n"
-    send_message(chat_id, text, products_list_kb(prods))
 
 # ---------- Настройки ----------
 def show_settings(chat_id):
@@ -688,8 +737,7 @@ def handle_csv_import(chat_id, document):
 
 # ---------- Массовое изменение цен ----------
 def start_mass_price(chat_id):
-    data, _ = get_data()
-    cats = data.get('settings', {}).get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
+    cats = get_categories()
     buttons = [[{"text": "Все товары", "callback_data": "massprice_all"}]]
     row = []
     for cat in cats:
@@ -728,13 +776,56 @@ def apply_mass_price(chat_id, percent):
         send_message(chat_id, 'ℹ️ Нет товаров в выбранной категории.')
     if chat_id in user_states: del user_states[chat_id]
 
-# ---------- Управление категориями (исправлено) ----------
+# ---------- Массовая скидка ----------
+def start_mass_discount(chat_id):
+    cats = get_categories()
+    buttons = [[{"text": "Все товары", "callback_data": "massdiscount_all"}]]
+    row = []
+    for cat in cats:
+        row.append({"text": cat, "callback_data": f"massdiscount_{cat}"})
+        if len(row) == 2:
+            buttons.append(row)
+            row = []
+    if row:
+        buttons.append(row)
+    buttons.append([{"text": "🔙 Отмена", "callback_data": "main_menu"}])
+    send_message(chat_id, '🏷 <b>Выберите категорию</b> для массовой скидки:', {"inline_keyboard": buttons})
+
+def ask_mass_discount_percent(chat_id, category):
+    user_states[chat_id] = {'action': 'mass_discount_percent', 'mass_discount_category': category}
+    send_message(chat_id, '🏷 Введите процент скидки (0-100):', cancel_kb())
+
+def ask_mass_discount_end(chat_id, category, percent):
+    user_states[chat_id].update({
+        'action': 'mass_discount_end',
+        'mass_discount_category': category,
+        'mass_discount_percent': percent
+    })
+    send_message(chat_id, '📅 Введите дату окончания скидки в формате ГГГГ-ММ-ДД (или отправьте "0" для бессрочной):', cancel_kb())
+
+def apply_mass_discount(chat_id, category, percent, discount_end):
+    data, sha = get_data()
+    if not data: return
+    if 'products' not in data: data['products'] = []
+    count = 0
+    for p in data['products']:
+        if category == 'all' or p.get('category') == category:
+            p['discount_percent'] = percent
+            p['discount_end'] = discount_end if discount_end != '0' else ''
+            count += 1
+    if count > 0:
+        if save_data(data, sha):
+            end_text = f' до {discount_end}' if discount_end and discount_end != '0' else ' бессрочно'
+            send_message(chat_id, f'✅ Скидка {percent}% применена к {count} товарам{end_text}.', main_reply_kb())
+        else:
+            send_message(chat_id, '❌ Ошибка сохранения.')
+    else:
+        send_message(chat_id, 'ℹ️ Нет товаров в выбранной категории.')
+    if chat_id in user_states: del user_states[chat_id]
+
+# ---------- Управление категориями ----------
 def show_categories_list(chat_id):
-    data, _ = get_data()
-    if not data:
-        send_message(chat_id, '❌ Ошибка загрузки данных.')
-        return
-    cats = data.get('settings', {}).get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
+    cats = get_categories()
     text = "🗂 <b>Текущие категории:</b>\n" + "\n".join([f"• {c}" for c in cats])
     keyboard = [
         [{"text": "➕ Добавить", "callback_data": "add_category"}],
@@ -745,7 +836,7 @@ def show_categories_list(chat_id):
 
 def add_category_prompt(chat_id):
     user_states[chat_id] = {'action': 'add_category'}
-    send_message(chat_id, '🗂 Введите название новой категории (можно на русском, с пробелами):', cancel_kb())
+    send_message(chat_id, '🗂 Введите название новой категории:', cancel_kb())
 
 def save_new_category(chat_id, name):
     name = name.strip()
@@ -753,12 +844,9 @@ def save_new_category(chat_id, name):
         send_message(chat_id, '❌ Название не может быть пустым.')
         return
     data, sha = get_data()
-    if not data:
-        send_message(chat_id, '❌ Не удалось получить данные.')
-        return
-    if 'settings' not in data:
-        data['settings'] = {}
-    cats = data['settings'].get('categories', ["Тактические", "Для путешествий", "Для бега", "Для дайвинга"])
+    if not data: return
+    if 'settings' not in data: data['settings'] = {}
+    cats = data['settings'].get('categories', DEFAULT_CATEGORIES.copy())
     if name in cats:
         send_message(chat_id, '❌ Такая категория уже есть.')
     else:
@@ -769,15 +857,10 @@ def save_new_category(chat_id, name):
             show_categories_list(chat_id)
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
-    if chat_id in user_states:
-        del user_states[chat_id]
+    if chat_id in user_states: del user_states[chat_id]
 
 def show_delete_category_menu(chat_id):
-    data, _ = get_data()
-    if not data:
-        send_message(chat_id, '❌ Ошибка загрузки данных.')
-        return
-    cats = data.get('settings', {}).get('categories', [])
+    cats = get_categories()
     if not cats:
         send_message(chat_id, '🗂 Нет категорий для удаления.', main_reply_kb())
         return
@@ -787,10 +870,8 @@ def show_delete_category_menu(chat_id):
 
 def delete_category(chat_id, cat_name):
     data, sha = get_data()
-    if not data:
-        send_message(chat_id, '❌ Ошибка доступа к данным.')
-        return
-    cats = data.get('settings', {}).get('categories', [])
+    if not data: return
+    cats = data.get('settings', {}).get('categories', DEFAULT_CATEGORIES.copy())
     if cat_name in cats:
         cats.remove(cat_name)
         data['settings']['categories'] = cats
@@ -801,6 +882,34 @@ def delete_category(chat_id, cat_name):
             send_message(chat_id, '❌ Ошибка сохранения.')
     else:
         send_message(chat_id, '❌ Категория не найдена.')
+
+# ---------- Маршрут для приёма заявок с сайта ----------
+@app.route('/submit-order', methods=['POST'])
+def submit_order():
+    data = request.get_json()
+    if not data:
+        return jsonify({'status': 'error'}), 400
+
+    items_text = "\n".join([f"• {item['product']['name']} ×{item['quantity']} = {item['product']['price'] * item['quantity']:,} ₽" for item in data.get('items', [])])
+    message = f"""
+🆕 *НОВЫЙ ЗАКАЗ* #{data.get('orderNumber', '')}
+
+👤 *Клиент:* {data.get('lastName', '')} {data.get('firstName', '')} {data.get('middleName', '')}
+📞 *Телефон:* {data.get('phone', '')}
+📧 *Email:* {data.get('email', '')}
+📍 *Адрес:* {data.get('address', '')}
+🚚 *Доставка:* {data.get('delivery', '')}
+📅 *Дата:* {data.get('date', '')}
+
+🛒 *Товары:*
+{items_text}
+
+💰 *Итого: {data.get('total', 0):,} ₽*
+    """
+    for admin_id in ADMIN_IDS:
+        send_message(admin_id, message)
+
+    return jsonify({'status': 'ok'})
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
