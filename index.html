@@ -270,6 +270,7 @@
                     <div id="navCategories"></div>
                     <span class="nav-section-title">Меню</span>
                     <a href="#footer">Контакты</a>
+                    <a href="reviews.html">Отзывы</a>
                     <a href="privacy.html" target="_blank">Политика конфиденциальности</a>
                     <button class="manager-btn" onclick="contactManager()"><i class="fa-solid fa-headset"></i> <span>Менеджер</span></button>
                     <button class="cart-btn" onclick="openCart()"><span class="cart-icon-wrap"><i class="fa-solid fa-bag-shopping"></i><span class="cart-count" id="cartCount">0</span></span><span>Корзина</span><span class="cart-amount" id="cartAmount">0 ₽</span></button>
@@ -393,6 +394,7 @@
             <div class="footer-info" id="ipInfo"></div>
             <div class="footer-links">
                 <a href="#catalog">Каталог</a>
+                <a href="reviews.html">Отзывы</a>
                 <a href="privacy.html" target="_blank">Политика конфиденциальности</a>
                 <a href="#" id="supportLink">Поддержка</a>
             </div>
@@ -400,7 +402,7 @@
     </footer>
 
     <script>
-        const DISPLAY_CATEGORIES = ['спорт', 'для жизни', 'тактические'];
+        let categories = [];
         const BOT_SERVER_URL = 'https://oneminute-bot.onrender.com';
 
         function normalizeCategory(cat) {
@@ -429,6 +431,7 @@
                 const d = await r.json();
                 PRODUCTS = (d.products || []).map(p => ({...p, category: normalizeCategory(p.category)}));
                 SETTINGS = d.settings || {};
+                categories = SETTINGS.categories || ['спорт', 'для жизни', 'тактические'];
                 buildCategoryFilters();
                 renderAllProducts();
                 updateFooter();
@@ -456,7 +459,8 @@
             allChip.setAttribute('onclick', "setFilter('all', this)");
             allChip.textContent = 'Все часы';
             chipsContainer.appendChild(allChip);
-            DISPLAY_CATEGORIES.forEach(cat => {
+
+            categories.forEach(cat => {
                 const chip = document.createElement('button');
                 chip.className = 'filter-chip';
                 chip.setAttribute('onclick', `setFilter('${cat}', this)`);
@@ -471,7 +475,7 @@
             aAll.setAttribute('onclick', "applyFilterAndClose('all')");
             aAll.textContent = 'Все часы';
             navCats.appendChild(aAll);
-            DISPLAY_CATEGORIES.forEach(cat => {
+            categories.forEach(cat => {
                 const a = document.createElement('a');
                 a.className = 'nav-cat-link';
                 a.setAttribute('onclick', `applyFilterAndClose('${cat}')`);

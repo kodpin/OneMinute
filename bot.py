@@ -20,10 +20,10 @@ ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(','
 
 user_states = {}
 
-# Нужные категории (только эти три)
-ALLOWED_CATEGORIES = ['спорт', 'для жизни', 'тактические']
+# Начальные категории, если в настройках их нет
+DEFAULT_CATEGORIES = ['спорт', 'для жизни', 'тактические']
 
-# Маппинг старых категорий на новые
+# Маппинг для миграции старых английских категорий
 CATEGORY_MAP = {
     'tactical': 'тактические',
     'travel': 'для жизни',
@@ -31,12 +31,18 @@ CATEGORY_MAP = {
     'diving': 'спорт',
     'run': 'спорт',
     'Для жизни': 'для жизни',
-    'Спорт': 'спорт'
+    'Спорт': 'спорт',
+    'Тактические': 'тактические'
 }
 
 def get_categories():
-    """Возвращает текущий список категорий, но всегда только разрешённые"""
-    return ALLOWED_CATEGORIES.copy()
+    """Возвращает текущий список категорий из настроек или стандартный"""
+    data, _ = get_data()
+    if data and 'settings' in data and 'categories' in data['settings']:
+        cats = data['settings']['categories']
+        # Убираем дубликаты и пустые строки
+        return [c for c in cats if c.strip()]
+    return DEFAULT_CATEGORIES.copy()
 
 # ---------- Telegram helpers ----------
 def send_message(chat_id, text, reply_markup=None):
@@ -94,18 +100,23 @@ def save_data(data, sha=None):
     return resp
 
 def migrate_categories(data):
-    """Приводит категории товаров и settings к разрешённым"""
+    """Приводит старые категории к русским названиям"""
     if 'products' in data:
         for p in data['products']:
             cat = p.get('category', '')
             p['category'] = CATEGORY_MAP.get(cat, cat)
-            # Если категория не входит в разрешённый список, ставим 'спорт'
-            if p['category'] not in ALLOWED_CATEGORIES:
-                p['category'] = 'спорт'
-    if 'settings' in data:
-        data['settings']['categories'] = ALLOWED_CATEGORIES.copy()
+    if 'settings' not in data:
+        data['settings'] = {}
+    if 'categories' not in data['settings']:
+        data['settings']['categories'] = DEFAULT_CATEGORIES.copy()
     else:
-        data['settings'] = {'categories': ALLOWED_CATEGORIES.copy()}
+        # Конвертируем категории в настройках, если нужно
+        cats = []
+        for c in data['settings']['categories']:
+            mapped = CATEGORY_MAP.get(c, c)
+            if mapped not in cats:
+                cats.append(mapped)
+        data['settings']['categories'] = cats
     return data
 
 def ensure_categories_migrated():
@@ -113,7 +124,6 @@ def ensure_categories_migrated():
     data, sha = get_data()
     if data:
         updated = migrate_categories(data)
-        # Если данные изменились, сохраняем
         if updated != data:
             save_data(updated, sha)
 
@@ -465,7 +475,7 @@ def save_product(chat_id):
     try:
         data, sha = get_data()
         if data is None:
-            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
+            data = {"products": [], "settings": {"categories": DEFAULT_CATEGORIES.copy()}}
             sha = None
         if 'products' not in data: data['products'] = []
         new_id = max([p['id'] for p in data['products']], default=0) + 1
@@ -752,7 +762,7 @@ def handle_csv_import(chat_id, document):
         reader = csv.DictReader(io.StringIO(content))
         data, sha = get_data()
         if data is None:
-            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
+            data = {"products": [], "settings": {"categories": DEFAULT_CATEGORIES.copy()}}
             sha = None
         if 'products' not in data: data['products'] = []
         updated = added = 0
@@ -893,20 +903,19 @@ def show_categories_list(chat_id):
 
 def add_category_prompt(chat_id):
     user_states[chat_id] = {'action': 'add_category'}
-    send_message(chat_id, '🗂 Введите название новой категории (будут разрешены только: спорт, для жизни, тактические):', cancel_kb())
+    send_message(chat_id, '🗂 Введите название новой категории (можно на русском):', cancel_kb())
 
 def save_new_category(chat_id, name):
     name = name.strip()
     if not name:
         send_message(chat_id, '❌ Название не может быть пустым.')
         return
-    if name not in ALLOWED_CATEGORIES:
-        send_message(chat_id, f'❌ Разрешены только категории: {", ".join(ALLOWED_CATEGORIES)}')
-        return
     data, sha = get_data()
     if not data: return
     if 'settings' not in data: data['settings'] = {}
-    cats = data['settings'].get('categories', ALLOWED_CATEGORIES.copy())
+    cats = data['settings'].get('categories', DEFAULT_CATEGORIES.copy())
+    # Убираем дубликаты и пустые
+    cats = [c for c in cats if c.strip()]
     if name in cats:
         send_message(chat_id, '❌ Такая категория уже есть.')
     else:
@@ -939,7 +948,9 @@ def show_delete_category_menu(chat_id):
 def delete_category_by_name(chat_id, cat_name):
     data, sha = get_data()
     if not data: return
-    cats = data.get('settings', {}).get('categories', ALLOWED_CATEGORIES.copy())
+    cats = data.get('settings', {}).get('categories', DEFAULT_CATEGORIES.copy())
+    # Убираем пустые
+    cats = [c for c in cats if c.strip()]
     if cat_name in cats:
         cats.remove(cat_name)
         data['settings']['categories'] = cats
