@@ -148,7 +148,7 @@
         .cart-btn-sm { background: var(--bg); color: var(--dark); border: 1px solid transparent; }
         .cart-btn-sm:hover { background: #e0e0e5; border-color: var(--border); }
 
-        /* модальные окна и прочее – идентично предыдущему коду */
+        /* МОДАЛКИ */
         .product-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; background: rgba(0,0,0,0.5); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .product-modal-content { background: var(--white); border-radius: var(--radius-xl); max-width: 500px; width: 94%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.2); animation: modalIn 0.4s ease; }
@@ -213,6 +213,9 @@
         .order-summary { background: var(--bg); padding: 12px 14px; border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; }
         .form-row { display: flex; gap: 10px; }
         .form-row input, .form-row select { flex: 1; }
+        .consent { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray); }
+        .consent input[type="checkbox"] { width: auto; }
+        .consent a { color: var(--blue); text-decoration: underline; cursor: pointer; }
 
         .payment-content { text-align: center; }
         .payment-instruction { text-align: left; background: var(--bg); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; font-size: 13px; color: var(--dark); line-height: 1.8; }
@@ -267,6 +270,7 @@
                     <div id="navCategories"></div>
                     <span class="nav-section-title">Меню</span>
                     <a href="#footer">Контакты</a>
+                    <a href="privacy.html" target="_blank">Политика конфиденциальности</a>
                     <button class="manager-btn" onclick="contactManager()"><i class="fa-solid fa-headset"></i> <span>Менеджер</span></button>
                     <button class="cart-btn" onclick="openCart()"><span class="cart-icon-wrap"><i class="fa-solid fa-bag-shopping"></i><span class="cart-count" id="cartCount">0</span></span><span>Корзина</span><span class="cart-amount" id="cartAmount">0 ₽</span></button>
                 </div>
@@ -293,7 +297,7 @@
         <div class="products-grid" id="productsGrid"></div>
     </main>
 
-    <!-- модалки -->
+    <!-- Карточка товара -->
     <div class="product-modal" id="productModal">
         <div class="product-modal-content">
             <button class="product-modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -317,6 +321,7 @@
         </div>
     </div>
 
+    <!-- Корзина -->
     <div class="modal" id="cartModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeCart()"><i class="fa-solid fa-xmark"></i></button>
@@ -328,6 +333,7 @@
         </div>
     </div>
 
+    <!-- Оформление -->
     <div class="modal" id="orderModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeOrder()"><i class="fa-solid fa-xmark"></i></button>
@@ -345,12 +351,17 @@
                     <option value="Boxberry">Boxberry</option>
                 </select>
                 <div class="order-summary" id="orderSummary"></div>
+                <div class="consent">
+                    <input type="checkbox" id="privacyCheck" required>
+                    <label for="privacyCheck">Я согласен с <a href="privacy.html" target="_blank">политикой конфиденциальности</a></label>
+                </div>
                 <button type="submit" class="submit-btn">Перейти к оплате</button>
-                <button type="button" class="manager-order-btn" onclick="contactManager()"><i class="fa-solid fa-headset"></i> Заказать через менеджера</button>
+                <button type="button" class="manager-order-btn" onclick="orderViaManager()"><i class="fa-solid fa-headset"></i> Заказать через менеджера</button>
             </form>
         </div>
     </div>
 
+    <!-- Оплата -->
     <div class="modal" id="paymentModal">
         <div class="modal-content payment-content">
             <button class="modal-close" onclick="closePayment()"><i class="fa-solid fa-xmark"></i></button>
@@ -382,6 +393,7 @@
             <div class="footer-info" id="ipInfo"></div>
             <div class="footer-links">
                 <a href="#catalog">Каталог</a>
+                <a href="privacy.html" target="_blank">Политика конфиденциальности</a>
                 <a href="#" id="supportLink">Поддержка</a>
             </div>
         </div>
@@ -389,6 +401,7 @@
 
     <script>
         const DISPLAY_CATEGORIES = ['спорт', 'для жизни', 'тактические'];
+        const BOT_SERVER_URL = 'https://oneminute-bot.onrender.com';
 
         function normalizeCategory(cat) {
             if (!cat) return 'без категории';
@@ -469,9 +482,7 @@
         function getFilteredProducts() {
             const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
             let f = PRODUCTS;
-            if (currentFilter !== 'all') {
-                f = f.filter(p => p.category === currentFilter);
-            }
+            if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter);
             if (q) f = f.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
             return f;
         }
@@ -616,7 +627,6 @@
         function buyNow(id) {
             const p = PRODUCTS.find(x => x.id === id);
             if (!p) return;
-            // Сохраняем товар для прямой покупки
             lastOrderData = {
                 items: [{ product: p, quantity: 1 }],
                 total: p.price,
@@ -626,7 +636,6 @@
             document.getElementById('orderModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
         }
-
         function addToCart(id) {
             const p = PRODUCTS.find(x => x.id === id);
             if (!p) return;
@@ -674,24 +683,76 @@
             document.body.style.overflow = 'hidden';
         }
         function closeOrder() { document.getElementById('orderModal').style.display = 'none'; document.body.style.overflow = ''; }
+
+        async function submitOrderToBot(orderData) {
+            try {
+                const response = await fetch(`${BOT_SERVER_URL}/submit-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+                return response.ok;
+            } catch(e) {
+                console.error('Ошибка отправки заявки боту', e);
+                return false;
+            }
+        }
+
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const form = e.target;
-            if (!lastOrderData) {
-                lastOrderData = { items: [], total: 0 };
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
             }
-            lastOrderData.orderNumber = 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase();
-            lastOrderData.lastName = form.querySelector('input[placeholder="Фамилия"]').value;
-            lastOrderData.firstName = form.querySelector('input[placeholder="Имя"]').value;
-            lastOrderData.middleName = form.querySelector('input[placeholder="Отчество (при наличии)"]').value || '—';
-            lastOrderData.phone = form.querySelector('input[type="tel"]').value;
-            lastOrderData.email = form.querySelector('input[type="email"]').value || '—';
-            lastOrderData.address = form.querySelector('textarea').value;
-            lastOrderData.delivery = form.querySelector('select').value;
-            lastOrderData.date = new Date().toLocaleString('ru-RU');
+            lastOrderData = {
+                orderNumber: 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase(),
+                lastName: form.querySelector('input[placeholder="Фамилия"]').value,
+                firstName: form.querySelector('input[placeholder="Имя"]').value,
+                middleName: form.querySelector('input[placeholder="Отчество (при наличии)"]').value || '—',
+                phone: form.querySelector('input[type="tel"]').value,
+                email: form.querySelector('input[type="email"]').value || '—',
+                address: form.querySelector('textarea').value,
+                delivery: form.querySelector('select').value,
+                items: cart,
+                total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0),
+                date: new Date().toLocaleString('ru-RU')
+            };
+            submitOrderToBot(lastOrderData);
             closeOrder();
             openPaymentModal();
         });
+
+        function orderViaManager() {
+            const form = document.getElementById('orderForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            const orderData = {
+                orderNumber: 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase(),
+                lastName: form.querySelector('input[placeholder="Фамилия"]').value,
+                firstName: form.querySelector('input[placeholder="Имя"]').value,
+                middleName: form.querySelector('input[placeholder="Отчество (при наличии)"]').value || '—',
+                phone: form.querySelector('input[type="tel"]').value,
+                email: form.querySelector('input[type="email"]').value || '—',
+                address: form.querySelector('textarea').value,
+                delivery: form.querySelector('select').value,
+                items: cart,
+                total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0),
+                date: new Date().toLocaleString('ru-RU')
+            };
+            submitOrderToBot(orderData).then(success => {
+                if (success) {
+                    showNotification('Заявка отправлена менеджеру');
+                } else {
+                    showNotification('Не удалось отправить заявку, но вы можете связаться с менеджером напрямую');
+                }
+                contactManager();
+            });
+            closeOrder();
+        }
+
         function openPaymentModal() {
             document.getElementById('qrImage').src = SETTINGS.payment_qr || 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg';
             const total = lastOrderData ? lastOrderData.total : 0;
