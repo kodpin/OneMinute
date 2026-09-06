@@ -20,10 +20,10 @@ ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(','
 
 user_states = {}
 
-# Начальные категории, если в настройках их нет
-DEFAULT_CATEGORIES = ['спорт', 'для жизни', 'тактические']
+# Разрешённые категории (только эти три будут использоваться)
+ALLOWED_CATEGORIES = ['спорт', 'для жизни', 'тактические']
 
-# Маппинг для миграции старых английских категорий
+# Маппинг старых категорий на новые русские
 CATEGORY_MAP = {
     'tactical': 'тактические',
     'travel': 'для жизни',
@@ -32,17 +32,82 @@ CATEGORY_MAP = {
     'run': 'спорт',
     'Для жизни': 'для жизни',
     'Спорт': 'спорт',
-    'Тактические': 'тактические'
+    'Тактические': 'тактические',
+    'life': 'для жизни',
+    'sport': 'спорт',
+    'casual': 'для жизни'
 }
 
-def get_categories():
-    """Возвращает текущий список категорий из настроек или стандартный"""
-    data, _ = get_data()
-    if data and 'settings' in data and 'categories' in data['settings']:
-        cats = data['settings']['categories']
-        # Убираем дубликаты и пустые строки
-        return [c for c in cats if c.strip()]
-    return DEFAULT_CATEGORIES.copy()
+def migrate_categories(data):
+    """Нормализует категории товаров и настроек, заменяя старые на русские"""
+    # Нормализуем категории товаров
+    if 'products' in data:
+        for p in data['products']:
+            cat = p.get('category', '')
+            # Применяем маппинг, если есть
+            if cat in CATEGORY_MAP:
+                p['category'] = CATEGORY_MAP[cat]
+            # Если категория не входит в разрешённые, ставим "спорт"
+            elif cat not in ALLOWED_CATEGORIES:
+                p['category'] = 'спорт'
+
+    # Нормализуем список категорий в настройках
+    if 'settings' not in data:
+        data['settings'] = {}
+    if 'categories' not in data['settings']:
+        data['settings']['categories'] = ALLOWED_CATEGORIES.copy()
+    else:
+        # Применяем маппинг к каждой категории, убираем дубликаты и пустые
+        new_cats = []
+        for c in data['settings']['categories']:
+            c = c.strip()
+            if not c:
+                continue
+            c_mapped = CATEGORY_MAP.get(c, c)
+            if c_mapped not in new_cats:
+                new_cats.append(c_mapped)
+        data['settings']['categories'] = new_cats
+    return data
+
+def get_data():
+    """Читает и нормализует данные из GitHub"""
+    owner, repo = DATA_REPO.split('/')
+    url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
+    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 200:
+        data = resp.json()
+        content = base64.b64decode(data['content']).decode('utf-8')
+        parsed = json.loads(content)
+        # Нормализуем категории
+        parsed = migrate_categories(parsed)
+        return parsed, data['sha']
+    return None, None
+
+def save_data(data, sha=None):
+    """Сохраняет нормализованные данные в GitHub"""
+    owner, repo = DATA_REPO.split('/')
+    url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
+    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    content = json.dumps(data, ensure_ascii=False, indent=2)
+    encoded = base64.b64encode(content.encode('utf-8')).decode('utf-8')
+    payload = {'message': 'Update via bot', 'content': encoded}
+    if sha:
+        payload['sha'] = sha
+    resp = requests.put(url, headers=headers, json=payload)
+    return resp
+
+def ensure_categories_migrated():
+    """При запуске проверяет и принудительно сохраняет нормализованные данные"""
+    data, sha = get_data()
+    if data:
+        # Данные уже нормализованы внутри get_data, но сохраним, чтобы файл в репо обновился
+        # Сравним с тем, что могло быть до нормализации, чтобы не делать лишних запросов
+        # Для простоты всегда сохраняем один раз при старте
+        save_data(data, sha)
+
+# Вызываем миграцию при старте
+ensure_categories_migrated()
 
 # ---------- Telegram helpers ----------
 def send_message(chat_id, text, reply_markup=None):
@@ -74,61 +139,6 @@ def answer_callback(callback_id, text=None):
     if text:
         payload['text'] = text
     requests.post(url, json=payload)
-
-# ---------- GitHub API ----------
-def get_data():
-    owner, repo = DATA_REPO.split('/')
-    url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
-    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
-    resp = requests.get(url, headers=headers)
-    if resp.status_code == 200:
-        data = resp.json()
-        content = base64.b64decode(data['content']).decode('utf-8')
-        return json.loads(content), data['sha']
-    return None, None
-
-def save_data(data, sha=None):
-    owner, repo = DATA_REPO.split('/')
-    url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
-    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
-    content = json.dumps(data, ensure_ascii=False, indent=2)
-    encoded = base64.b64encode(content.encode('utf-8')).decode('utf-8')
-    payload = {'message': 'Update via bot', 'content': encoded}
-    if sha:
-        payload['sha'] = sha
-    resp = requests.put(url, headers=headers, json=payload)
-    return resp
-
-def migrate_categories(data):
-    """Приводит старые категории к русским названиям"""
-    if 'products' in data:
-        for p in data['products']:
-            cat = p.get('category', '')
-            p['category'] = CATEGORY_MAP.get(cat, cat)
-    if 'settings' not in data:
-        data['settings'] = {}
-    if 'categories' not in data['settings']:
-        data['settings']['categories'] = DEFAULT_CATEGORIES.copy()
-    else:
-        # Конвертируем категории в настройках, если нужно
-        cats = []
-        for c in data['settings']['categories']:
-            mapped = CATEGORY_MAP.get(c, c)
-            if mapped not in cats:
-                cats.append(mapped)
-        data['settings']['categories'] = cats
-    return data
-
-def ensure_categories_migrated():
-    """Проверяет и обновляет данные при старте"""
-    data, sha = get_data()
-    if data:
-        updated = migrate_categories(data)
-        if updated != data:
-            save_data(updated, sha)
-
-# Вызываем миграцию при старте
-ensure_categories_migrated()
 
 def upload_image_to_site(image_bytes, filename):
     owner, repo = SITE_REPO.split('/')
@@ -185,6 +195,13 @@ def main_menu_kb():
 
 def cancel_kb():
     return {"inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]}
+
+def get_categories():
+    """Возвращает список категорий из настроек (уже нормализованный)"""
+    data, _ = get_data()
+    if data and 'settings' in data and 'categories' in data['settings']:
+        return data['settings']['categories']
+    return ALLOWED_CATEGORIES.copy()
 
 def category_kb():
     cats = get_categories()
@@ -475,7 +492,7 @@ def save_product(chat_id):
     try:
         data, sha = get_data()
         if data is None:
-            data = {"products": [], "settings": {"categories": DEFAULT_CATEGORIES.copy()}}
+            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
             sha = None
         if 'products' not in data: data['products'] = []
         new_id = max([p['id'] for p in data['products']], default=0) + 1
@@ -762,7 +779,7 @@ def handle_csv_import(chat_id, document):
         reader = csv.DictReader(io.StringIO(content))
         data, sha = get_data()
         if data is None:
-            data = {"products": [], "settings": {"categories": DEFAULT_CATEGORIES.copy()}}
+            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
             sha = None
         if 'products' not in data: data['products'] = []
         updated = added = 0
@@ -913,8 +930,7 @@ def save_new_category(chat_id, name):
     data, sha = get_data()
     if not data: return
     if 'settings' not in data: data['settings'] = {}
-    cats = data['settings'].get('categories', DEFAULT_CATEGORIES.copy())
-    # Убираем дубликаты и пустые
+    cats = data['settings'].get('categories', ALLOWED_CATEGORIES.copy())
     cats = [c for c in cats if c.strip()]
     if name in cats:
         send_message(chat_id, '❌ Такая категория уже есть.')
@@ -948,8 +964,7 @@ def show_delete_category_menu(chat_id):
 def delete_category_by_name(chat_id, cat_name):
     data, sha = get_data()
     if not data: return
-    cats = data.get('settings', {}).get('categories', DEFAULT_CATEGORIES.copy())
-    # Убираем пустые
+    cats = data.get('settings', {}).get('categories', ALLOWED_CATEGORIES.copy())
     cats = [c for c in cats if c.strip()]
     if cat_name in cats:
         cats.remove(cat_name)
