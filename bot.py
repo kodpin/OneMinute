@@ -63,16 +63,25 @@ def migrate_categories(data):
 
 def get_data():
     owner, repo = DATA_REPO.split('/')
-    url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
-    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
-    resp = requests.get(url, headers=headers)
+    # Читаем файл напрямую из публичного репозитория без токена
+    url = f'https://raw.githubusercontent.com/{owner}/{repo}/main/products.json'
+    resp = requests.get(url)
     if resp.status_code == 200:
-        data = resp.json()
-        content = base64.b64decode(data['content']).decode('utf-8')
-        parsed = json.loads(content)
-        parsed = migrate_categories(parsed)
-        return parsed, data['sha']
-    return None, None
+        try:
+            parsed = resp.json()
+            parsed = migrate_categories(parsed)
+            # Получаем sha для возможности записи (необязательно для чтения)
+            api_url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
+            headers = {'Authorization': f'token {GITHUB_TOKEN}'} if GITHUB_TOKEN else {}
+            api_resp = requests.get(api_url, headers=headers)
+            sha = api_resp.json().get('sha') if api_resp.status_code == 200 else None
+            return parsed, sha
+        except Exception as e:
+            print(f"Ошибка парсинга: {e}")
+            return None, None
+    else:
+        print(f"Не удалось получить файл, статус: {resp.status_code}")
+        return None, None
 
 def save_data(data, sha=None):
     owner, repo = DATA_REPO.split('/')
@@ -396,9 +405,9 @@ def process_update(update):
         send_main_menu(chat_id)
 
 def send_main_menu(chat_id):
-    data, sha = get_data()
+    data, _ = get_data()
     if data is None:
-        send_message(chat_id, '❌ Не удалось получить данные из GitHub. Проверь GITHUB_TOKEN и доступ к репозиторию.')
+        send_message(chat_id, '❌ Не удалось получить данные из GitHub. Проверь, что репозиторий публичный и файл лежит в ветке main.')
         return
     products = data.get('products', [])
     if products:
@@ -407,9 +416,7 @@ def send_main_menu(chat_id):
         info = f'\n📦 Товаров: {count} | 💰 На сумму: {total:,} ₽'
         send_message(chat_id, f'🎯 <b>OneMinute — Панель управления</b>{info}', main_reply_kb())
     else:
-        # Показываем содержимое data для диагностики
-        debug_info = json.dumps(data, ensure_ascii=False, indent=2)[:500]
-        send_message(chat_id, f'📦 Товаров пока нет\n\nДиагностика:\n<pre>{debug_info}</pre>', main_reply_kb())
+        send_message(chat_id, '📦 Товаров пока нет', main_reply_kb())
 
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
@@ -445,10 +452,8 @@ def handle_category_selection(chat_id, category):
     if not state:
         return
     if state.get('action') == 'edit_product' and state.get('step') == 'edit_category':
-        # Сохраняем выбранную категорию при редактировании
         save_edit(chat_id, category)
     else:
-        # Добавление нового товара
         set_category(chat_id, category)
 
 def set_category(chat_id, category):
@@ -711,7 +716,6 @@ def save_edit(chat_id, new_value):
     if resp.status_code in [200, 201]:
         send_message(chat_id, f'✅ Поле <b>{field}</b> обновлено!')
         show_edit_menu(chat_id, product)
-        # Сбрасываем состояние, чтобы избежать повторных срабатываний
         if chat_id in user_states:
             del user_states[chat_id]
     else:
