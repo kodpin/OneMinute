@@ -396,14 +396,20 @@ def process_update(update):
         send_main_menu(chat_id)
 
 def send_main_menu(chat_id):
-    data, _ = get_data()
-    if data and data.get('products'):
-        count = len(data['products'])
-        total = sum(p['price'] for p in data['products'])
+    data, sha = get_data()
+    if data is None:
+        send_message(chat_id, '❌ Не удалось получить данные из GitHub. Проверь GITHUB_TOKEN и доступ к репозиторию.')
+        return
+    products = data.get('products', [])
+    if products:
+        count = len(products)
+        total = sum(p['price'] for p in products)
         info = f'\n📦 Товаров: {count} | 💰 На сумму: {total:,} ₽'
+        send_message(chat_id, f'🎯 <b>OneMinute — Панель управления</b>{info}', main_reply_kb())
     else:
-        info = '\n📦 Товаров пока нет'
-    send_message(chat_id, f'🎯 <b>OneMinute — Панель управления</b>{info}', main_reply_kb())
+        # Показываем содержимое data для диагностики
+        debug_info = json.dumps(data, ensure_ascii=False, indent=2)[:500]
+        send_message(chat_id, f'📦 Товаров пока нет\n\nДиагностика:\n<pre>{debug_info}</pre>', main_reply_kb())
 
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
