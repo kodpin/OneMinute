@@ -23,13 +23,7 @@
         .bg-ambient { position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 25% 15%, rgba(0,113,227,0.03) 0%, transparent 50%), radial-gradient(ellipse at 75% 80%, rgba(0,113,227,0.02) 0%, transparent 50%); animation: bgShift 25s ease-in-out infinite; }
         @keyframes bgShift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(1%,-0.5%)} 66%{transform:translate(-0.5%,0.8%)} }
 
-        .navbar {
-            position: fixed; top:0; left:0; right:0; z-index:1000;
-            background: rgba(255,255,255,0.75);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-        }
+        .navbar { position: fixed; top:0; left:0; right:0; z-index:1000; background: rgba(255,255,255,0.75); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); transition: background 0.3s ease, box-shadow 0.3s ease; }
         .navbar.scrolled { background: rgba(255,255,255,0.92); box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
         .nav-container { max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center; }
         .nav-left { display:flex;align-items:center;gap:16px; }
@@ -43,13 +37,7 @@
         .burger-menu.active span:nth-child(2){opacity:0; transform:scaleX(0);}
         .burger-menu.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
         .nav-right { display:flex; align-items:center; gap:12px; }
-        .nav-links {
-            display:flex; flex-direction:column; align-items:flex-start; gap:12px; list-style:none;
-            position: fixed; top:0; right:-100%; width:78%; max-width:340px; height:100vh;
-            background:rgba(255,255,255,0.97); backdrop-filter:blur(30px);
-            padding:100px 28px 40px; transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1);
-            box-shadow:-10px 0 60px rgba(0,0,0,0.08); overflow-y:auto; z-index:1000;
-        }
+        .nav-links { display:flex; flex-direction:column; align-items:flex-start; gap:12px; list-style:none; position: fixed; top:0; right:-100%; width:78%; max-width:340px; height:100vh; background:rgba(255,255,255,0.97); backdrop-filter:blur(30px); padding:100px 28px 40px; transition:right 0.5s cubic-bezier(0.25,0.1,0.25,1); box-shadow:-10px 0 60px rgba(0,0,0,0.08); overflow-y:auto; z-index:1000; }
         .nav-links.active { right:0; }
         .nav-links a, .nav-links .nav-cat-link { text-decoration:none; color:var(--dark); font-size:16px; font-weight:500; transition:color 0.2s; cursor:pointer; display:block; padding:6px 0; }
         .nav-links a:hover, .nav-links .nav-cat-link:hover { color:var(--blue); }
@@ -402,7 +390,6 @@
     </footer>
 
     <script>
-        let categories = [];
         const BOT_SERVER_URL = 'https://oneminute-bot.onrender.com';
 
         function normalizeCategory(cat) {
@@ -423,15 +410,23 @@
         let lastOrderData = null, selectedFile = null;
         let galleryImages = [], currentSlide = 0;
         let isDirectBuy = false;
+        let categories = [];
 
         async function loadData() {
             try {
-                const r = await fetch('https://raw.githubusercontent.com/kodpin/OneMinute-data/main/products.json');
+                const r = await fetch('https://raw.githubusercontent.com/kodpin/OneMinute-data/main/products.json', { cache: 'no-store' });
                 if (!r.ok) throw new Error('no data');
                 const d = await r.json();
                 PRODUCTS = (d.products || []).map(p => ({...p, category: normalizeCategory(p.category)}));
                 SETTINGS = d.settings || {};
-                categories = SETTINGS.categories || ['спорт', 'для жизни', 'тактические'];
+                // Динамически загружаем категории, нормализуя каждую
+                if (SETTINGS.categories && Array.isArray(SETTINGS.categories)) {
+                    categories = SETTINGS.categories
+                        .map(c => normalizeCategory(c))
+                        .filter((v, i, a) => a.indexOf(v) === i && v !== 'без категории');
+                } else {
+                    categories = ['спорт', 'для жизни', 'тактические'];
+                }
                 buildCategoryFilters();
                 renderAllProducts();
                 updateFooter();
