@@ -86,45 +86,10 @@ def save_data(data, sha=None):
     resp = requests.put(url, headers=headers, json=payload)
     return resp
 
-def ensure_categories_migrated():
-    data, sha = get_data()
-    if data:
-        # Проверяем, была ли миграция необходима
-        owner, repo = DATA_REPO.split('/')
-        url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
-        headers = {'Authorization': f'token {GITHUB_TOKEN}'}
-        resp = requests.get(url, headers=headers)
-        if resp.status_code == 200:
-            raw_content = base64.b64decode(resp.json()['content']).decode('utf-8')
-            raw_data = json.loads(raw_content)
-            # Сравниваем с мигрированными данными
-            if raw_data != data:
-                save_data(data, sha)
-                print("Categories migrated and saved.")
-            else:
-                print("Categories already up to date.")
-        else:
-            print("Could not fetch raw data for comparison.")
-    else:
-        print("No data to migrate.")
-
-# Вызываем миграцию при старте
-ensure_categories_migrated()
-
 # ---------- Telegram helpers ----------
 def send_message(chat_id, text, reply_markup=None):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
     payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}
-    if reply_markup:
-        payload['reply_markup'] = json.dumps(reply_markup)
-    requests.post(url, json=payload)
-
-def send_photo(chat_id, photo_url, caption=None, reply_markup=None):
-    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto'
-    payload = {'chat_id': chat_id, 'photo': photo_url}
-    if caption:
-        payload['caption'] = caption
-        payload['parse_mode'] = 'HTML'
     if reply_markup:
         payload['reply_markup'] = json.dumps(reply_markup)
     requests.post(url, json=payload)
@@ -172,6 +137,17 @@ def compress_image(image_bytes, max_width=800):
         return image_bytes
 
 # ---------- Клавиатуры ----------
+def main_reply_kb():
+    return {
+        "keyboard": [
+            ["➕ Добавить товар", "📋 Список товаров"],
+            ["✏️ Редактировать товар", "⚙️ Настройки"],
+            ["🏠 Главное меню"]
+        ],
+        "resize_keyboard": True,
+        "one_time_keyboard": False
+    }
+
 def main_menu_kb():
     return {"inline_keyboard": [
         [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
@@ -427,7 +403,7 @@ def send_main_menu(chat_id):
         info = f'\n📦 Товаров: {count} | 💰 На сумму: {total:,} ₽'
     else:
         info = '\n📦 Товаров пока нет'
-    send_message(chat_id, f'🎯 <b>OneMinute — Панель управления</b>{info}', main_menu_kb())
+    send_message(chat_id, f'🎯 <b>OneMinute — Панель управления</b>{info}', main_reply_kb())
 
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
@@ -537,7 +513,7 @@ def save_product(chat_id):
         data['products'].append(new_product)
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
-            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.', main_menu_kb())
+            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.', main_reply_kb())
         else:
             send_message(chat_id, f'❌ Ошибка сохранения!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     except Exception as e:
@@ -550,7 +526,7 @@ def save_product(chat_id):
 def show_products(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
-        send_message(chat_id, '📋 Товаров пока нет.', main_menu_kb())
+        send_message(chat_id, '📋 Товаров пока нет.', main_reply_kb())
         return
     prods = data['products']
     text = f'📋 <b>Товары ({len(prods)}):</b>\n\n'
@@ -580,7 +556,7 @@ def delete_product(chat_id, pid):
     data['products'] = [p for p in data['products'] if p['id'] != pid]
     resp = save_data(data, sha)
     if resp.status_code in [200, 201]:
-        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_menu_kb())
+        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_reply_kb())
         show_products(chat_id)
     else:
         send_message(chat_id, f'❌ Ошибка удаления!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
@@ -589,7 +565,7 @@ def delete_product(chat_id, pid):
 def start_edit_product(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
-        send_message(chat_id, '📋 Нет товаров для редактирования.', main_menu_kb())
+        send_message(chat_id, '📋 Нет товаров для редактирования.', main_reply_kb())
         return
     prods = data['products']
     keyboard = [[{"text": f"✏️ {p['name']} (ID {p['id']})", "callback_data": f"edit_{p['id']}"}] for p in prods]
@@ -766,7 +742,7 @@ def save_setting(chat_id, value):
     data['settings'][key] = value
     resp = save_data(data, sha)
     if resp.status_code in [200, 201]:
-        send_message(chat_id, '✅ Настройка обновлена!', main_menu_kb())
+        send_message(chat_id, '✅ Настройка обновлена!', main_reply_kb())
     else:
         send_message(chat_id, f'❌ Ошибка сохранения настройки!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     if chat_id in user_states:
@@ -775,7 +751,7 @@ def save_setting(chat_id, value):
 def cancel_action(chat_id):
     if chat_id in user_states:
         del user_states[chat_id]
-    send_message(chat_id, '❌ Отменено', main_menu_kb())
+    send_message(chat_id, '❌ Отменено', main_reply_kb())
 
 # ---------- Экспорт CSV ----------
 def export_csv(chat_id):
@@ -905,7 +881,7 @@ def apply_mass_price(chat_id, percent):
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
             word = 'повышены' if percent > 0 else 'понижены'
-            send_message(chat_id, f'✅ Цены {word} на {abs(percent)}% для {count} товаров.', main_menu_kb())
+            send_message(chat_id, f'✅ Цены {word} на {abs(percent)}% для {count} товаров.', main_reply_kb())
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
     else:
@@ -956,7 +932,7 @@ def apply_mass_discount(chat_id, category, percent, discount_end):
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
             end_text = f' до {discount_end}' if discount_end and discount_end != '0' else ' бессрочно'
-            send_message(chat_id, f'✅ Скидка {percent}% применена к {count} товарам{end_text}.', main_menu_kb())
+            send_message(chat_id, f'✅ Скидка {percent}% применена к {count} товарам{end_text}.', main_reply_kb())
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
     else:
@@ -1008,7 +984,7 @@ def save_new_category(chat_id, name):
 def show_delete_category_menu(chat_id):
     cats = get_categories()
     if not cats:
-        send_message(chat_id, '🗂 Нет категорий для удаления.', main_menu_kb())
+        send_message(chat_id, '🗂 Нет категорий для удаления.', main_reply_kb())
         return
     keyboard = []
     row = []
