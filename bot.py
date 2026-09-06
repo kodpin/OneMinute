@@ -13,17 +13,15 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
-DATA_REPO = 'kodpin/OneMinute-data'        # ← замените kodpin на свой логин при необходимости
+DATA_REPO = 'kodpin/OneMinute-data'
 SITE_REPO = os.environ.get('GITHUB_REPOSITORY', 'kodpin/OneMinute')
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(',') if id.strip()]
 
 user_states = {}
 
-# Разрешённые категории (только эти три будут использоваться)
 ALLOWED_CATEGORIES = ['спорт', 'для жизни', 'тактические']
 
-# Маппинг старых категорий на новые русские
 CATEGORY_MAP = {
     'tactical': 'тактические',
     'travel': 'для жизни',
@@ -39,25 +37,19 @@ CATEGORY_MAP = {
 }
 
 def migrate_categories(data):
-    """Нормализует категории товаров и настроек, заменяя старые на русские"""
-    # Нормализуем категории товаров
     if 'products' in data:
         for p in data['products']:
             cat = p.get('category', '')
-            # Применяем маппинг, если есть
             if cat in CATEGORY_MAP:
                 p['category'] = CATEGORY_MAP[cat]
-            # Если категория не входит в разрешённые, ставим "спорт"
             elif cat not in ALLOWED_CATEGORIES:
                 p['category'] = 'спорт'
 
-    # Нормализуем список категорий в настройках
     if 'settings' not in data:
         data['settings'] = {}
     if 'categories' not in data['settings']:
         data['settings']['categories'] = ALLOWED_CATEGORIES.copy()
     else:
-        # Применяем маппинг к каждой категории, убираем дубликаты и пустые
         new_cats = []
         for c in data['settings']['categories']:
             c = c.strip()
@@ -70,7 +62,6 @@ def migrate_categories(data):
     return data
 
 def get_data():
-    """Читает и нормализует данные из GitHub"""
     owner, repo = DATA_REPO.split('/')
     url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
     headers = {'Authorization': f'token {GITHUB_TOKEN}'}
@@ -79,13 +70,11 @@ def get_data():
         data = resp.json()
         content = base64.b64decode(data['content']).decode('utf-8')
         parsed = json.loads(content)
-        # Нормализуем категории
         parsed = migrate_categories(parsed)
         return parsed, data['sha']
     return None, None
 
 def save_data(data, sha=None):
-    """Сохраняет нормализованные данные в GitHub"""
     owner, repo = DATA_REPO.split('/')
     url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
     headers = {'Authorization': f'token {GITHUB_TOKEN}'}
@@ -98,13 +87,26 @@ def save_data(data, sha=None):
     return resp
 
 def ensure_categories_migrated():
-    """При запуске проверяет и принудительно сохраняет нормализованные данные"""
     data, sha = get_data()
     if data:
-        # Данные уже нормализованы внутри get_data, но сохраним, чтобы файл в репо обновился
-        # Сравним с тем, что могло быть до нормализации, чтобы не делать лишних запросов
-        # Для простоты всегда сохраняем один раз при старте
-        save_data(data, sha)
+        # Проверяем, была ли миграция необходима
+        owner, repo = DATA_REPO.split('/')
+        url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
+        headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+        resp = requests.get(url, headers=headers)
+        if resp.status_code == 200:
+            raw_content = base64.b64decode(resp.json()['content']).decode('utf-8')
+            raw_data = json.loads(raw_content)
+            # Сравниваем с мигрированными данными
+            if raw_data != data:
+                save_data(data, sha)
+                print("Categories migrated and saved.")
+            else:
+                print("Categories already up to date.")
+        else:
+            print("Could not fetch raw data for comparison.")
+    else:
+        print("No data to migrate.")
 
 # Вызываем миграцию при старте
 ensure_categories_migrated()
@@ -170,17 +172,6 @@ def compress_image(image_bytes, max_width=800):
         return image_bytes
 
 # ---------- Клавиатуры ----------
-def main_reply_kb():
-    return {
-        "keyboard": [
-            ["➕ Добавить товар", "📋 Список товаров"],
-            ["✏️ Редактировать товар", "⚙️ Настройки"],
-            ["🏠 Главное меню"]
-        ],
-        "resize_keyboard": True,
-        "one_time_keyboard": False
-    }
-
 def main_menu_kb():
     return {"inline_keyboard": [
         [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
@@ -197,7 +188,6 @@ def cancel_kb():
     return {"inline_keyboard": [[{"text": "❌ Отмена", "callback_data": "cancel_add"}]]}
 
 def get_categories():
-    """Возвращает список категорий из настроек (уже нормализованный)"""
     data, _ = get_data()
     if data and 'settings' in data and 'categories' in data['settings']:
         return data['settings']['categories']
@@ -255,33 +245,47 @@ def process_update(update):
             return
         answer_callback(cb['id'])
 
-        if data == 'main_menu': send_main_menu(chat_id)
-        elif data == 'add_product': start_add_product(chat_id)
-        elif data == 'cancel_add': cancel_action(chat_id)
-        elif data == 'list_products': show_products(chat_id)
-        elif data == 'settings_menu': show_settings(chat_id)
+        if data == 'main_menu':
+            send_main_menu(chat_id)
+        elif data == 'add_product':
+            start_add_product(chat_id)
+        elif data == 'cancel_add':
+            cancel_action(chat_id)
+        elif data == 'list_products':
+            show_products(chat_id)
+        elif data == 'settings_menu':
+            show_settings(chat_id)
         elif data.startswith('cat_'):
             idx = int(data.replace('cat_', ''))
             cats = get_categories()
             if 0 <= idx < len(cats):
-                set_category(chat_id, cats[idx])
+                handle_category_selection(chat_id, cats[idx])
             else:
                 send_message(chat_id, '❌ Категория не найдена.')
-        elif data == 'confirm_product': save_product(chat_id)
-        elif data == 'confirm_edit_photo': confirm_edit_photo(chat_id)
+        elif data == 'confirm_product':
+            save_product(chat_id)
+        elif data == 'confirm_edit_photo':
+            confirm_edit_photo(chat_id)
         elif data.startswith('delete_confirm_'):
             pid = int(data.replace('delete_confirm_', ''))
             delete_product(chat_id, pid)
         elif data.startswith('delete_'):
             pid = int(data.replace('delete_', ''))
             confirm_delete_product(chat_id, pid)
-        elif data == 'edit_ip': start_edit(chat_id, 'ip_info', '📝 Введите информацию об ИП:')
-        elif data == 'edit_qr': start_edit(chat_id, 'payment_qr', '📱 Отправьте ссылку на QR-код:')
-        elif data == 'edit_link': start_edit(chat_id, 'payment_link', '🔗 Отправьте ссылку для оплаты:')
-        elif data == 'edit_manager': start_edit(chat_id, 'manager_telegram', '👤 Отправьте ссылку на менеджера:')
-        elif data == 'export_csv': export_csv(chat_id)
-        elif data == 'import_csv': prompt_import(chat_id)
-        elif data == 'mass_price': start_mass_price(chat_id)
+        elif data == 'edit_ip':
+            start_edit(chat_id, 'ip_info', '📝 Введите информацию об ИП:')
+        elif data == 'edit_qr':
+            start_edit(chat_id, 'payment_qr', '📱 Отправьте ссылку на QR-код:')
+        elif data == 'edit_link':
+            start_edit(chat_id, 'payment_link', '🔗 Отправьте ссылку для оплаты:')
+        elif data == 'edit_manager':
+            start_edit(chat_id, 'manager_telegram', '👤 Отправьте ссылку на менеджера:')
+        elif data == 'export_csv':
+            export_csv(chat_id)
+        elif data == 'import_csv':
+            prompt_import(chat_id)
+        elif data == 'mass_price':
+            start_mass_price(chat_id)
         elif data.startswith('massprice_'):
             part = data.replace('massprice_', '')
             if part == 'all':
@@ -294,7 +298,8 @@ def process_update(update):
         elif data.startswith('masspct_'):
             pct = float(data.replace('masspct_', ''))
             apply_mass_price(chat_id, pct)
-        elif data == 'mass_discount': start_mass_discount(chat_id)
+        elif data == 'mass_discount':
+            start_mass_discount(chat_id)
         elif data.startswith('massdiscount_'):
             part = data.replace('massdiscount_', '')
             if part == 'all':
@@ -314,20 +319,25 @@ def process_update(update):
                     ask_mass_discount_end(chat_id, cats[idx], pct)
                 elif idx == -1:
                     ask_mass_discount_end(chat_id, 'all', pct)
-        elif data == 'edit_product': start_edit_product(chat_id)
+        elif data == 'edit_product':
+            start_edit_product(chat_id)
         elif data.startswith('edit_') and data[5:].isdigit():
             pid = int(data.split('_')[1])
             start_edit_field(chat_id, pid)
-        elif data == 'edit_product_back': start_edit_product(chat_id)
+        elif data == 'edit_product_back':
+            start_edit_product(chat_id)
         elif data.startswith('edit_field_'):
             field = data.replace('edit_field_', '')
             if chat_id in user_states and user_states[chat_id].get('action') == 'edit_product':
                 handle_edit_field(chat_id, field)
             else:
                 send_message(chat_id, '⚠️ Сессия редактирования устарела. Начните заново.')
-        elif data == 'manage_categories': show_categories_list(chat_id)
-        elif data == 'add_category': add_category_prompt(chat_id)
-        elif data == 'delete_category': show_delete_category_menu(chat_id)
+        elif data == 'manage_categories':
+            show_categories_list(chat_id)
+        elif data == 'add_category':
+            add_category_prompt(chat_id)
+        elif data == 'delete_category':
+            show_delete_category_menu(chat_id)
         elif data.startswith('delcat_'):
             idx = int(data.replace('delcat_', ''))
             cats = get_categories()
@@ -337,10 +347,12 @@ def process_update(update):
                 send_message(chat_id, '❌ Категория не найдена.')
         return
 
-    if 'message' not in update: return
+    if 'message' not in update:
+        return
     msg = update['message']
     chat_id = msg['chat']['id']
-    if chat_id not in ADMIN_IDS: return
+    if chat_id not in ADMIN_IDS:
+        return
 
     if 'document' in msg and not msg['document'].get('mime_type', '').startswith('image/'):
         handle_csv_import(chat_id, msg['document'])
@@ -424,7 +436,8 @@ def start_add_product(chat_id):
 
 def handle_text_step(chat_id, text):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     step = state['step']
     if step == 'name':
         state['data']['name'] = text
@@ -445,9 +458,21 @@ def handle_text_step(chat_id, text):
     elif step == 'edit_setting':
         save_setting(chat_id, text)
 
+def handle_category_selection(chat_id, category):
+    state = user_states.get(chat_id)
+    if not state:
+        return
+    if state.get('action') == 'edit_product' and state.get('step') == 'edit_category':
+        # Сохраняем выбранную категорию при редактировании
+        save_edit(chat_id, category)
+    else:
+        # Добавление нового товара
+        set_category(chat_id, category)
+
 def set_category(chat_id, category):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     state['data']['category'] = category
     state['step'] = 'photo'
     state['action'] = 'waiting_photo'
@@ -455,7 +480,8 @@ def set_category(chat_id, category):
 
 def handle_photo(chat_id, message):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     try:
         if 'photo' in message:
             file_id = message['photo'][-1]['file_id']
@@ -484,7 +510,8 @@ def handle_photo(chat_id, message):
 
 def save_product(chat_id):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     photos = state.get('photos', [])
     if not photos:
         send_message(chat_id, '❌ Нужно хотя бы одно фото.')
@@ -494,7 +521,8 @@ def save_product(chat_id):
         if data is None:
             data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
             sha = None
-        if 'products' not in data: data['products'] = []
+        if 'products' not in data:
+            data['products'] = []
         new_id = max([p['id'] for p in data['products']], default=0) + 1
         new_product = {
             'id': new_id,
@@ -509,19 +537,20 @@ def save_product(chat_id):
         data['products'].append(new_product)
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
-            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.', main_reply_kb())
+            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.', main_menu_kb())
         else:
             send_message(chat_id, f'❌ Ошибка сохранения!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     except Exception as e:
         send_message(chat_id, f'❌ Ошибка: {e}')
     finally:
-        if chat_id in user_states: del user_states[chat_id]
+        if chat_id in user_states:
+            del user_states[chat_id]
 
 # ---------- Список и удаление ----------
 def show_products(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
-        send_message(chat_id, '📋 Товаров пока нет.', main_reply_kb())
+        send_message(chat_id, '📋 Товаров пока нет.', main_menu_kb())
         return
     prods = data['products']
     text = f'📋 <b>Товары ({len(prods)}):</b>\n\n'
@@ -542,7 +571,8 @@ def confirm_delete_product(chat_id, pid):
 
 def delete_product(chat_id, pid):
     data, sha = get_data()
-    if not data: return
+    if not data:
+        return
     product = next((p for p in data['products'] if p['id'] == pid), None)
     if not product:
         send_message(chat_id, '❌ Товар не найден')
@@ -550,7 +580,7 @@ def delete_product(chat_id, pid):
     data['products'] = [p for p in data['products'] if p['id'] != pid]
     resp = save_data(data, sha)
     if resp.status_code in [200, 201]:
-        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_reply_kb())
+        send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_menu_kb())
         show_products(chat_id)
     else:
         send_message(chat_id, f'❌ Ошибка удаления!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
@@ -559,7 +589,7 @@ def delete_product(chat_id, pid):
 def start_edit_product(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
-        send_message(chat_id, '📋 Нет товаров для редактирования.', main_reply_kb())
+        send_message(chat_id, '📋 Нет товаров для редактирования.', main_menu_kb())
         return
     prods = data['products']
     keyboard = [[{"text": f"✏️ {p['name']} (ID {p['id']})", "callback_data": f"edit_{p['id']}"}] for p in prods]
@@ -589,7 +619,8 @@ def show_edit_menu(chat_id, product):
 
 def handle_edit_field(chat_id, field):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     if field == 'image':
         state['action'] = 'edit_product_photo'
         state['edit_photos'] = []
@@ -613,7 +644,8 @@ def handle_edit_field(chat_id, field):
 
 def handle_edit_photo(chat_id, message):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     try:
         if 'photo' in message:
             file_id = message['photo'][-1]['file_id']
@@ -642,7 +674,8 @@ def handle_edit_photo(chat_id, message):
 
 def confirm_edit_photo(chat_id):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     photos = state.get('edit_photos', [])
     if not photos:
         send_message(chat_id, '❌ Нужно хотя бы одно фото.')
@@ -655,19 +688,22 @@ def confirm_edit_photo(chat_id):
 
 def save_edit(chat_id, new_value):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     pid = state['product_id']
     field = state.get('edit_field')
     if not field:
         send_message(chat_id, '❌ Ошибка: не выбрано поле.')
         return
     data, sha = get_data()
-    if not data: return
+    if not data:
+        return
     product = next((p for p in data['products'] if p['id'] == pid), None)
-    if not product: return
+    if not product:
+        return
     if field == 'price':
         try:
-            new_value = int(new_value.replace(' ', '').replace('₽', ''))
+            new_value = int(new_value.replace(' ', '').replace('₽', '').replace(',', ''))
         except:
             send_message(chat_id, '❌ Неверная цена.')
             return
@@ -689,9 +725,13 @@ def save_edit(chat_id, new_value):
                 send_message(chat_id, '❌ Неверный формат даты. Используйте ГГГГ-ММ-ДД или оставьте пустым.')
                 return
     product[field] = new_value
-    if save_data(data, sha):
+    resp = save_data(data, sha)
+    if resp.status_code in [200, 201]:
         send_message(chat_id, f'✅ Поле <b>{field}</b> обновлено!')
         show_edit_menu(chat_id, product)
+        # Сбрасываем состояние, чтобы избежать повторных срабатываний
+        if chat_id in user_states:
+            del user_states[chat_id]
     else:
         send_message(chat_id, '❌ Ошибка сохранения.')
         show_edit_menu(chat_id, product)
@@ -715,22 +755,27 @@ def start_edit(chat_id, key, prompt):
 
 def save_setting(chat_id, value):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     key = state['setting_key']
     data, sha = get_data()
-    if not data: return
-    if 'settings' not in data: data['settings'] = {}
+    if not data:
+        return
+    if 'settings' not in data:
+        data['settings'] = {}
     data['settings'][key] = value
     resp = save_data(data, sha)
     if resp.status_code in [200, 201]:
-        send_message(chat_id, '✅ Настройка обновлена!', main_reply_kb())
+        send_message(chat_id, '✅ Настройка обновлена!', main_menu_kb())
     else:
         send_message(chat_id, f'❌ Ошибка сохранения настройки!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
-    if chat_id in user_states: del user_states[chat_id]
+    if chat_id in user_states:
+        del user_states[chat_id]
 
 def cancel_action(chat_id):
-    if chat_id in user_states: del user_states[chat_id]
-    send_message(chat_id, '❌ Отменено', main_reply_kb())
+    if chat_id in user_states:
+        del user_states[chat_id]
+    send_message(chat_id, '❌ Отменено', main_menu_kb())
 
 # ---------- Экспорт CSV ----------
 def export_csv(chat_id):
@@ -781,7 +826,8 @@ def handle_csv_import(chat_id, document):
         if data is None:
             data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
             sha = None
-        if 'products' not in data: data['products'] = []
+        if 'products' not in data:
+            data['products'] = []
         updated = added = 0
         for row in reader:
             pid = row.get('id', '').strip()
@@ -792,7 +838,8 @@ def handle_csv_import(chat_id, document):
             category = row.get('category', '').strip()
             discount_percent = row.get('discount_percent', '0').strip()
             discount_end = row.get('discount_end', '').strip()
-            if not name or not price: continue
+            if not name or not price:
+                continue
             price = int(price)
             discount_percent = int(discount_percent) if discount_percent else 0
             if pid and pid.isdigit():
@@ -812,7 +859,8 @@ def handle_csv_import(chat_id, document):
                 'discount_percent': discount_percent, 'discount_end': discount_end
             })
             added += 1
-        if save_data(data, sha):
+        resp = save_data(data, sha)
+        if resp.status_code in [200, 201]:
             send_message(chat_id, f'✅ Импорт завершён! Добавлено: {added}, обновлено: {updated}.')
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
@@ -840,25 +888,30 @@ def ask_mass_price_percent(chat_id, category):
 
 def apply_mass_price(chat_id, percent):
     state = user_states.get(chat_id)
-    if not state: return
+    if not state:
+        return
     cat = state.get('mass_price_category')
     data, sha = get_data()
-    if not data: return
-    if 'products' not in data: data['products'] = []
+    if not data:
+        return
+    if 'products' not in data:
+        data['products'] = []
     count = 0
     for p in data['products']:
         if cat == 'all' or p.get('category') == cat:
             p['price'] = max(0, int(p['price'] * (1 + percent / 100)))
             count += 1
     if count > 0:
-        if save_data(data, sha):
+        resp = save_data(data, sha)
+        if resp.status_code in [200, 201]:
             word = 'повышены' if percent > 0 else 'понижены'
-            send_message(chat_id, f'✅ Цены {word} на {abs(percent)}% для {count} товаров.', main_reply_kb())
+            send_message(chat_id, f'✅ Цены {word} на {abs(percent)}% для {count} товаров.', main_menu_kb())
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
     else:
         send_message(chat_id, 'ℹ️ Нет товаров в выбранной категории.')
-    if chat_id in user_states: del user_states[chat_id]
+    if chat_id in user_states:
+        del user_states[chat_id]
 
 # ---------- Массовая скидка ----------
 def start_mass_discount(chat_id):
@@ -889,8 +942,10 @@ def ask_mass_discount_end(chat_id, category, percent):
 
 def apply_mass_discount(chat_id, category, percent, discount_end):
     data, sha = get_data()
-    if not data: return
-    if 'products' not in data: data['products'] = []
+    if not data:
+        return
+    if 'products' not in data:
+        data['products'] = []
     count = 0
     for p in data['products']:
         if category == 'all' or p.get('category') == category:
@@ -898,14 +953,16 @@ def apply_mass_discount(chat_id, category, percent, discount_end):
             p['discount_end'] = discount_end if discount_end != '0' else ''
             count += 1
     if count > 0:
-        if save_data(data, sha):
+        resp = save_data(data, sha)
+        if resp.status_code in [200, 201]:
             end_text = f' до {discount_end}' if discount_end and discount_end != '0' else ' бессрочно'
-            send_message(chat_id, f'✅ Скидка {percent}% применена к {count} товарам{end_text}.', main_reply_kb())
+            send_message(chat_id, f'✅ Скидка {percent}% применена к {count} товарам{end_text}.', main_menu_kb())
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
     else:
         send_message(chat_id, 'ℹ️ Нет товаров в выбранной категории.')
-    if chat_id in user_states: del user_states[chat_id]
+    if chat_id in user_states:
+        del user_states[chat_id]
 
 # ---------- Управление категориями ----------
 def show_categories_list(chat_id):
@@ -928,8 +985,10 @@ def save_new_category(chat_id, name):
         send_message(chat_id, '❌ Название не может быть пустым.')
         return
     data, sha = get_data()
-    if not data: return
-    if 'settings' not in data: data['settings'] = {}
+    if not data:
+        return
+    if 'settings' not in data:
+        data['settings'] = {}
     cats = data['settings'].get('categories', ALLOWED_CATEGORIES.copy())
     cats = [c for c in cats if c.strip()]
     if name in cats:
@@ -937,17 +996,19 @@ def save_new_category(chat_id, name):
     else:
         cats.append(name)
         data['settings']['categories'] = cats
-        if save_data(data, sha):
+        resp = save_data(data, sha)
+        if resp.status_code in [200, 201]:
             send_message(chat_id, f'✅ Категория <b>{name}</b> добавлена!')
             show_categories_list(chat_id)
         else:
             send_message(chat_id, '❌ Ошибка сохранения.')
-    if chat_id in user_states: del user_states[chat_id]
+    if chat_id in user_states:
+        del user_states[chat_id]
 
 def show_delete_category_menu(chat_id):
     cats = get_categories()
     if not cats:
-        send_message(chat_id, '🗂 Нет категорий для удаления.', main_reply_kb())
+        send_message(chat_id, '🗂 Нет категорий для удаления.', main_menu_kb())
         return
     keyboard = []
     row = []
@@ -963,13 +1024,15 @@ def show_delete_category_menu(chat_id):
 
 def delete_category_by_name(chat_id, cat_name):
     data, sha = get_data()
-    if not data: return
+    if not data:
+        return
     cats = data.get('settings', {}).get('categories', ALLOWED_CATEGORIES.copy())
     cats = [c for c in cats if c.strip()]
     if cat_name in cats:
         cats.remove(cat_name)
         data['settings']['categories'] = cats
-        if save_data(data, sha):
+        resp = save_data(data, sha)
+        if resp.status_code in [200, 201]:
             send_message(chat_id, f'✅ Категория <b>{cat_name}</b> удалена!')
             show_categories_list(chat_id)
         else:
