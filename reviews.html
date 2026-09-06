@@ -24,85 +24,131 @@
             --radius-sm: 10px;
             --radius-md: 16px;
             --radius-lg: 22px;
+            --radius-xl: 28px;
             --transition: 0.25s cubic-bezier(0.25,0.1,0.25,1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--white);
             color: var(--dark);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .bg-ambient {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            z-index: -1;
+            pointer-events: none;
+            background: radial-gradient(ellipse at 25% 15%, rgba(0,113,227,0.03) 0%, transparent 50%),
+                        radial-gradient(ellipse at 75% 80%, rgba(0,113,227,0.02) 0%, transparent 50%);
+            animation: bgShift 25s ease-in-out infinite;
+        }
+        @keyframes bgShift {
+            0%, 100% { transform: translate(0,0); }
+            33% { transform: translate(1%, -0.5%); }
+            66% { transform: translate(-0.5%, 0.8%); }
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             width: 100%;
-            margin: 40px auto;
+            margin: 0 auto;
+            padding: 60px 20px 40px;
         }
 
         h1 {
-            font-size: 32px;
+            font-size: 38px;
             font-weight: 800;
-            letter-spacing: -0.5px;
-            margin-bottom: 8px;
+            letter-spacing: -1px;
             text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--dark) 0%, #444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .subtitle {
             text-align: center;
             color: var(--gray);
-            margin-bottom: 30px;
-            font-size: 15px;
+            margin-bottom: 40px;
+            font-size: 16px;
         }
 
-        .reviews-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-bottom: 32px;
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
         }
 
         .review-card {
             background: var(--white);
             border-radius: var(--radius-md);
-            padding: 20px;
+            padding: 24px;
             box-shadow: var(--shadow-sm);
             border: 1px solid rgba(0,0,0,0.04);
+            transition: all var(--transition);
+        }
+
+        .review-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
         }
 
         .review-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
-        .review-author {
-            font-weight: 600;
+        .review-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .review-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
             font-size: 16px;
+            color: var(--blue);
+            flex-shrink: 0;
+        }
+
+        .review-name {
+            font-weight: 600;
+            font-size: 15px;
         }
 
         .review-date {
             color: var(--gray-light);
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .review-stars {
             color: var(--orange);
             font-size: 14px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .review-text {
             color: #444;
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.7;
         }
 
@@ -161,6 +207,7 @@
             overflow-y: auto;
             box-shadow: 0 30px 80px rgba(0,0,0,0.2);
             animation: modalIn 0.3s ease;
+            position: relative;
         }
 
         @keyframes modalIn {
@@ -209,8 +256,7 @@
         }
 
         .form-group input,
-        .form-group textarea,
-        .form-group select {
+        .form-group textarea {
             width: 100%;
             padding: 12px 14px;
             border: 1.5px solid var(--border);
@@ -222,8 +268,7 @@
         }
 
         .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
+        .form-group textarea:focus {
             outline: none;
             border-color: var(--blue);
             background: white;
@@ -284,67 +329,139 @@
             color: var(--blue);
             text-decoration: none;
             font-weight: 500;
+            text-align: center;
         }
 
         .back-link:hover {
             text-decoration: underline;
         }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 28px; }
+            .reviews-grid { grid-template-columns: 1fr; }
+            .modal-content { padding: 20px 16px; }
+        }
     </style>
 </head>
 <body>
+    <div class="bg-ambient"></div>
+
     <div class="container">
         <h1>Отзывы наших клиентов</h1>
-        <p class="subtitle">Что говорят покупатели о OneMinute</p>
+        <p class="subtitle">Что покупатели говорят о OneMinute</p>
 
-        <div class="reviews-list">
+        <div class="reviews-grid">
+            <!-- Отзыв 1 -->
             <div class="review-card">
                 <div class="review-header">
-                    <span class="review-author">Алексей</span>
-                    <span class="review-date">12 марта 2025</span>
+                    <div class="review-user">
+                        <div class="review-avatar">А</div>
+                        <div>
+                            <div class="review-name">Алексей</div>
+                            <div class="review-date">12 марта 2025</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="review-stars">
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
                 </div>
                 <div class="review-text">
                     Часы просто огонь! Доставили быстро, упаковка на высоте. Качество превосходное, уже рекомендовал друзьям.
                 </div>
             </div>
 
+            <!-- Отзыв 2 -->
             <div class="review-card">
                 <div class="review-header">
-                    <span class="review-author">Мария</span>
-                    <span class="review-date">28 февраля 2025</span>
+                    <div class="review-user">
+                        <div class="review-avatar">М</div>
+                        <div>
+                            <div class="review-name">Мария</div>
+                            <div class="review-date">28 февраля 2025</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="review-stars">
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star-half-stroke"></i>
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
                 </div>
                 <div class="review-text">
                     Очень довольна покупкой! Часы выглядят ещё лучше, чем на фото. Продавец на связи, помог с выбором. Спасибо!
                 </div>
             </div>
 
+            <!-- Отзыв 3 -->
             <div class="review-card">
                 <div class="review-header">
-                    <span class="review-author">Дмитрий</span>
-                    <span class="review-date">10 января 2025</span>
+                    <div class="review-user">
+                        <div class="review-avatar">Д</div>
+                        <div>
+                            <div class="review-name">Дмитрий</div>
+                            <div class="review-date">10 января 2025</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="review-stars">
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-regular fa-star"></i>
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>
                 </div>
                 <div class="review-text">
                     Хороший магазин, всё честно. Часы соответствуют описанию. Доставили за 3 дня. Остался доволен.
+                </div>
+            </div>
+
+            <!-- Отзыв 4 -->
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="review-user">
+                        <div class="review-avatar">Е</div>
+                        <div>
+                            <div class="review-name">Екатерина</div>
+                            <div class="review-date">5 января 2025</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                </div>
+                <div class="review-text">
+                    Заказывала в подарок мужу — он в восторге! Очень стильные, качество отличное. Спасибо за быструю доставку.
+                </div>
+            </div>
+
+            <!-- Отзыв 5 -->
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="review-user">
+                        <div class="review-avatar">С</div>
+                        <div>
+                            <div class="review-name">Сергей</div>
+                            <div class="review-date">22 декабря 2024</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                </div>
+                <div class="review-text">
+                    Отличный сервис, вежливые менеджеры. Часы пришли в идеальном состоянии. Буду заказывать ещё.
+                </div>
+            </div>
+
+            <!-- Отзыв 6 -->
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="review-user">
+                        <div class="review-avatar">О</div>
+                        <div>
+                            <div class="review-name">Ольга</div>
+                            <div class="review-date">15 ноября 2024</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                </div>
+                <div class="review-text">
+                    Лучший магазин часов! Очень довольна обслуживанием и качеством. Всем советую!
                 </div>
             </div>
         </div>
@@ -383,7 +500,7 @@
                 </div>
                 <button type="submit" class="submit-review-btn">Отправить отзыв</button>
                 <div class="message-success" id="successMessage">
-                    Ваш отзыв будет опубликован после модерации
+                    Спасибо! Ваш отзыв отправлен на модерацию.
                 </div>
             </form>
         </div>
@@ -415,14 +532,12 @@
             selectedRating = 0;
         }
 
-        // Обработка кликов по звёздам
         document.querySelectorAll('.rating-stars i').forEach(star => {
             star.addEventListener('click', function() {
                 const value = parseInt(this.dataset.value);
                 selectedRating = value;
                 document.getElementById('ratingValue').value = value;
 
-                // Обновляем отображение звёзд
                 document.querySelectorAll('.rating-stars i').forEach((s, index) => {
                     if (index < value) {
                         s.classList.add('active');
@@ -437,21 +552,18 @@
             });
         });
 
-        // Обработка отправки формы
         document.getElementById('reviewForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // Проверяем, что рейтинг выбран
             if (selectedRating === 0) {
                 alert('Пожалуйста, выберите оценку');
                 return;
             }
 
-            // Имитация отправки — просто показываем сообщение
             const success = document.getElementById('successMessage');
             success.style.display = 'block';
 
-            // Очищаем поля
+            // Очистка формы
             document.getElementById('orderNumber').value = '';
             document.getElementById('reviewText').value = '';
             document.querySelectorAll('.rating-stars i').forEach(s => {
@@ -462,7 +574,6 @@
             selectedRating = 0;
             document.getElementById('ratingValue').value = '0';
 
-            // Через 3 секунды закрываем модальное окно
             setTimeout(() => {
                 closeReviewModal();
             }, 3000);
