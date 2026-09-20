@@ -17,6 +17,14 @@ DATA_REPO = 'kodpin/OneMinute-data'
 SITE_REPO = os.environ.get('GITHUB_REPOSITORY', 'kodpin/OneMinute')
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(',') if id.strip()]
+GROUP_CHAT_ID = os.environ.get('GROUP_CHAT_ID', '').strip()
+if GROUP_CHAT_ID:
+    try:
+        GROUP_CHAT_ID = int(GROUP_CHAT_ID)
+    except ValueError:
+        GROUP_CHAT_ID = None
+else:
+    GROUP_CHAT_ID = None
 
 user_states = {}
 
@@ -55,7 +63,6 @@ def migrate_categories(data):
                 p['category'] = CATEGORY_MAP[cat]
             elif cat not in ALLOWED_CATEGORIES:
                 p['category'] = 'Спорт'
-            # Миграция бренда: если нет — ставим Garmin
             p['brand'] = normalize_brand(p.get('brand', ''))
 
     if 'settings' not in data:
@@ -76,14 +83,12 @@ def migrate_categories(data):
 
 def get_data():
     owner, repo = DATA_REPO.split('/')
-    # Читаем файл напрямую из публичного репозитория без токена
     url = f'https://raw.githubusercontent.com/{owner}/{repo}/main/products.json'
     resp = requests.get(url)
     if resp.status_code == 200:
         try:
             parsed = resp.json()
             parsed = migrate_categories(parsed)
-            # Получаем sha для возможности записи (необязательно для чтения)
             api_url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
             headers = {'Authorization': f'token {GITHUB_TOKEN}'} if GITHUB_TOKEN else {}
             api_resp = requests.get(api_url, headers=headers)
@@ -805,7 +810,8 @@ def get_product_by_id(pid):
 def show_settings(chat_id):
     data, _ = get_data()
     s = data.get('settings', {}) if data else {}
-    text = f"⚙️ <b>Настройки</b>\n\n📝 ИП: {s.get('ip_info','-')[:100]}\n📱 QR: {s.get('payment_qr','-')[:50]}\n🔗 Ссылка: {s.get('payment_link','-')[:50]}\n👤 Менеджер: {s.get('manager_telegram','-')[:50]}"
+    group_info = f'\n👥 Группа: {GROUP_CHAT_ID}' if GROUP_CHAT_ID else '\n⚠️ Группа не настроена'
+    text = f"⚙️ <b>Настройки</b>\n\n📝 ИП: {s.get('ip_info','-')[:100]}\n📱 QR: {s.get('payment_qr','-')[:50]}\n🔗 Ссылка: {s.get('payment_link','-')[:50]}\n👤 Менеджер: {s.get('manager_telegram','-')[:50]}{group_info}"
     send_message(chat_id, text, settings_kb())
 
 def start_edit(chat_id, key, prompt):
@@ -1047,7 +1053,6 @@ def save_new_category(chat_id, name):
     if not name:
         send_message(chat_id, '❌ Название не может быть пустым.')
         return
-    # Автоматически делаем первую букву заглавной
     name = name[0].upper() + name[1:] if len(name) > 1 else name.upper()
     data, sha = get_data()
     if not data:
@@ -1105,6 +1110,23 @@ def delete_category_by_name(chat_id, cat_name):
     else:
         send_message(chat_id, '❌ Категория не найдена.')
 
+# ---------- Утилита: формирование текста заказа ----------
+def format_order_message(data):
+    items_text = "\n".join([f"• {item['product']['name']} ×{item['quantity']} = {item['product']['price'] * item['quantity']:,} ₽" for item in data.get('items', [])])
+    return f"""🆕 <b>НОВЫЙ ЗАКАЗ</b> #{data.get('orderNumber', '')}
+
+👤 <b>Клиент:</b> {data.get('lastName', '')} {data.get('firstName', '')} {data.get('middleName', '')}
+📞 <b>Телефон:</b> {data.get('phone', '')}
+📧 <b>Email:</b> {data.get('email', '')}
+📍 <b>Адрес:</b> {data.get('address', '')}
+🚚 <b>Доставка:</b> {data.get('delivery', '')}
+📅 <b>Дата:</b> {data.get('date', '')}
+
+🛒 <b>Товары:</b>
+{items_text}
+
+💰 <b>Итого: {data.get('total', 0):,} ₽</b>"""
+
 # ---------- Маршрут для приёма заявок с сайта ----------
 @app.route('/submit-order', methods=['POST'])
 def submit_order():
@@ -1112,26 +1134,55 @@ def submit_order():
     if not data:
         return jsonify({'status': 'error'}), 400
 
-    items_text = "\n".join([f"• {item['product']['name']} ×{item['quantity']} = {item['product']['price'] * item['quantity']:,} ₽" for item in data.get('items', [])])
-    message = f"""
-🆕 *НОВЫЙ ЗАКАЗ* #{data.get('orderNumber', '')}
+    message = format_order_message(data)
 
-👤 *Клиент:* {data.get('lastName', '')} {data.get('firstName', '')} {data.get('middleName', '')}
-📞 *Телефон:* {data.get('phone', '')}
-📧 *Email:* {data.get('email', '')}
-📍 *Адрес:* {data.get('address', '')}
-🚚 *Доставка:* {data.get('delivery', '')}
-📅 *Дата:* {data.get('date', '')}
+    # 1. Отправляем в группу (если настроена)
+    if GROUP_CHAT_ID:
+        send_message(GROUP_CHAT_ID, message)
 
-🛒 *Товары:*
-{items_text}
-
-💰 *Итого: {data.get('total', 0):,} ₽*
-    """
+    # 2. Дублируем в личку админам
     for admin_id in ADMIN_IDS:
         send_message(admin_id, message)
 
     return jsonify({'status': 'ok'})
+
+# ---------- НОВЫЙ маршрут: приём чека с сайта ----------
+@app.route('/upload-receipt', methods=['POST'])
+def upload_receipt():
+    if 'document' not in request.files:
+        return jsonify({'status': 'error', 'message': 'no file'}), 400
+
+    file = request.files['document']
+    caption = request.form.get('caption', '🧾 Чек об оплате')
+
+    try:
+        file_bytes = file.read()
+        filename = file.filename or 'receipt.jpg'
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+
+    sent = 0
+    targets = []
+    if GROUP_CHAT_ID:
+        targets.append(GROUP_CHAT_ID)
+    targets.extend(ADMIN_IDS)
+
+    for chat_id in targets:
+        try:
+            url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendDocument'
+            files = {'document': (filename, file_bytes)}
+            data = {'chat_id': chat_id, 'caption': caption, 'parse_mode': 'HTML'}
+            r = requests.post(url, files=files, data=data)
+            if r.ok:
+                sent += 1
+            else:
+                print(f'!! Receipt send error ({chat_id}): {r.status_code} {r.text[:200]}')
+        except Exception as e:
+            print(f'!! Receipt send exception ({chat_id}): {e}')
+
+    if sent > 0:
+        return jsonify({'status': 'ok', 'sent': sent})
+    return jsonify({'status': 'error', 'message': 'send failed'}), 500
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
