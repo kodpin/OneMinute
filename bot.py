@@ -22,6 +22,7 @@ user_states = {}
 
 ALLOWED_CATEGORIES = ['Спорт', 'Для жизни', 'Тактические']
 DEFAULT_BRAND = 'Garmin'
+PRODUCTS_PER_PAGE = 10
 
 CATEGORY_MAP = {
     'tactical': 'Тактические',
@@ -75,12 +76,14 @@ def migrate_categories(data):
 
 def get_data():
     owner, repo = DATA_REPO.split('/')
+    # Читаем файл напрямую из публичного репозитория без токена
     url = f'https://raw.githubusercontent.com/{owner}/{repo}/main/products.json'
     resp = requests.get(url)
     if resp.status_code == 200:
         try:
             parsed = resp.json()
             parsed = migrate_categories(parsed)
+            # Получаем sha для возможности записи (необязательно для чтения)
             api_url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
             headers = {'Authorization': f'token {GITHUB_TOKEN}'} if GITHUB_TOKEN else {}
             api_resp = requests.get(api_url, headers=headers)
@@ -111,7 +114,10 @@ def send_message(chat_id, text, reply_markup=None):
     payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}
     if reply_markup:
         payload['reply_markup'] = json.dumps(reply_markup)
-    requests.post(url, json=payload)
+    r = requests.post(url, json=payload)
+    if not r.ok:
+        print(f'!! Telegram error: {r.status_code} {r.text[:300]}')
+    return r
 
 def send_document(chat_id, file_data, filename):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendDocument'
@@ -247,7 +253,15 @@ def process_update(update):
         elif data == 'cancel_add':
             cancel_action(chat_id)
         elif data == 'list_products':
-            show_products(chat_id)
+            show_products(chat_id, 0)
+        elif data.startswith('list_page_'):
+            page = int(data.replace('list_page_', ''))
+            show_products(chat_id, page)
+        elif data.startswith('editpage_'):
+            page = int(data.replace('editpage_', ''))
+            start_edit_product(chat_id, page)
+        elif data == 'noop':
+            pass
         elif data == 'settings_menu':
             show_settings(chat_id)
         elif data.startswith('cat_'):
@@ -315,12 +329,12 @@ def process_update(update):
                 elif idx == -1:
                     ask_mass_discount_end(chat_id, 'all', pct)
         elif data == 'edit_product':
-            start_edit_product(chat_id)
+            start_edit_product(chat_id, 0)
         elif data.startswith('edit_') and data[5:].isdigit():
             pid = int(data.split('_')[1])
             start_edit_field(chat_id, pid)
         elif data == 'edit_product_back':
-            start_edit_product(chat_id)
+            start_edit_product(chat_id, 0)
         elif data.startswith('edit_field_'):
             field = data.replace('edit_field_', '')
             if chat_id in user_states and user_states[chat_id].get('action') == 'edit_product':
@@ -401,15 +415,15 @@ def process_update(update):
             apply_mass_discount(chat_id, state['mass_discount_category'], state['mass_discount_percent'], discount_end)
             return
 
-    if text == '/start' or text == '🏠 Главное меню':
+    if text == '/start' or 'Главное меню' in text:
         send_main_menu(chat_id)
-    elif text == '➕ Добавить товар':
+    elif 'Добавить товар' in text:
         start_add_product(chat_id)
-    elif text == '📋 Список товаров':
-        show_products(chat_id)
-    elif text == '✏️ Редактировать товар':
-        start_edit_product(chat_id)
-    elif text == '⚙️ Настройки':
+    elif 'Список товаров' in text:
+        show_products(chat_id, 0)
+    elif 'Редактировать товар' in text:
+        start_edit_product(chat_id, 0)
+    elif 'Настройки' in text:
         show_settings(chat_id)
     else:
         send_main_menu(chat_id)
@@ -549,17 +563,37 @@ def save_product(chat_id):
             del user_states[chat_id]
 
 # ---------- Список и удаление ----------
-def show_products(chat_id):
+def show_products(chat_id, page=0):
     data, _ = get_data()
     if not data or not data.get('products'):
         send_message(chat_id, '📋 Товаров пока нет.', main_reply_kb())
         return
     prods = data['products']
-    text = f'📋 <b>Товары ({len(prods)}):</b>\n\n'
-    for p in prods:
+    total = len(prods)
+    total_pages = max(1, (total + PRODUCTS_PER_PAGE - 1) // PRODUCTS_PER_PAGE)
+    page = max(0, min(page, total_pages - 1))
+    start = page * PRODUCTS_PER_PAGE
+    chunk = prods[start:start + PRODUCTS_PER_PAGE]
+
+    text = f'📋 <b>Товары ({total})</b> — страница {page+1}/{total_pages}\n\n'
+    for p in chunk:
         brand = p.get('brand', DEFAULT_BRAND)
-        text += f"🆔 {p['id']} | {brand} {p['name']} | {p['price']:,}₽\n"
-    send_message(chat_id, text, products_list_kb(prods))
+        text += f"🆔 {p['id']} | {brand} {p['name'][:45]} | {p['price']:,}₽\n"
+
+    keyboard = []
+    nav_row = []
+    if page > 0:
+        nav_row.append({"text": "⬅️ Назад", "callback_data": f"list_page_{page-1}"})
+    nav_row.append({"text": f"{page+1} / {total_pages}", "callback_data": "noop"})
+    if page < total_pages - 1:
+        nav_row.append({"text": "Вперёд ➡️", "callback_data": f"list_page_{page+1}"})
+    keyboard.append(nav_row)
+
+    for p in chunk:
+        keyboard.append([{"text": f"❌ Удалить {p['name'][:30]}", "callback_data": f"delete_{p['id']}"}])
+
+    keyboard.append([{"text": "🏠 Главное меню", "callback_data": "main_menu"}])
+    send_message(chat_id, text, {"inline_keyboard": keyboard})
 
 def confirm_delete_product(chat_id, pid):
     product = get_product_by_id(pid)
@@ -584,20 +618,38 @@ def delete_product(chat_id, pid):
     resp = save_data(data, sha)
     if resp.status_code in [200, 201]:
         send_message(chat_id, f'✅ <b>{product["name"]}</b> удалён!', main_reply_kb())
-        show_products(chat_id)
+        show_products(chat_id, 0)
     else:
         send_message(chat_id, f'❌ Ошибка удаления!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
 
 # ---------- Редактирование товара ----------
-def start_edit_product(chat_id):
+def start_edit_product(chat_id, page=0):
     data, _ = get_data()
     if not data or not data.get('products'):
         send_message(chat_id, '📋 Нет товаров для редактирования.', main_reply_kb())
         return
     prods = data['products']
-    keyboard = [[{"text": f"✏️ {p['name']} (ID {p['id']})", "callback_data": f"edit_{p['id']}"}] for p in prods]
-    keyboard.append([{"text": "🔙 Назад", "callback_data": "main_menu"}])
-    send_message(chat_id, '✏️ Выберите товар для редактирования:', {"inline_keyboard": keyboard})
+    total = len(prods)
+    total_pages = max(1, (total + PRODUCTS_PER_PAGE - 1) // PRODUCTS_PER_PAGE)
+    page = max(0, min(page, total_pages - 1))
+    start = page * PRODUCTS_PER_PAGE
+    chunk = prods[start:start + PRODUCTS_PER_PAGE]
+
+    text = f'✏️ <b>Выберите товар для редактирования</b> — страница {page+1}/{total_pages}'
+    keyboard = []
+    nav_row = []
+    if page > 0:
+        nav_row.append({"text": "⬅️ Назад", "callback_data": f"editpage_{page-1}"})
+    nav_row.append({"text": f"{page+1} / {total_pages}", "callback_data": "noop"})
+    if page < total_pages - 1:
+        nav_row.append({"text": "Вперёд ➡️", "callback_data": f"editpage_{page+1}"})
+    keyboard.append(nav_row)
+
+    for p in chunk:
+        keyboard.append([{"text": f"✏️ {p['name'][:40]} (ID {p['id']})", "callback_data": f"edit_{p['id']}"}])
+
+    keyboard.append([{"text": "🏠 Главное меню", "callback_data": "main_menu"}])
+    send_message(chat_id, text, {"inline_keyboard": keyboard})
 
 def start_edit_field(chat_id, product_id):
     product = get_product_by_id(product_id)
