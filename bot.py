@@ -21,6 +21,7 @@ ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(','
 user_states = {}
 
 ALLOWED_CATEGORIES = ['Спорт', 'Для жизни', 'Тактические']
+DEFAULT_BRAND = 'Garmin'
 
 CATEGORY_MAP = {
     'tactical': 'Тактические',
@@ -39,6 +40,12 @@ CATEGORY_MAP = {
     'casual': 'Для жизни'
 }
 
+def normalize_brand(brand):
+    if not brand or not str(brand).strip():
+        return DEFAULT_BRAND
+    b = str(brand).strip()
+    return b[0].upper() + b[1:] if len(b) > 1 else b.upper()
+
 def migrate_categories(data):
     if 'products' in data:
         for p in data['products']:
@@ -47,6 +54,8 @@ def migrate_categories(data):
                 p['category'] = CATEGORY_MAP[cat]
             elif cat not in ALLOWED_CATEGORIES:
                 p['category'] = 'Спорт'
+            # Миграция бренда: если нет — ставим Garmin
+            p['brand'] = normalize_brand(p.get('brand', ''))
 
     if 'settings' not in data:
         data['settings'] = {}
@@ -66,14 +75,12 @@ def migrate_categories(data):
 
 def get_data():
     owner, repo = DATA_REPO.split('/')
-    # Читаем файл напрямую из публичного репозитория без токена
     url = f'https://raw.githubusercontent.com/{owner}/{repo}/main/products.json'
     resp = requests.get(url)
     if resp.status_code == 200:
         try:
             parsed = resp.json()
             parsed = migrate_categories(parsed)
-            # Получаем sha для возможности записи (необязательно для чтения)
             api_url = f'https://api.github.com/repos/{owner}/{repo}/contents/products.json'
             headers = {'Authorization': f'token {GITHUB_TOKEN}'} if GITHUB_TOKEN else {}
             api_resp = requests.get(api_url, headers=headers)
@@ -424,7 +431,7 @@ def send_main_menu(chat_id):
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
     user_states[chat_id] = {'action': 'waiting_text', 'step': 'name', 'data': {}, 'photos': []}
-    send_message(chat_id, '➕ <b>Шаг 1/5:</b> Введите <b>название</b> товара:', cancel_kb())
+    send_message(chat_id, '➕ <b>Шаг 1/6:</b> Введите <b>название</b> товара:', cancel_kb())
 
 def handle_text_step(chat_id, text):
     state = user_states.get(chat_id)
@@ -433,20 +440,24 @@ def handle_text_step(chat_id, text):
     step = state['step']
     if step == 'name':
         state['data']['name'] = text
+        state['step'] = 'brand'
+        send_message(chat_id, f'✅ <b>{text}</b>\n\n🏭 <b>Шаг 2/6:</b> Введите <b>производителя</b> (бренд), например <b>{DEFAULT_BRAND}</b>:', cancel_kb())
+    elif step == 'brand':
+        state['data']['brand'] = normalize_brand(text)
         state['step'] = 'price'
-        send_message(chat_id, f'✅ <b>{text}</b>\n\n💰 <b>Шаг 2/5:</b> Введите <b>цену</b> (только цифры):', cancel_kb())
+        send_message(chat_id, f'✅ Бренд: <b>{state["data"]["brand"]}</b>\n\n💰 <b>Шаг 3/6:</b> Введите <b>цену</b> (только цифры):', cancel_kb())
     elif step == 'price':
         try:
             price = int(text.replace(' ', '').replace('₽', '').replace(',', ''))
             state['data']['price'] = price
             state['step'] = 'description'
-            send_message(chat_id, f'✅ <b>{price:,} ₽</b>\n\n📝 <b>Шаг 3/5:</b> Введите <b>описание</b>:', cancel_kb())
+            send_message(chat_id, f'✅ <b>{price:,} ₽</b>\n\n📝 <b>Шаг 4/6:</b> Введите <b>описание</b>:', cancel_kb())
         except:
             send_message(chat_id, '❌ Введите цену цифрами!')
     elif step == 'description':
         state['data']['description'] = text
         state['step'] = 'category'
-        send_message(chat_id, '🏷 <b>Шаг 4/5:</b> Выберите <b>категорию</b>:', category_kb())
+        send_message(chat_id, '🏷 <b>Шаг 5/6:</b> Выберите <b>категорию</b>:', category_kb())
     elif step == 'edit_setting':
         save_setting(chat_id, text)
 
@@ -466,7 +477,7 @@ def set_category(chat_id, category):
     state['data']['category'] = category
     state['step'] = 'photo'
     state['action'] = 'waiting_photo'
-    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n📸 <b>Шаг 5/5:</b> Отправьте <b>фото</b> (можно несколько по одному).\nКогда закончите, нажмите <b>✅ Завершить</b>.', photo_step_kb())
+    send_message(chat_id, f'✅ Категория: <b>{category}</b>\n\n📸 <b>Шаг 6/6:</b> Отправьте <b>фото</b> (можно несколько по одному).\nКогда закончите, нажмите <b>✅ Завершить</b>.', photo_step_kb())
 
 def handle_photo(chat_id, message):
     state = user_states.get(chat_id)
@@ -517,6 +528,7 @@ def save_product(chat_id):
         new_product = {
             'id': new_id,
             'name': state['data']['name'],
+            'brand': state['data'].get('brand', DEFAULT_BRAND),
             'price': state['data']['price'],
             'description': state['data']['description'],
             'image': photos if len(photos) > 1 else photos[0],
@@ -527,7 +539,7 @@ def save_product(chat_id):
         data['products'].append(new_product)
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
-            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.', main_reply_kb())
+            send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nБренд: {new_product["brand"]}\nЦена: {new_product["price"]:,} ₽\nФото: {len(photos)} шт.', main_reply_kb())
         else:
             send_message(chat_id, f'❌ Ошибка сохранения!\nКод: {resp.status_code}\nОтвет: {resp.text[:300]}')
     except Exception as e:
@@ -545,7 +557,8 @@ def show_products(chat_id):
     prods = data['products']
     text = f'📋 <b>Товары ({len(prods)}):</b>\n\n'
     for p in prods:
-        text += f"🆔 {p['id']} | {p['name']} | {p['price']:,}₽\n"
+        brand = p.get('brand', DEFAULT_BRAND)
+        text += f"🆔 {p['id']} | {brand} {p['name']} | {p['price']:,}₽\n"
     send_message(chat_id, text, products_list_kb(prods))
 
 def confirm_delete_product(chat_id, pid):
@@ -597,6 +610,7 @@ def start_edit_field(chat_id, product_id):
 def show_edit_menu(chat_id, product):
     keyboard = [
         [{"text": "📱 Название", "callback_data": "edit_field_name"}],
+        [{"text": "🏭 Производитель", "callback_data": "edit_field_brand"}],
         [{"text": "💰 Цена", "callback_data": "edit_field_price"}],
         [{"text": "📝 Описание", "callback_data": "edit_field_description"}],
         [{"text": "🏷 Категория", "callback_data": "edit_field_category"}],
@@ -605,7 +619,8 @@ def show_edit_menu(chat_id, product):
         [{"text": "📅 Окончание скидки", "callback_data": "edit_field_discount_end"}],
         [{"text": "🔙 Назад", "callback_data": "edit_product"}]
     ]
-    send_message(chat_id, f'✏️ Редактирование: <b>{product["name"]}</b>\nВыберите поле:', {"inline_keyboard": keyboard})
+    brand = product.get('brand', DEFAULT_BRAND)
+    send_message(chat_id, f'✏️ Редактирование: <b>{product["name"]}</b>\n🏭 Бренд: <b>{brand}</b>\nВыберите поле:', {"inline_keyboard": keyboard})
 
 def handle_edit_field(chat_id, field):
     state = user_states.get(chat_id)
@@ -619,6 +634,7 @@ def handle_edit_field(chat_id, field):
     state['edit_field'] = field
     prompts = {
         'name': '📱 Введите новое название:',
+        'brand': f'🏭 Введите нового производителя (например, {DEFAULT_BRAND}):',
         'price': '💰 Введите новую цену (цифры):',
         'description': '📝 Введите новое описание:',
         'discount_percent': '🏷 Введите процент скидки (0-100):',
@@ -693,7 +709,7 @@ def save_edit(chat_id, new_value):
         return
     if field == 'price':
         try:
-            new_value = int(new_value.replace(' ', '').replace('₽', '').replace(',', ''))
+            new_value = int(str(new_value).replace(' ', '').replace('₽', '').replace(',', ''))
         except:
             send_message(chat_id, '❌ Неверная цена.')
             return
@@ -706,7 +722,7 @@ def save_edit(chat_id, new_value):
             send_message(chat_id, '❌ Процент скидки должен быть числом от 0 до 100.')
             return
     elif field == 'discount_end':
-        if new_value.strip() == '':
+        if str(new_value).strip() == '':
             new_value = ''
         else:
             try:
@@ -714,6 +730,8 @@ def save_edit(chat_id, new_value):
             except ValueError:
                 send_message(chat_id, '❌ Неверный формат даты. Используйте ГГГГ-ММ-ДД или оставьте пустым.')
                 return
+    elif field == 'brand':
+        new_value = normalize_brand(new_value)
     product[field] = new_value
     resp = save_data(data, sha)
     if resp.status_code in [200, 201]:
@@ -775,11 +793,12 @@ def export_csv(chat_id):
     prods = data['products']
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['id', 'name', 'price', 'description', 'image', 'category', 'discount_percent', 'discount_end'])
+    writer.writerow(['id', 'name', 'brand', 'price', 'description', 'image', 'category', 'discount_percent', 'discount_end'])
     for p in prods:
         writer.writerow([
             p.get('id', ''),
             p.get('name', ''),
+            p.get('brand', DEFAULT_BRAND),
             p.get('price', ''),
             p.get('description', ''),
             p.get('image', ''),
@@ -821,6 +840,7 @@ def handle_csv_import(chat_id, document):
         for row in reader:
             pid = row.get('id', '').strip()
             name = row.get('name', '').strip()
+            brand = normalize_brand(row.get('brand', ''))
             price = row.get('price', '').strip()
             description = row.get('description', '').strip()
             image = row.get('image', '').strip()
@@ -837,7 +857,7 @@ def handle_csv_import(chat_id, document):
                 existing = next((p for p in data['products'] if p['id'] == int(pid)), None)
                 if existing:
                     existing.update({
-                        'name': name, 'price': price, 'description': description,
+                        'name': name, 'brand': brand, 'price': price, 'description': description,
                         'image': image, 'category': category,
                         'discount_percent': discount_percent, 'discount_end': discount_end
                     })
@@ -845,7 +865,7 @@ def handle_csv_import(chat_id, document):
                     continue
             new_id = max([p['id'] for p in data['products']], default=0) + 1
             data['products'].append({
-                'id': new_id, 'name': name, 'price': price, 'description': description,
+                'id': new_id, 'name': name, 'brand': brand, 'price': price, 'description': description,
                 'image': image, 'category': category,
                 'discount_percent': discount_percent, 'discount_end': discount_end
             })

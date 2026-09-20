@@ -97,6 +97,10 @@
         .price-filter input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(0,113,227,0.06); }
         .price-filter input::placeholder { color: var(--gray-light); }
 
+        .sort-filter { display: flex; align-items: center; }
+        .sort-filter select { padding: 12px 36px 12px 14px; border: 1.5px solid #e5e5ea; border-radius: 24px; font-size: 13px; font-family: inherit; background: var(--white); cursor: pointer; appearance: none; -webkit-appearance: none; transition: all var(--transition); color: var(--dark); font-weight: 500; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+        .sort-filter select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(0,113,227,0.06); }
+
         .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
         .filter-chip { padding: 9px 16px; border-radius: 24px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid #e5e5ea; background: var(--white); color: var(--gray); transition: all var(--transition); white-space: nowrap; user-select: none; }
         .filter-chip:hover { border-color: var(--gray-light); color: var(--dark); }
@@ -128,6 +132,8 @@
             .filter-chips { justify-content: center; }
             .price-filter { width: 100%; justify-content: center; }
             .price-filter input { flex: 1; max-width: 130px; }
+            .sort-filter { width: 100%; }
+            .sort-filter select { width: 100%; }
             .form-row { flex-direction: column; }
         }
 
@@ -143,6 +149,8 @@
         .product-card:hover .product-image { transform: scale(1.05); }
         .product-badge { position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); padding: 5px 12px; border-radius: 16px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--dark); }
         .product-info { padding: 18px; flex: 1; display: flex; flex-direction: column; }
+        .product-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: var(--blue); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 5px; }
+        .product-brand i { font-size: 9px; }
         .product-name { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 4px; }
         .product-description { color: var(--gray); font-size: 12px; line-height: 1.5; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 36px; }
         .price-block { margin-top: auto; margin-bottom: 12px; }
@@ -172,8 +180,11 @@
         .gallery-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; }
         .gallery-dot.active { background: white; }
         .product-modal-body { padding: 24px; }
-        .product-modal-category { display: inline-flex; align-items: center; gap: 6px; background: var(--bg); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray); margin-bottom: 12px; }
+        .product-modal-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+        .product-modal-category { display: inline-flex; align-items: center; gap: 6px; background: var(--bg); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray); }
         .product-modal-category::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
+        .product-modal-brand { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--dark) 0%, #3a3a3c 100%); color: white; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .product-modal-brand i { font-size: 9px; color: #40a9ff; }
         .product-modal-name { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
         .price-block { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
         .product-modal-price { font-size: 28px; font-weight: 800; color: var(--blue); }
@@ -295,14 +306,24 @@
         <p class="section-subtitle">Найдите идеальные часы для любого момента</p>
         <div class="search-filter-bar">
             <div class="search-wrap">
-                <input type="text" class="search-input" id="searchInput" placeholder="Поиск по названию..." oninput="onSearchInput()" onfocus="showSuggestions()" onkeydown="handleSearchKey(event)">
+                <input type="text" class="search-input" id="searchInput" placeholder="Поиск по названию, бренду..." oninput="onSearchInput()" onfocus="showSuggestions()" onkeydown="handleSearchKey(event)">
                 <button class="search-clear" id="searchClear" onclick="clearSearch()"><i class="fa-solid fa-xmark"></i></button>
                 <button class="search-icon" onclick="filterAndRender()"><i class="fa-solid fa-magnifying-glass"></i></button>
                 <div class="search-suggestions" id="searchSuggestions"></div>
             </div>
             <div class="price-filter">
-                <input type="number" id="priceMin" placeholder="Цена от" min="0" inputmode="numeric" oninput="renderAllProducts()" onkeydown="if(event.key==='Enter'){event.preventDefault();renderAllProducts();}">
-                <input type="number" id="priceMax" placeholder="Цена до" min="0" inputmode="numeric" oninput="renderAllProducts()" onkeydown="if(event.key==='Enter'){event.preventDefault();renderAllProducts();}">
+                <input type="number" id="priceMin" placeholder="Цена от" min="0" inputmode="numeric" oninput="renderAllProducts()" onchange="renderAllProducts()" onkeyup="renderAllProducts()" onkeydown="if(event.key==='Enter'){event.preventDefault();renderAllProducts();}">
+                <input type="number" id="priceMax" placeholder="Цена до" min="0" inputmode="numeric" oninput="renderAllProducts()" onchange="renderAllProducts()" onkeyup="renderAllProducts()" onkeydown="if(event.key==='Enter'){event.preventDefault();renderAllProducts();}">
+            </div>
+            <div class="sort-filter">
+                <select id="sortSelect" onchange="renderAllProducts()">
+                    <option value="default">По умолчанию</option>
+                    <option value="price-asc">Сначала дешёвые</option>
+                    <option value="price-desc">Сначала дорогие</option>
+                    <option value="name-asc">По алфавиту А-Я</option>
+                    <option value="name-desc">По алфавиту Я-А</option>
+                    <option value="new">Сначала новые</option>
+                </select>
             </div>
             <div class="filter-chips" id="filterChips"></div>
             <span class="results-count" id="resultsCount"></span>
@@ -316,7 +337,10 @@
             <button class="product-modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
             <div class="product-modal-gallery" id="modalGallery"></div>
             <div class="product-modal-body">
-                <span class="product-modal-category" id="modalCategory"></span>
+                <div class="product-modal-meta">
+                    <span class="product-modal-category" id="modalCategory"></span>
+                    <span class="product-modal-brand" id="modalBrand"><i class="fa-solid fa-certificate"></i> <span id="modalBrandText">Garmin</span></span>
+                </div>
                 <h2 class="product-modal-name" id="modalName"></h2>
                 <div class="price-block" id="modalPriceBlock"></div>
                 <p class="product-modal-description" id="modalDescription"></p>
@@ -416,6 +440,7 @@
     <script>
         // Жёстко заданные категории (только эти три) — с заглавной буквы
         const ALLOWED_CATEGORIES = ['Спорт', 'Для жизни', 'Тактические'];
+        const DEFAULT_BRAND = 'Garmin';
         const BOT_SERVER_URL = 'https://oneminute-bot.onrender.com';
 
         function normalizeCategory(cat) {
@@ -437,6 +462,12 @@
             return map[trimmed] || cat;
         }
 
+        function normalizeBrand(brand) {
+            if (!brand || !String(brand).trim()) return DEFAULT_BRAND;
+            const b = String(brand).trim();
+            return b.charAt(0).toUpperCase() + b.slice(1);
+        }
+
         let PRODUCTS = [], SETTINGS = {}, cart = [], currentFilter = 'all', suggestionIndex = -1;
         let lastOrderData = null, selectedFile = null;
         let galleryImages = [], currentSlide = 0;
@@ -447,15 +478,34 @@
                 const r = await fetch('https://raw.githubusercontent.com/kodpin/OneMinute-data/main/products.json', { cache: 'no-store' });
                 if (!r.ok) throw new Error('no data');
                 const d = await r.json();
-                PRODUCTS = (d.products || []).map(p => ({...p, category: normalizeCategory(p.category)}));
+                PRODUCTS = (d.products || []).map(p => ({
+                    ...p,
+                    category: normalizeCategory(p.category),
+                    brand: normalizeBrand(p.brand)
+                }));
                 SETTINGS = d.settings || {};
                 buildCategoryFilters();
                 renderAllProducts();
                 updateFooter();
                 updateLinks();
+                attachFilterListeners();
             } catch(e) {
                 document.getElementById('productsGrid').innerHTML = '<p style="text-align:center;color:var(--gray);padding:50px 0;grid-column:1/-1;">Ошибка загрузки</p>';
             }
+        }
+
+        function attachFilterListeners() {
+            // Дублирующие обработчики для надёжности
+            ['priceMin', 'priceMax'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', renderAllProducts);
+                    el.addEventListener('change', renderAllProducts);
+                    el.addEventListener('keyup', renderAllProducts);
+                }
+            });
+            const sortEl = document.getElementById('sortSelect');
+            if (sortEl) sortEl.addEventListener('change', renderAllProducts);
         }
 
         function updateLinks() {
@@ -502,26 +552,71 @@
         }
 
         function getEffectivePrice(p) {
-            const hasDiscount = p.discount_percent > 0 && p.discount_end;
+            if (!p || p.price === undefined || p.price === null) return 0;
+            const price = Number(p.price) || 0;
+            const hasDiscount = Number(p.discount_percent) > 0 && p.discount_end;
             const now = new Date();
             const endDate = hasDiscount ? new Date(p.discount_end) : null;
             const isActive = hasDiscount && endDate && endDate > now;
-            return isActive ? Math.round(p.price * (1 - p.discount_percent / 100)) : p.price;
+            return isActive ? Math.round(price * (1 - Number(p.discount_percent) / 100)) : price;
         }
 
         function getFilteredProducts() {
-            const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            const searchEl = document.getElementById('searchInput');
             const minEl = document.getElementById('priceMin');
             const maxEl = document.getElementById('priceMax');
-            const minPrice = minEl && minEl.value !== '' ? parseFloat(minEl.value) : 0;
-            const maxPrice = maxEl && maxEl.value !== '' ? parseFloat(maxEl.value) : Infinity;
-            let f = PRODUCTS;
-            if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter);
-            if (q) f = f.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+            const sortEl = document.getElementById('sortSelect');
+
+            const q = (searchEl && searchEl.value || '').toLowerCase().trim();
+            let minPrice = 0, maxPrice = Infinity;
+            if (minEl && minEl.value !== '') {
+                const v = parseFloat(minEl.value);
+                if (!isNaN(v) && v >= 0) minPrice = v;
+            }
+            if (maxEl && maxEl.value !== '') {
+                const v = parseFloat(maxEl.value);
+                if (!isNaN(v) && v >= 0) maxPrice = v;
+            }
+            const sortVal = sortEl ? sortEl.value : 'default';
+
+            let f = [...PRODUCTS];
+
+            if (currentFilter !== 'all') {
+                f = f.filter(p => p.category === currentFilter);
+            }
+
+            if (q) {
+                f = f.filter(p => {
+                    const name = (p.name || '').toLowerCase();
+                    const desc = (p.description || '').toLowerCase();
+                    const brand = (p.brand || '').toLowerCase();
+                    return name.includes(q) || desc.includes(q) || brand.includes(q);
+                });
+            }
+
             f = f.filter(p => {
                 const price = getEffectivePrice(p);
                 return price >= minPrice && price <= maxPrice;
             });
+
+            switch (sortVal) {
+                case 'price-asc':
+                    f.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
+                    break;
+                case 'price-desc':
+                    f.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
+                    break;
+                case 'name-asc':
+                    f.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru'));
+                    break;
+                case 'name-desc':
+                    f.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'ru'));
+                    break;
+                case 'new':
+                    f.sort((a, b) => (b.id || 0) - (a.id || 0));
+                    break;
+            }
+
             return f;
         }
 
@@ -547,9 +642,12 @@
                 }
 
                 const imageUrl = Array.isArray(p.image) ? p.image[0] : p.image;
+                const brand = p.brand || DEFAULT_BRAND;
+
                 return `<div class="product-card" style="animation-delay:${i*0.03}s" onclick="openProductModal(${p.id})">
                     <div class="product-image-wrap"><img src="${imageUrl}" alt="${p.name}" class="product-image" loading="lazy"><span class="product-badge">${p.category || ''}</span></div>
                     <div class="product-info">
+                        <div class="product-brand"><i class="fa-solid fa-certificate"></i> ${brand}</div>
                         <h3 class="product-name">${p.name}</h3>
                         <p class="product-description">${p.description}</p>
                         <div class="price-block">${priceHTML}</div>
@@ -587,13 +685,18 @@
         function onSearchInput() {
             document.getElementById('searchClear').classList.toggle('visible', document.getElementById('searchInput').value.length > 0);
             showSuggestions();
+            renderAllProducts();
         }
         function filterAndRender() { closeSuggestions(); renderAllProducts(); }
         function showSuggestions() {
             const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
             const c = document.getElementById('searchSuggestions');
             if (!q) { c.classList.remove('active'); return; }
-            const m = PRODUCTS.filter(p => p.name.toLowerCase().includes(q)).slice(0, 5);
+            const m = PRODUCTS.filter(p => {
+                const name = (p.name || '').toLowerCase();
+                const brand = (p.brand || '').toLowerCase();
+                return name.includes(q) || brand.includes(q);
+            }).slice(0, 5);
             if (!m.length) { c.classList.remove('active'); return; }
             c.innerHTML = m.map((p, i) => `<div class="suggestion-item" onclick="selectSuggestion('${p.name.replace(/'/g,"\\'")}')"><i class="fa-solid fa-magnifying-glass"></i><span class="suggestion-name">${p.name}</span><span class="suggestion-price">${fmt(p.price)}</span></div>`).join('');
             c.classList.add('active');
@@ -613,18 +716,21 @@
             document.getElementById('searchInput').value = '';
             const minEl = document.getElementById('priceMin');
             const maxEl = document.getElementById('priceMax');
+            const sortEl = document.getElementById('sortSelect');
             if (minEl) minEl.value = '';
             if (maxEl) maxEl.value = '';
+            if (sortEl) sortEl.value = 'default';
             document.getElementById('searchClear').classList.remove('visible');
             closeSuggestions();
             renderAllProducts();
         }
-        function fmt(p) { return p.toLocaleString('ru-RU') + ' ₽'; }
+        function fmt(p) { return Number(p).toLocaleString('ru-RU') + ' ₽'; }
 
         function openProductModal(id) {
             const p = PRODUCTS.find(x => x.id === id);
             if (!p) return;
             document.getElementById('modalCategory').textContent = p.category || 'Без категории';
+            document.getElementById('modalBrandText').textContent = p.brand || DEFAULT_BRAND;
             document.getElementById('modalName').textContent = p.name;
             document.getElementById('modalDescription').textContent = p.description;
             document.getElementById('modalBuyBtn').onclick = () => { closeProductModal(); buyNow(id); };
