@@ -91,6 +91,12 @@
         .suggestion-name { font-weight: 600; }
         .suggestion-price { margin-left: auto; font-weight: 700; font-size: 13px; color: var(--blue); }
 
+        .price-filter { display: flex; gap: 8px; align-items: center; }
+        .price-filter input { width: 110px; padding: 12px 14px; border: 1.5px solid #e5e5ea; border-radius: 24px; font-size: 13px; font-family: inherit; background: var(--white); transition: all var(--transition); -webkit-appearance: textfield; }
+        .price-filter input::-webkit-outer-spin-button, .price-filter input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .price-filter input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(0,113,227,0.06); }
+        .price-filter input::placeholder { color: var(--gray-light); }
+
         .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
         .filter-chip { padding: 9px 16px; border-radius: 24px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid #e5e5ea; background: var(--white); color: var(--gray); transition: all var(--transition); white-space: nowrap; user-select: none; }
         .filter-chip:hover { border-color: var(--gray-light); color: var(--dark); }
@@ -120,6 +126,8 @@
             .search-filter-bar { flex-direction: column; }
             .search-wrap { min-width: 100%; }
             .filter-chips { justify-content: center; }
+            .price-filter { width: 100%; justify-content: center; }
+            .price-filter input { flex: 1; max-width: 130px; }
             .form-row { flex-direction: column; }
         }
 
@@ -292,6 +300,10 @@
                 <button class="search-icon" onclick="filterAndRender()"><i class="fa-solid fa-magnifying-glass"></i></button>
                 <div class="search-suggestions" id="searchSuggestions"></div>
             </div>
+            <div class="price-filter">
+                <input type="number" id="priceMin" placeholder="Цена от" min="0" inputmode="numeric" oninput="renderAllProducts()" onkeydown="if(event.key==='Enter'){event.preventDefault();renderAllProducts();}">
+                <input type="number" id="priceMax" placeholder="Цена до" min="0" inputmode="numeric" oninput="renderAllProducts()" onkeydown="if(event.key==='Enter'){event.preventDefault();renderAllProducts();}">
+            </div>
             <div class="filter-chips" id="filterChips"></div>
             <span class="results-count" id="resultsCount"></span>
         </div>
@@ -402,27 +414,27 @@
     </footer>
 
     <script>
-        // Жёстко заданные категории (только эти три)
-        const ALLOWED_CATEGORIES = ['спорт', 'для жизни', 'тактические'];
+        // Жёстко заданные категории (только эти три) — с заглавной буквы
+        const ALLOWED_CATEGORIES = ['Спорт', 'Для жизни', 'Тактические'];
         const BOT_SERVER_URL = 'https://oneminute-bot.onrender.com';
 
         function normalizeCategory(cat) {
-            if (!cat) return 'без категории';
+            if (!cat) return 'Без категории';
             const trimmed = String(cat).trim().toLowerCase();
             const map = {
-                'tactical': 'тактические',
-                'travel': 'для жизни',
-                'running': 'спорт',
-                'diving': 'спорт',
-                'run': 'спорт',
-                'Для жизни': 'для жизни',
-                'Спорт': 'спорт',
-                'Тактические': 'тактические',
-                'life': 'для жизни',
-                'sport': 'спорт',
-                'casual': 'для жизни'
+                'tactical': 'Тактические',
+                'тактические': 'Тактические',
+                'travel': 'Для жизни',
+                'для жизни': 'Для жизни',
+                'running': 'Спорт',
+                'diving': 'Спорт',
+                'run': 'Спорт',
+                'спорт': 'Спорт',
+                'life': 'Для жизни',
+                'sport': 'Спорт',
+                'casual': 'Для жизни'
             };
-            return map[trimmed] || trimmed;
+            return map[trimmed] || cat;
         }
 
         let PRODUCTS = [], SETTINGS = {}, cart = [], currentFilter = 'all', suggestionIndex = -1;
@@ -489,11 +501,27 @@
             });
         }
 
+        function getEffectivePrice(p) {
+            const hasDiscount = p.discount_percent > 0 && p.discount_end;
+            const now = new Date();
+            const endDate = hasDiscount ? new Date(p.discount_end) : null;
+            const isActive = hasDiscount && endDate && endDate > now;
+            return isActive ? Math.round(p.price * (1 - p.discount_percent / 100)) : p.price;
+        }
+
         function getFilteredProducts() {
             const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            const minEl = document.getElementById('priceMin');
+            const maxEl = document.getElementById('priceMax');
+            const minPrice = minEl && minEl.value !== '' ? parseFloat(minEl.value) : 0;
+            const maxPrice = maxEl && maxEl.value !== '' ? parseFloat(maxEl.value) : Infinity;
             let f = PRODUCTS;
             if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter);
             if (q) f = f.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+            f = f.filter(p => {
+                const price = getEffectivePrice(p);
+                return price >= minPrice && price <= maxPrice;
+            });
             return f;
         }
 
@@ -583,6 +611,10 @@
         function closeSuggestions() { document.getElementById('searchSuggestions').classList.remove('active'); }
         function clearSearch() {
             document.getElementById('searchInput').value = '';
+            const minEl = document.getElementById('priceMin');
+            const maxEl = document.getElementById('priceMax');
+            if (minEl) minEl.value = '';
+            if (maxEl) maxEl.value = '';
             document.getElementById('searchClear').classList.remove('visible');
             closeSuggestions();
             renderAllProducts();

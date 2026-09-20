@@ -20,20 +20,23 @@ ADMIN_IDS = [int(id.strip()) for id in os.environ.get('ADMIN_IDS', '').split(','
 
 user_states = {}
 
-ALLOWED_CATEGORIES = ['спорт', 'для жизни', 'тактические']
+ALLOWED_CATEGORIES = ['Спорт', 'Для жизни', 'Тактические']
 
 CATEGORY_MAP = {
-    'tactical': 'тактические',
-    'travel': 'для жизни',
-    'running': 'спорт',
-    'diving': 'спорт',
-    'run': 'спорт',
-    'Для жизни': 'для жизни',
-    'Спорт': 'спорт',
-    'Тактические': 'тактические',
-    'life': 'для жизни',
-    'sport': 'спорт',
-    'casual': 'для жизни'
+    'tactical': 'Тактические',
+    'Тактические': 'Тактические',
+    'тактические': 'Тактические',
+    'travel': 'Для жизни',
+    'Для жизни': 'Для жизни',
+    'для жизни': 'Для жизни',
+    'running': 'Спорт',
+    'diving': 'Спорт',
+    'run': 'Спорт',
+    'Спорт': 'Спорт',
+    'спорт': 'Спорт',
+    'life': 'Для жизни',
+    'sport': 'Спорт',
+    'casual': 'Для жизни'
 }
 
 def migrate_categories(data):
@@ -43,7 +46,7 @@ def migrate_categories(data):
             if cat in CATEGORY_MAP:
                 p['category'] = CATEGORY_MAP[cat]
             elif cat not in ALLOWED_CATEGORIES:
-                p['category'] = 'спорт'
+                p['category'] = 'Спорт'
 
     if 'settings' not in data:
         data['settings'] = {}
@@ -828,6 +831,8 @@ def handle_csv_import(chat_id, document):
                 continue
             price = int(price)
             discount_percent = int(discount_percent) if discount_percent else 0
+            if category in CATEGORY_MAP:
+                category = CATEGORY_MAP[category]
             if pid and pid.isdigit():
                 existing = next((p for p in data['products'] if p['id'] == int(pid)), None)
                 if existing:
@@ -970,6 +975,8 @@ def save_new_category(chat_id, name):
     if not name:
         send_message(chat_id, '❌ Название не может быть пустым.')
         return
+    # Автоматически делаем первую букву заглавной
+    name = name[0].upper() + name[1:] if len(name) > 1 else name.upper()
     data, sha = get_data()
     if not data:
         return
