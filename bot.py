@@ -49,6 +49,15 @@ CATEGORY_MAP = {
     'casual': 'Для жизни'
 }
 
+# ---------- CORS (чтобы сайт мог отправлять заказы на бота) ----------
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Max-Age'] = '86400'
+    return response
+
 def normalize_brand(brand):
     if not brand or not str(brand).strip():
         return DEFAULT_BRAND
@@ -1128,8 +1137,11 @@ def format_order_message(data):
 💰 <b>Итого: {data.get('total', 0):,} ₽</b>"""
 
 # ---------- Маршрут для приёма заявок с сайта ----------
-@app.route('/submit-order', methods=['POST'])
+@app.route('/submit-order', methods=['POST', 'OPTIONS'])
 def submit_order():
+    if request.method == 'OPTIONS':
+        return ('', 204)
+
     data = request.get_json()
     if not data:
         return jsonify({'status': 'error'}), 400
@@ -1146,9 +1158,12 @@ def submit_order():
 
     return jsonify({'status': 'ok'})
 
-# ---------- НОВЫЙ маршрут: приём чека с сайта ----------
-@app.route('/upload-receipt', methods=['POST'])
+# ---------- Маршрут: приём чека с сайта ----------
+@app.route('/upload-receipt', methods=['POST', 'OPTIONS'])
 def upload_receipt():
+    if request.method == 'OPTIONS':
+        return ('', 204)
+
     if 'document' not in request.files:
         return jsonify({'status': 'error', 'message': 'no file'}), 400
 
@@ -1184,14 +1199,18 @@ def upload_receipt():
         return jsonify({'status': 'ok', 'sent': sent})
     return jsonify({'status': 'error', 'message': 'send failed'}), 500
 
-@app.route('/webhook', methods=['POST'])
+@app.route('/webhook', methods=['POST', 'OPTIONS'])
 def webhook():
+    if request.method == 'OPTIONS':
+        return ('', 204)
     if request.is_json:
         process_update(request.get_json())
     return jsonify({'status': 'ok'})
 
-@app.route('/')
+@app.route('/', methods=['GET', 'OPTIONS'])
 def index():
+    if request.method == 'OPTIONS':
+        return ('', 204)
     return 'Bot is running!'
 
 if __name__ == '__main__':
