@@ -64,7 +64,6 @@ def migrate_categories(data):
             elif cat not in ALLOWED_CATEGORIES:
                 p['category'] = 'Спорт'
             p['brand'] = normalize_brand(p.get('brand', ''))
-
     if 'settings' not in data:
         data['settings'] = {}
     if 'categories' not in data['settings']:
@@ -79,6 +78,8 @@ def migrate_categories(data):
             if c_mapped not in new_cats:
                 new_cats.append(c_mapped)
         data['settings']['categories'] = new_cats
+    if 'promocodes' not in data['settings']:
+        data['settings']['promocodes'] = []
     return data
 
 def get_data():
@@ -110,15 +111,12 @@ def save_data(data, sha=None):
         payload['sha'] = sha
     return requests.put(url, headers=headers, json=payload)
 
-# ---------- Загрузка текстового файла в репозиторий сайта ----------
 def upload_text_file_to_site(text, filename):
     owner, repo = SITE_REPO.split('/')
     url = f'https://api.github.com/repos/{owner}/{repo}/contents/{filename}'
     headers = {'Authorization': f'token {GITHUB_TOKEN}'}
-
     r = requests.get(url, headers=headers)
     sha = r.json().get('sha') if r.status_code == 200 else None
-
     encoded = base64.b64encode(text.encode('utf-8')).decode('utf-8')
     payload = {'message': f'Update {filename}', 'content': encoded}
     if sha:
@@ -126,23 +124,16 @@ def upload_text_file_to_site(text, filename):
     resp = requests.put(url, headers=headers, json=payload)
     return resp.status_code in [200, 201]
 
-# ---------- Генерация sitemap.xml ----------
 def generate_sitemap_xml():
     data, _ = get_data()
     if not data or not data.get('products'):
         return None
     now = datetime.utcnow().strftime('%Y-%m-%d')
-    urls = [
-        f'  <url>\n    <loc>{SITE_BASE_URL}/</loc>\n    <lastmod>{now}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>'
-    ]
+    urls = [f'  <url>\n    <loc>{SITE_BASE_URL}/</loc>\n    <lastmod>{now}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>']
     for p in data['products']:
-        urls.append(
-            f'  <url>\n    <loc>{SITE_BASE_URL}/?id={p["id"]}</loc>\n    <lastmod>{now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>'
-        )
-    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + '\n'.join(urls) + '\n</urlset>'
-    return xml
+        urls.append(f'  <url>\n    <loc>{SITE_BASE_URL}/?id={p["id"]}</loc>\n    <lastmod>{now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>')
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + '\n'.join(urls) + '\n</urlset>'
 
-# ---------- Генерация robots.txt ----------
 def generate_robots_txt():
     return f"""User-agent: *
 Allow: /
@@ -152,7 +143,6 @@ Disallow: /privacy.html
 Sitemap: {SITE_BASE_URL}/sitemap.xml
 """
 
-# ---------- Telegram helpers ----------
 def send_message(chat_id, text, reply_markup=None):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
     payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}
@@ -205,30 +195,25 @@ def compress_image(image_bytes, max_width=800):
     except Exception:
         return image_bytes
 
-# ---------- Клавиатуры ----------
 def main_reply_kb():
     return {
         "keyboard": [
             ["➕ Добавить товар", "📋 Список товаров"],
             ["✏️ Редактировать товар", "⚙️ Настройки"],
-            ["🗺 SEO: sitemap + robots", "🏠 Главное меню"]
+            ["🎟 Промокоды", "🗺 SEO: sitemap + robots"],
+            ["🏠 Главное меню"]
         ],
         "resize_keyboard": True,
         "one_time_keyboard": False
     }
 
-def main_menu_kb():
+def promo_menu_kb():
     return {"inline_keyboard": [
-        [{"text": "➕ Добавить товар", "callback_data": "add_product"}],
-        [{"text": "📋 Список товаров", "callback_data": "list_products"}],
-        [{"text": "✏️ Редактировать товар", "callback_data": "edit_product"}],
-        [{"text": "📊 Массовое изменение цен", "callback_data": "mass_price"}],
-        [{"text": "🏷 Массовая скидка", "callback_data": "mass_discount"}],
-        [{"text": "🗺 Обновить sitemap.xml", "callback_data": "gen_sitemap"}],
-        [{"text": "🤖 Обновить robots.txt", "callback_data": "gen_robots"}],
-        [{"text": "📥 Экспорт товаров", "callback_data": "export_csv"}],
-        [{"text": "📤 Импорт товаров", "callback_data": "import_csv"}],
-        [{"text": "⚙️ Настройки", "callback_data": "settings_menu"}]
+        [{"text": "📋 Список промокодов", "callback_data": "promo_list"}],
+        [{"text": "➕ Создать промокод", "callback_data": "promo_create"}],
+        [{"text": "❌ Удалить промокод", "callback_data": "promo_delete_menu"}],
+        [{"text": "📊 Статистика", "callback_data": "promo_stats"}],
+        [{"text": "🔙 Назад", "callback_data": "main_menu"}]
     ]}
 
 def cancel_kb():
@@ -247,10 +232,8 @@ def category_kb():
     for idx, cat in enumerate(cats):
         row.append({"text": cat, "callback_data": f"cat_{idx}"})
         if len(row) == 2:
-            buttons.append(row)
-            row = []
-    if row:
-        buttons.append(row)
+            buttons.append(row); row = []
+    if row: buttons.append(row)
     buttons.append([{"text": "❌ Отмена", "callback_data": "cancel_add"}])
     return {"inline_keyboard": buttons}
 
@@ -272,12 +255,10 @@ def settings_kb():
         [{"text": "📱 Изменить QR-код", "callback_data": "edit_qr"}],
         [{"text": "🔗 Изменить ссылку оплаты", "callback_data": "edit_link"}],
         [{"text": "👤 Изменить менеджера", "callback_data": "edit_manager"}],
-        [{"text": "🌐 Изменить базовый URL сайта", "callback_data": "edit_site_url"}],
         [{"text": "🗂 Управление категориями", "callback_data": "manage_categories"}],
         [{"text": "🔙 Назад", "callback_data": "main_menu"}]
     ]}
 
-# ---------- Главный обработчик ----------
 def process_update(update):
     if 'callback_query' in update:
         cb = update['callback_query']
@@ -304,6 +285,19 @@ def process_update(update):
             start_edit_product(chat_id, page)
         elif data == 'noop':
             pass
+        elif data == 'promo_menu':
+            show_promo_menu(chat_id)
+        elif data == 'promo_list':
+            show_promos_list(chat_id)
+        elif data == 'promo_create':
+            start_add_promo(chat_id)
+        elif data == 'promo_delete_menu':
+            show_delete_promo_menu(chat_id)
+        elif data == 'promo_stats':
+            show_promo_stats(chat_id)
+        elif data.startswith('delpromo_'):
+            idx = int(data.replace('delpromo_', ''))
+            delete_promo_by_index(chat_id, idx)
         elif data == 'gen_sitemap':
             cmd_gen_sitemap(chat_id)
         elif data == 'gen_robots':
@@ -330,13 +324,11 @@ def process_update(update):
         elif data == 'edit_ip':
             start_edit(chat_id, 'ip_info', '📝 Введите информацию об ИП:')
         elif data == 'edit_qr':
-            start_edit(chat_id, 'payment_qr', '📱 Отправьте ссылку на QR-код:')
+            start_edit(chat_id, 'payment_qr', '📱 Отправьте ссылку на QR-код (или отправьте "-" чтобы очистить):')
         elif data == 'edit_link':
-            start_edit(chat_id, 'payment_link', '🔗 Отправьте ссылку для оплаты:')
+            start_edit(chat_id, 'payment_link', '🔗 Отправьте ссылку для оплаты (или отправьте "-" чтобы очистить):')
         elif data == 'edit_manager':
             start_edit(chat_id, 'manager_telegram', '👤 Отправьте ссылку на менеджера:')
-        elif data == 'edit_site_url':
-            start_edit(chat_id, 'site_base_url', f'🌐 Введите базовый URL сайта (например, {SITE_BASE_URL}):')
         elif data == 'export_csv':
             export_csv(chat_id)
         elif data == 'import_csv':
@@ -388,7 +380,7 @@ def process_update(update):
             if chat_id in user_states and user_states[chat_id].get('action') == 'edit_product':
                 handle_edit_field(chat_id, field)
             else:
-                send_message(chat_id, '⚠️ Сессия редактирования устарела. Начните заново.')
+                send_message(chat_id, '⚠️ Сессия устарела.')
         elif data == 'manage_categories':
             show_categories_list(chat_id)
         elif data == 'add_category':
@@ -401,7 +393,7 @@ def process_update(update):
             if 0 <= idx < len(cats):
                 delete_category_by_name(chat_id, cats[idx])
             else:
-                send_message(chat_id, '❌ Категория не найдена.')
+                send_message(chat_id, '❌ Не найдена.')
         return
 
     if 'message' not in update:
@@ -435,6 +427,9 @@ def process_update(update):
         if state.get('action') == 'waiting_text':
             handle_text_step(chat_id, text)
             return
+        elif state.get('action') == 'new_promo':
+            handle_promo_step(chat_id, text)
+            return
         elif state.get('action') == 'edit_product' and state.get('step') == 'edit_value':
             save_edit(chat_id, text)
             return
@@ -446,7 +441,7 @@ def process_update(update):
                 pct = float(text.replace(',', '.'))
                 apply_mass_price(chat_id, pct)
             except:
-                send_message(chat_id, '❌ Введите число (например, 10 или -5).')
+                send_message(chat_id, '❌ Введите число.')
             return
         elif state.get('action') == 'mass_discount_percent':
             try:
@@ -454,9 +449,9 @@ def process_update(update):
                 if 0 <= pct <= 100:
                     ask_mass_discount_end(chat_id, state['mass_discount_category'], pct)
                 else:
-                    send_message(chat_id, '❌ Процент должен быть от 0 до 100.')
+                    send_message(chat_id, '❌ 0-100.')
             except:
-                send_message(chat_id, '❌ Введите целое число от 0 до 100.')
+                send_message(chat_id, '❌ 0-100.')
             return
         elif state.get('action') == 'mass_discount_end':
             discount_end = text.strip()
@@ -471,6 +466,8 @@ def process_update(update):
         show_products(chat_id, 0)
     elif 'Редактировать товар' in text:
         start_edit_product(chat_id, 0)
+    elif 'Промокод' in text:
+        show_promo_menu(chat_id)
     elif 'SEO' in text or 'sitemap' in text.lower():
         cmd_gen_sitemap(chat_id)
         cmd_gen_robots(chat_id)
@@ -488,34 +485,189 @@ def send_main_menu(chat_id):
     if products:
         count = len(products)
         total = sum(p['price'] for p in products)
-        info = f'\n📦 Товаров: {count} | 💰 На сумму: {total:,} ₽'
+        promos = data.get('settings', {}).get('promocodes', [])
+        info = f'\n📦 Товаров: {count} | 💰 На сумму: {total:,} ₽\n🎟 Промокодов: {len(promos)}'
         send_message(chat_id, f'🎯 <b>OneMinute — Панель управления</b>{info}', main_reply_kb())
     else:
         send_message(chat_id, '📦 Товаров пока нет', main_reply_kb())
 
-# ---------- SEO-команды ----------
+# ---------- ПРОМОКОДЫ ----------
+def show_promo_menu(chat_id):
+    send_message(chat_id, '🎟 <b>Промокоды</b>\n\nУправление скидочными кодами.', promo_menu_kb())
+
+def show_promos_list(chat_id):
+    data, _ = get_data()
+    promos = data.get('settings', {}).get('promocodes', []) if data else []
+    if not promos:
+        send_message(chat_id, '📋 Промокодов пока нет.', promo_menu_kb())
+        return
+    text = '📋 <b>Список промокодов:</b>\n\n'
+    now = datetime.now()
+    for p in promos:
+        code = p.get('code', '?')
+        pct = p.get('percent', 0)
+        used = p.get('used', 0)
+        limit = p.get('limit', 0)
+        expires = p.get('expires', '')
+        status = '🟢'
+        if expires:
+            try:
+                if datetime.strptime(expires, '%Y-%m-%d') < now:
+                    status = '🔴'
+            except:
+                pass
+        if limit > 0 and used >= limit:
+            status = '🔴'
+        limit_text = f'{used}/{limit}' if limit > 0 else f'{used}/∞'
+        expires_text = expires or 'бессрочно'
+        text += f'{status} <b>{code}</b> — {pct}% · {limit_text} · до {expires_text}\n'
+    send_message(chat_id, text, promo_menu_kb())
+
+def start_add_promo(chat_id):
+    user_states[chat_id] = {'action': 'new_promo', 'step': 'code', 'promo': {}}
+    send_message(chat_id, '➕ <b>Новый промокод</b>\n\n<b>Шаг 1/4:</b> Введите код (например: <b>ЛЕТО10</b> или <b>SUMMER10</b>):', cancel_kb())
+
+def handle_promo_step(chat_id, text):
+    state = user_states.get(chat_id)
+    if not state:
+        return
+    step = state['step']
+    if step == 'code':
+        code = text.strip().upper().replace(' ', '')
+        if not code:
+            send_message(chat_id, '❌ Код не может быть пустым.')
+            return
+        data, _ = get_data()
+        promos = data.get('settings', {}).get('promocodes', []) if data else []
+        if any(p.get('code', '').upper() == code for p in promos):
+            send_message(chat_id, '❌ Такой код уже существует. Введите другой.')
+            return
+        state['promo'] = {'code': code}
+        state['step'] = 'percent'
+        send_message(chat_id, f'✅ Код: <b>{code}</b>\n\n<b>Шаг 2/4:</b> Введите процент скидки (0-100):', cancel_kb())
+    elif step == 'percent':
+        try:
+            pct = int(text)
+            if pct < 0 or pct > 100:
+                raise ValueError
+        except:
+            send_message(chat_id, '❌ Введите число от 0 до 100.')
+            return
+        state['promo']['percent'] = pct
+        state['step'] = 'expires'
+        send_message(chat_id, f'✅ Скидка: {pct}%\n\n<b>Шаг 3/4:</b> Срок действия (ГГГГ-ММ-ДД) или отправьте <b>0</b> для бессрочного:', cancel_kb())
+    elif step == 'expires':
+        text = text.strip()
+        if text == '0' or text == '':
+            state['promo']['expires'] = ''
+        else:
+            try:
+                datetime.strptime(text, '%Y-%m-%d')
+                state['promo']['expires'] = text
+            except ValueError:
+                send_message(chat_id, '❌ Неверный формат. Нужно ГГГГ-ММ-ДД или 0.')
+                return
+        state['step'] = 'limit'
+        exp_text = state['promo']['expires'] or 'бессрочный'
+        send_message(chat_id, f'✅ Срок: {exp_text}\n\n<b>Шаг 4/4:</b> Лимит использований (число) или <b>0</b> для безлимита:', cancel_kb())
+    elif step == 'limit':
+        try:
+            limit = int(text)
+            if limit < 0:
+                raise ValueError
+        except:
+            send_message(chat_id, '❌ Введите положительное число или 0.')
+            return
+        state['promo']['limit'] = limit
+        state['promo']['used'] = 0
+        state['promo']['created'] = datetime.now().strftime('%Y-%m-%d')
+        data, sha = get_data()
+        if not data:
+            send_message(chat_id, '❌ Ошибка чтения данных.')
+            return
+        if 'settings' not in data:
+            data['settings'] = {}
+        if 'promocodes' not in data['settings']:
+            data['settings']['promocodes'] = []
+        data['settings']['promocodes'].append(state['promo'])
+        resp = save_data(data, sha)
+        if resp.status_code in [200, 201]:
+            p = state['promo']
+            expires_text = p['expires'] or 'бессрочный'
+            limit_text = str(p['limit']) if p['limit'] > 0 else 'безлимит'
+            send_message(chat_id, f'✅ Промокод <b>{p["code"]}</b> создан!\n\n💰 Скидка: {p["percent"]}%\n📅 Срок: {expires_text}\n🔢 Лимит: {limit_text}', main_reply_kb())
+        else:
+            send_message(chat_id, '❌ Ошибка сохранения.')
+        if chat_id in user_states:
+            del user_states[chat_id]
+
+def show_delete_promo_menu(chat_id):
+    data, _ = get_data()
+    promos = data.get('settings', {}).get('promocodes', []) if data else []
+    if not promos:
+        send_message(chat_id, '📋 Промокодов нет.', promo_menu_kb())
+        return
+    keyboard = []
+    for i, p in enumerate(promos):
+        keyboard.append([{"text": f"❌ {p.get('code', '?')} ({p.get('percent', 0)}%)", "callback_data": f"delpromo_{i}"}])
+    keyboard.append([{"text": "🔙 Назад", "callback_data": "promo_menu"}])
+    send_message(chat_id, '❌ Выберите промокод для удаления:', {"inline_keyboard": keyboard})
+
+def delete_promo_by_index(chat_id, idx):
+    data, sha = get_data()
+    if not data:
+        return
+    promos = data.get('settings', {}).get('promocodes', [])
+    if 0 <= idx < len(promos):
+        removed = promos.pop(idx)
+        data['settings']['promocodes'] = promos
+        resp = save_data(data, sha)
+        if resp.status_code in [200, 201]:
+            send_message(chat_id, f'✅ Промокод <b>{removed.get("code", "?")}</b> удалён!', promo_menu_kb())
+        else:
+            send_message(chat_id, '❌ Ошибка.')
+    else:
+        send_message(chat_id, '❌ Не найден.')
+
+def show_promo_stats(chat_id):
+    data, _ = get_data()
+    promos = data.get('settings', {}).get('promocodes', []) if data else []
+    if not promos:
+        send_message(chat_id, '📊 Промокодов нет.', promo_menu_kb())
+        return
+    text = '📊 <b>Статистика промокодов</b>\n\n'
+    total_uses = 0
+    for p in promos:
+        used = p.get('used', 0)
+        total_uses += used
+        pct = p.get('percent', 0)
+        text += f'🎟 <b>{p.get("code", "?")}</b> — {pct}%: <b>{used}</b> раз\n'
+    text += f'\n📈 Всего применений: <b>{total_uses}</b>'
+    send_message(chat_id, text, promo_menu_kb())
+
+# ---------- SEO ----------
 def cmd_gen_sitemap(chat_id):
     send_message(chat_id, '🗺 Генерирую sitemap.xml...')
     xml = generate_sitemap_xml()
     if not xml:
-        send_message(chat_id, '❌ Нет товаров или ошибка чтения данных.')
+        send_message(chat_id, '❌ Нет товаров.')
         return
     ok = upload_text_file_to_site(xml, 'sitemap.xml')
     if ok:
         data, _ = get_data()
         count = len(data.get('products', [])) if data else 0
-        send_message(chat_id, f'✅ <b>sitemap.xml</b> обновлён!\nВсего URL: {count + 1}\n\n📍 {SITE_BASE_URL}/sitemap.xml', main_reply_kb())
+        send_message(chat_id, f'✅ <b>sitemap.xml</b> обновлён!\nВсего URL: {count + 1}', main_reply_kb())
     else:
-        send_message(chat_id, '❌ Ошибка загрузки sitemap.xml в репозиторий.')
+        send_message(chat_id, '❌ Ошибка.')
 
 def cmd_gen_robots(chat_id):
     send_message(chat_id, '🤖 Генерирую robots.txt...')
     txt = generate_robots_txt()
     ok = upload_text_file_to_site(txt, 'robots.txt')
     if ok:
-        send_message(chat_id, f'✅ <b>robots.txt</b> обновлён!\n\n📍 {SITE_BASE_URL}/robots.txt', main_reply_kb())
+        send_message(chat_id, '✅ <b>robots.txt</b> обновлён!', main_reply_kb())
     else:
-        send_message(chat_id, '❌ Ошибка загрузки robots.txt.')
+        send_message(chat_id, '❌ Ошибка.')
 
 # ---------- Добавление товара ----------
 def start_add_product(chat_id):
@@ -530,7 +682,7 @@ def handle_text_step(chat_id, text):
     if step == 'name':
         state['data']['name'] = text
         state['step'] = 'brand'
-        send_message(chat_id, f'✅ <b>{text}</b>\n\n🏭 <b>Шаг 2/6:</b> Введите <b>производителя</b> (например, {DEFAULT_BRAND}):', cancel_kb())
+        send_message(chat_id, f'✅ <b>{text}</b>\n\n🏭 <b>Шаг 2/6:</b> Введите <b>производителя</b>:', cancel_kb())
     elif step == 'brand':
         state['data']['brand'] = normalize_brand(text)
         state['step'] = 'price'
@@ -585,11 +737,9 @@ def handle_photo(chat_id, message):
         file_path = resp['result']['file_path']
         img_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
         img_data = requests.get(img_url).content
-
         compressed = compress_image(img_data, max_width=800)
         filename = f"watch_{int(time.time())}.jpg"
         github_url = upload_image_to_site(compressed, filename)
-
         if github_url:
             state.setdefault('photos', []).append(github_url)
             send_message(chat_id, f'✅ Фото добавлено ({len(state["photos"])} шт.).', photo_step_kb())
@@ -609,7 +759,7 @@ def save_product(chat_id):
     try:
         data, sha = get_data()
         if data is None:
-            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
+            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy(), "promocodes": []}}
             sha = None
         if 'products' not in data:
             data['products'] = []
@@ -629,7 +779,6 @@ def save_product(chat_id):
         resp = save_data(data, sha)
         if resp.status_code in [200, 201]:
             send_message(chat_id, f'✅ Товар <b>{new_product["name"]}</b> добавлен!\nID: {new_id}\nБренд: {new_product["brand"]}\nЦена: {new_product["price"]:,} ₽', main_reply_kb())
-            # Авто-обновление sitemap
             try:
                 xml = generate_sitemap_xml()
                 if xml:
@@ -644,7 +793,6 @@ def save_product(chat_id):
         if chat_id in user_states:
             del user_states[chat_id]
 
-# ---------- Список и удаление ----------
 def show_products(chat_id, page=0):
     data, _ = get_data()
     if not data or not data.get('products'):
@@ -656,12 +804,10 @@ def show_products(chat_id, page=0):
     page = max(0, min(page, total_pages - 1))
     start = page * PRODUCTS_PER_PAGE
     chunk = prods[start:start + PRODUCTS_PER_PAGE]
-
     text = f'📋 <b>Товары ({total})</b> — страница {page+1}/{total_pages}\n\n'
     for p in chunk:
         brand = p.get('brand', DEFAULT_BRAND)
         text += f"🆔 {p['id']} | {brand} {p['name'][:45]} | {p['price']:,}₽\n"
-
     keyboard = []
     nav_row = []
     if page > 0:
@@ -704,11 +850,10 @@ def delete_product(chat_id, pid):
             if xml:
                 upload_text_file_to_site(xml, 'sitemap.xml')
         except Exception as e:
-            print(f'sitemap auto-update error: {e}')
+            print(f'sitemap error: {e}')
     else:
-        send_message(chat_id, f'❌ Ошибка удаления!')
+        send_message(chat_id, '❌ Ошибка удаления!')
 
-# ---------- Редактирование ----------
 def start_edit_product(chat_id, page=0):
     data, _ = get_data()
     if not data or not data.get('products'):
@@ -720,7 +865,6 @@ def start_edit_product(chat_id, page=0):
     page = max(0, min(page, total_pages - 1))
     start = page * PRODUCTS_PER_PAGE
     chunk = prods[start:start + PRODUCTS_PER_PAGE]
-
     text = f'✏️ <b>Выберите товар</b> — стр. {page+1}/{total_pages}'
     keyboard = []
     nav_row = []
@@ -770,7 +914,7 @@ def handle_edit_field(chat_id, field):
     state['edit_field'] = field
     prompts = {
         'name': '📱 Введите новое название:',
-        'brand': f'🏭 Введите производителя:',
+        'brand': '🏭 Введите производителя:',
         'price': '💰 Введите новую цену:',
         'description': '📝 Введите новое описание:',
         'discount_percent': '🏷 Процент скидки (0-100):',
@@ -848,7 +992,7 @@ def save_edit(chat_id, new_value):
             if new_value < 0 or new_value > 100:
                 raise ValueError
         except:
-            send_message(chat_id, '❌ Процент 0-100.')
+            send_message(chat_id, '❌ 0-100.')
             return
     elif field == 'discount_end':
         if str(new_value).strip() == '':
@@ -884,13 +1028,15 @@ def get_product_by_id(pid):
         return next((p for p in data['products'] if p['id'] == pid), None)
     return None
 
-# ---------- Настройки ----------
 def show_settings(chat_id):
     data, _ = get_data()
     s = data.get('settings', {}) if data else {}
     group_info = f'\n👥 Группа: {GROUP_CHAT_ID}' if GROUP_CHAT_ID else '\n⚠️ Группа не настроена'
-    site_url = s.get('site_base_url', SITE_BASE_URL)
-    text = f"⚙️ <b>Настройки</b>\n\n📝 ИП: {s.get('ip_info','-')[:100]}\n📱 QR: {s.get('payment_qr','-')[:50]}\n🔗 Ссылка: {s.get('payment_link','-')[:50]}\n👤 Менеджер: {s.get('manager_telegram','-')[:50]}\n🌐 Сайт: {site_url}{group_info}"
+    qr = s.get('payment_qr', '')
+    link = s.get('payment_link', '')
+    qr_status = '✅' if qr and qr.strip() else '❌ не задан'
+    link_status = '✅' if link and link.strip() else '❌ не задана'
+    text = f"⚙️ <b>Настройки</b>\n\n📝 ИП: {s.get('ip_info','-')[:100]}\n📱 QR: {qr_status}\n🔗 Ссылка оплаты: {link_status}\n👤 Менеджер: {s.get('manager_telegram','-')[:50]}{group_info}"
     send_message(chat_id, text, settings_kb())
 
 def start_edit(chat_id, key, prompt):
@@ -907,6 +1053,10 @@ def save_setting(chat_id, value):
         return
     if 'settings' not in data:
         data['settings'] = {}
+    # Поддержка очистки через "-"
+    value = value.strip()
+    if value == '-':
+        value = ''
     data['settings'][key] = value
     resp = save_data(data, sha)
     if resp.status_code in [200, 201]:
@@ -921,7 +1071,6 @@ def cancel_action(chat_id):
         del user_states[chat_id]
     send_message(chat_id, '❌ Отменено', main_reply_kb())
 
-# ---------- Экспорт/Импорт CSV ----------
 def export_csv(chat_id):
     data, _ = get_data()
     if not data or not data.get('products'):
@@ -951,7 +1100,7 @@ def handle_csv_import(chat_id, document):
         reader = csv.DictReader(io.StringIO(content))
         data, sha = get_data()
         if data is None:
-            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy()}}
+            data = {"products": [], "settings": {"categories": ALLOWED_CATEGORIES.copy(), "promocodes": []}}
             sha = None
         if 'products' not in data:
             data['products'] = []
@@ -993,7 +1142,6 @@ def handle_csv_import(chat_id, document):
     except Exception as e:
         send_message(chat_id, f'❌ Ошибка CSV: {e}')
 
-# ---------- Массовые операции ----------
 def start_mass_price(chat_id):
     cats = get_categories()
     buttons = [[{"text": "Все товары", "callback_data": "massprice_all"}]]
@@ -1065,7 +1213,6 @@ def apply_mass_discount(chat_id, category, percent, discount_end):
     if chat_id in user_states:
         del user_states[chat_id]
 
-# ---------- Категории ----------
 def show_categories_list(chat_id):
     cats = get_categories()
     text = "🗂 <b>Категории:</b>\n" + "\n".join([f"• {c}" for c in cats])
@@ -1133,9 +1280,14 @@ def delete_category_by_name(chat_id, cat_name):
     else:
         send_message(chat_id, '❌ Не найдена.')
 
-# ---------- Форматирование заказа ----------
 def format_order_message(data):
     items_text = "\n".join([f"• {item['product']['name']} ×{item['quantity']} = {item['product']['price'] * item['quantity']:,} ₽" for item in data.get('items', [])])
+    promo_line = ''
+    if data.get('promo'):
+        promo_line = f"🎟 <b>Промокод:</b> {data.get('promo')} (−{data.get('promo_discount', 0):,} ₽)\n"
+    subtotal_line = ''
+    if data.get('subtotal') and data.get('promo_discount', 0) > 0:
+        subtotal_line = f"💵 <b>Сумма без скидки:</b> {data.get('subtotal', 0):,} ₽\n"
     return f"""🆕 <b>НОВЫЙ ЗАКАЗ</b> #{data.get('orderNumber', '')}
 
 👤 <b>Клиент:</b> {data.get('lastName', '')} {data.get('firstName', '')} {data.get('middleName', '')}
@@ -1148,7 +1300,7 @@ def format_order_message(data):
 🛒 <b>Товары:</b>
 {items_text}
 
-💰 <b>Итого: {data.get('total', 0):,} ₽</b>"""
+{subtotal_line}{promo_line}💰 <b>Итого: {data.get('total', 0):,} ₽</b>"""
 
 @app.route('/submit-order', methods=['POST', 'OPTIONS'])
 def submit_order():
