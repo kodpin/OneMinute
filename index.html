@@ -185,22 +185,68 @@
         .feature-label { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; margin-bottom: 2px; }
         .feature-value { font-size: 12px; font-weight: 700; }
 
-        /* ПРОМОКОД В КАРТОЧКЕ — СТИЛЬ САЙТА */
-        .modal-promo { margin-top: 16px; padding: 16px; background: var(--bg); border: 1.5px solid rgba(0,113,227,0.15); border-radius: var(--radius-md); }
-        .modal-promo-title { font-size: 13px; font-weight: 800; color: var(--dark); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .modal-promo-title i { color: var(--blue); font-size: 14px; }
-        .modal-promo-row { display: flex; gap: 8px; align-items: stretch; }
-        .modal-promo-input { flex: 1; min-width: 0; padding: 11px 14px; border: 1.5px solid #e5e5ea; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: var(--white); text-transform: uppercase; transition: all var(--transition); }
-        .modal-promo-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(0,113,227,0.06); }
-        .modal-promo-hint { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--blue); margin-top: 10px; cursor: pointer; transition: opacity 0.2s; }
-        .modal-promo-hint:hover { opacity: 0.75; text-decoration: underline; }
-        .modal-promo-applied { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .modal-promo-applied-text { font-size: 14px; font-weight: 700; color: var(--green); display: flex; align-items: center; gap: 6px; }
+        /* ПРОМОКОД В КАРТОЧКЕ — КОМПАКТНЫЙ */
+        .modal-promo {
+            margin: 22px 0 18px;
+            padding: 12px 14px;
+            background: var(--bg);
+            border: 1px solid rgba(0,113,227,0.1);
+            border-radius: 14px;
+        }
+        .modal-promo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .modal-promo-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            letter-spacing: -0.1px;
+        }
+        .modal-promo-title i { color: var(--blue); font-size: 13px; }
+        .modal-promo-hint {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--blue);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+        .modal-promo-hint:hover { opacity: 0.75; background: rgba(0,113,227,0.08); }
+        .modal-promo-hint i { font-size: 12px; }
+        .modal-promo-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e5e5ea;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--white);
+            letter-spacing: 0.4px;
+            transition: all var(--transition);
+        }
+        .modal-promo-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.08); }
+        .modal-promo-input::placeholder { color: var(--gray-light); letter-spacing: normal; font-family: inherit; }
+        .modal-promo-applied { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(52,199,89,0.08); border: 1px solid rgba(52,199,89,0.35); border-radius: 10px; }
+        .modal-promo-applied-text { font-size: 13px; font-weight: 700; color: var(--green); display: flex; align-items: center; gap: 6px; }
+        .modal-promo-applied-text i { font-size: 13px; }
         .modal-promo-remove { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 12px; flex-shrink: 0; }
         .modal-promo-remove:hover { background: rgba(255,59,48,0.08); }
-        .modal-promo-error { color: var(--red); font-size: 12px; font-weight: 600; margin-top: 8px; }
+        .modal-promo-error { color: var(--red); font-size: 12px; font-weight: 600; margin-top: 8px; padding-left: 2px; }
 
-        /* ПАСХАЛКА — модалка про промокоды */
+        /* ПАСХАЛКА */
         .promo-hint-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; background: rgba(0,0,0,0.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); animation: fadeIn 0.3s ease; }
         .promo-hint-content { background: var(--white); border-radius: var(--radius-xl); max-width: 500px; width: 94%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 88vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.25); padding: 32px 26px; animation: modalIn 0.4s ease; }
         .promo-hint-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--bg); border: none; font-size: 16px; cursor: pointer; color: var(--gray); display: flex; align-items: center; justify-content: center; }
@@ -219,7 +265,7 @@
         .promo-hint-cta i { font-size: 18px; }
         .promo-hint-note { font-size: 11px; color: var(--gray); text-align: center; margin-top: 12px; }
 
-        .product-modal-buttons { display: flex; gap: 10px; }
+        .product-modal-buttons { display: flex; gap: 10px; margin-top: 4px; }
         .product-modal-buy, .product-modal-cart { border: none; padding: 15px 0; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; transition: all var(--transition); flex: 1; }
         .product-modal-buy { background: var(--blue); color: white; }
         .product-modal-buy:hover { background: var(--blue-dark); }
@@ -272,8 +318,9 @@
         .manager-order-btn:hover { background: #30b350; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(52,199,89,0.35); }
         .promo-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.06); }
         .promo-label { font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.4px; }
-        .promo-input { width: 100%; padding: 12px 14px; border: 1.5px solid #e5e5ea; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: var(--white); text-transform: uppercase; transition: all var(--transition); }
+        .promo-input { width: 100%; padding: 12px 14px; border: 1.5px solid #e5e5ea; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: var(--white); text-transform: uppercase; transition: all var(--transition); letter-spacing: 0.4px; }
         .promo-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(0,113,227,0.06); }
+        .promo-input::placeholder { color: var(--gray-light); letter-spacing: normal; text-transform: none; font-family: inherit; }
         .promo-applied { display: flex; justify-content: space-between; align-items: center; background: rgba(52,199,89,0.1); border: 1.5px solid var(--green); border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 8px; gap: 10px; }
         .promo-applied-text { font-size: 13px; font-weight: 700; color: var(--green); }
         .promo-remove-btn { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 12px; flex-shrink: 0; }
@@ -417,18 +464,18 @@
                 </div>
 
                 <div class="modal-promo" id="modalPromoBlock">
-                    <div class="modal-promo-title"><i class="fa-solid fa-ticket"></i> Есть промокод?</div>
+                    <div class="modal-promo-header">
+                        <span class="modal-promo-title"><i class="fa-solid fa-ticket"></i> Есть промокод?</span>
+                        <a class="modal-promo-hint" onclick="openPromoHint(event)"><i class="fa-solid fa-circle-question"></i> Где найти?</a>
+                    </div>
                     <div id="modalPromoArea">
-                        <div class="modal-promo-row">
-                            <input type="text" class="modal-promo-input" id="modalPromoInput" placeholder="Введите код — скидка применится автоматически" maxlength="30" autocomplete="off">
-                        </div>
+                        <input type="text" class="modal-promo-input" id="modalPromoInput" placeholder="Введите код — скидка применится автоматически" maxlength="30" autocomplete="off">
                         <div class="modal-promo-error" id="modalPromoError" style="display:none;"></div>
                     </div>
                     <div class="modal-promo-applied" id="modalPromoApplied" style="display:none;">
                         <span class="modal-promo-applied-text"><i class="fa-solid fa-check-circle"></i> <span id="modalPromoAppliedText"></span></span>
                         <button class="modal-promo-remove" onclick="removePromoFromModal()">Убрать</button>
                     </div>
-                    <a class="modal-promo-hint" onclick="openPromoHint(event)"><i class="fa-solid fa-circle-question"></i> Откуда взять промокод?</a>
                 </div>
 
                 <div class="product-modal-buttons">
@@ -963,7 +1010,6 @@
             }
         }
 
-        // Отрисовка цены в карточке с учётом скидки товара и промокода
         function renderModalPrice(p) {
             const hasDiscount = p.discount_percent > 0 && p.discount_end;
             const now = new Date();
@@ -1253,12 +1299,10 @@
             return { ok: true, promo: found };
         }
 
-        // Общий обработчик ввода промокода без кнопки (для карточки и корзины)
         function tryApplyPromo(rawCode, errorEl, onSuccess) {
             const code = (rawCode || '').trim();
             if (!code) {
                 if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
-                // Если поле очищено, а промокод был применён — снимем его
                 if (appliedPromo) {
                     removePromoGlobal();
                 }
@@ -1284,7 +1328,6 @@
             window.omTrack('promo_applied', { code: appliedPromo.code, percent: appliedPromo.percent });
         }
 
-        // Применение из карточки (при вводе/Enter/blur)
         function applyPromoFromModal(rawValue) {
             const input = document.getElementById('modalPromoInput');
             const errorEl = document.getElementById('modalPromoError');
@@ -1294,7 +1337,6 @@
             });
         }
 
-        // Применение из корзины
         function applyPromo(rawValue) {
             const input = document.getElementById('promoInput');
             const errorEl = document.getElementById('promoError');
@@ -1363,7 +1405,6 @@
             }
         }
 
-        // ---------- ПАСХАЛКА ПРО ПРОМОКОДЫ ----------
         function openPromoHint(e) {
             if (e) e.preventDefault();
             document.getElementById('promoHintModal').style.display = 'block';
@@ -1622,7 +1663,6 @@
         }
         function contactManager() { window.open(SETTINGS.manager_telegram || 'https://t.me/manager', '_blank'); }
 
-        // Debounce-утилита для авто-применения промокода
         function debounce(fn, delay) {
             let timer = null;
             return function() {
@@ -1657,7 +1697,6 @@
             });
         });
 
-        // ---------- АВТО-ПРИМЕНЕНИЕ ПРОМОКОДА (без кнопки) ----------
         (function setupPromoInputs() {
             const modalInput = document.getElementById('modalPromoInput');
             const cartInput = document.getElementById('promoInput');
@@ -1686,7 +1725,6 @@
             }
         })();
 
-        // Esc для пасхалки
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 const ph = document.getElementById('promoHintModal');
@@ -1704,7 +1742,6 @@
             setTimeout(() => { n.style.opacity = '0'; n.style.transition = 'opacity 0.3s'; setTimeout(() => n.remove(), 300); }, 2000);
         }
 
-        // При загрузке — если промокод уже был применён, обновим стейт
         document.addEventListener('DOMContentLoaded', function() {
             loadData().then(() => {
                 showPromoApplied();
