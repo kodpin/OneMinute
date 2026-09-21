@@ -128,7 +128,7 @@
         @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
         .product-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
         .product-card:active { transform: scale(0.97); transition: 0.12s ease; }
-        .product-image-wrap { position: relative; overflow: hidden; height: 230px; background: linear-gradient(135deg,#f0f0f5,#e6e6ed); flex-shrink: 0; }
+        .product-image-wrap { position: relative; overflow: hidden; height: 230px; background: #f5f5f7; flex-shrink: 0; }
         .product-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
         .product-card:hover .product-image { transform: scale(1.05); }
         .product-badge { position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); padding: 5px 12px; border-radius: 16px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--dark); }
@@ -149,24 +149,20 @@
         .cart-btn-sm:hover { background: #e0e0e5; border-color: var(--border); }
         .product-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; background: rgba(0,0,0,0.55); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .product-modal-content { background: var(--white); border-radius: var(--radius-xl); max-width: 700px; width: 94%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.2); animation: modalIn 0.4s ease; }
+        .product-modal-content { background: var(--white); border-radius: var(--radius-xl); max-width: 640px; width: 94%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.2); animation: modalIn 0.4s ease; }
         @keyframes modalIn { from { transform: translate(-50%, -42%); opacity: 0; } to { transform: translate(-50%, -50%); opacity: 1; } }
-        .product-modal-gallery { position: relative; overflow: hidden; border-radius: var(--radius-xl) var(--radius-xl) 0 0; background: #f5f5f7; }
+        .product-modal-gallery { position: relative; overflow: hidden; border-radius: var(--radius-xl) var(--radius-xl) 0 0; background: #ffffff; }
         .gallery-slides { display: flex; transition: transform 0.3s ease; }
-        .gallery-slides img { width: 100%; flex-shrink: 0; height: 400px; object-fit: cover; background: #f5f5f7; }
-        .gallery-prev, .gallery-next { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.8; transition: opacity 0.2s, background 0.2s; z-index: 2; }
-        .gallery-prev:hover, .gallery-next:hover { opacity: 1; background: rgba(0,0,0,0.6); }
+        .gallery-slides img { width: 100%; flex-shrink: 0; height: 420px; object-fit: contain; background: #ffffff; padding: 24px; }
+        .gallery-prev, .gallery-next { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.35); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.85; transition: opacity 0.2s, background 0.2s; z-index: 2; }
+        .gallery-prev:hover, .gallery-next:hover { opacity: 1; background: rgba(0,0,0,0.55); }
         .gallery-prev { left: 14px; }
         .gallery-next { right: 14px; }
         .gallery-dots { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
-        .gallery-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.6); cursor: pointer; transition: background 0.2s, transform 0.2s; }
-        .gallery-dot.active { background: white; transform: scale(1.3); }
+        .gallery-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(0,0,0,0.25); cursor: pointer; transition: background 0.2s, transform 0.2s; }
+        .gallery-dot.active { background: var(--dark); transform: scale(1.3); }
         @media (max-width: 480px) {
-            .product-modal-content { max-width: 94%; width: 94%; }
-            .gallery-slides img { height: 260px; }
-        }
-        @media (min-width: 481px) and (max-width: 899px) {
-            .gallery-slides img { height: 360px; }
+            .gallery-slides img { height: 280px; padding: 16px; }
         }
         .product-modal-body { padding: 28px; }
         .product-modal-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
@@ -186,6 +182,43 @@
         .feature-item i { font-size: 16px; margin-bottom: 4px; color: var(--blue); display: block; }
         .feature-label { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; margin-bottom: 2px; }
         .feature-value { font-size: 12px; font-weight: 700; }
+
+        /* ПРОМОКОД В КАРТОЧКЕ ТОВАРА */
+        .modal-promo { margin-top: 16px; padding: 14px; background: linear-gradient(135deg, #fff7e6 0%, #ffeccc 100%); border: 1.5px dashed rgba(255,149,0,0.5); border-radius: var(--radius-md); }
+        .modal-promo-title { font-size: 13px; font-weight: 800; color: var(--dark); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .modal-promo-title i { color: var(--orange); font-size: 14px; }
+        .modal-promo-row { display: flex; gap: 8px; }
+        .modal-promo-input { flex: 1; padding: 10px 12px; border: 1.5px solid rgba(0,0,0,0.08); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; background: var(--white); text-transform: uppercase; transition: all var(--transition); }
+        .modal-promo-input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,149,0,0.15); }
+        .modal-promo-btn { padding: 10px 18px; background: var(--dark); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; transition: all var(--transition); white-space: nowrap; }
+        .modal-promo-btn:hover { background: #333; }
+        .modal-promo-hint { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--orange); margin-top: 10px; cursor: pointer; transition: opacity 0.2s; }
+        .modal-promo-hint:hover { opacity: 0.75; text-decoration: underline; }
+        .modal-promo-applied { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .modal-promo-applied-text { font-size: 13px; font-weight: 700; color: var(--green); display: flex; align-items: center; gap: 6px; }
+        .modal-promo-remove { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 12px; }
+        .modal-promo-remove:hover { background: rgba(255,59,48,0.08); }
+        .modal-promo-error { color: var(--red); font-size: 12px; font-weight: 600; margin-top: 8px; }
+
+        /* ПАСХАЛКА - модальное окно о промокодах */
+        .promo-hint-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; background: rgba(0,0,0,0.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); animation: fadeIn 0.3s ease; }
+        .promo-hint-content { background: var(--white); border-radius: var(--radius-xl); max-width: 500px; width: 94%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 88vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.25); padding: 32px 26px; animation: modalIn 0.4s ease; }
+        .promo-hint-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--bg); border: none; font-size: 16px; cursor: pointer; color: var(--gray); display: flex; align-items: center; justify-content: center; }
+        .promo-hint-close:hover { background: #e0e0e5; }
+        .promo-hint-emoji { font-size: 52px; text-align: center; display: block; margin-bottom: 6px; line-height: 1; }
+        .promo-hint-title { font-size: 24px; font-weight: 800; text-align: center; margin-bottom: 6px; letter-spacing: -0.5px; }
+        .promo-hint-subtitle { font-size: 14px; color: var(--gray); text-align: center; margin-bottom: 22px; line-height: 1.5; }
+        .promo-reasons { display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; }
+        .promo-reason { display: flex; gap: 12px; padding: 12px 14px; background: var(--bg); border-radius: var(--radius-md); align-items: flex-start; }
+        .promo-reason-icon { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), #ffb84d); color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .promo-reason-text { flex: 1; }
+        .promo-reason-title { font-size: 14px; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
+        .promo-reason-desc { font-size: 12px; color: var(--gray); line-height: 1.4; }
+        .promo-hint-cta { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; background: var(--green); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 800; cursor: pointer; transition: all var(--transition); box-shadow: 0 6px 20px rgba(52,199,89,0.35); }
+        .promo-hint-cta:hover { background: #30b350; transform: translateY(-2px); box-shadow: 0 8px 26px rgba(52,199,89,0.45); }
+        .promo-hint-cta i { font-size: 18px; }
+        .promo-hint-note { font-size: 11px; color: var(--gray); text-align: center; margin-top: 12px; }
+
         .product-modal-buttons { display: flex; gap: 10px; }
         .product-modal-buy, .product-modal-cart { border: none; padding: 15px 0; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; transition: all var(--transition); flex: 1; }
         .product-modal-buy { background: var(--blue); color: white; }
@@ -206,7 +239,7 @@
         .similar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .similar-card { background: var(--bg); border-radius: var(--radius-sm); padding: 10px; cursor: pointer; transition: all var(--transition); text-align: center; }
         .similar-card:hover { background: var(--blue-light); transform: translateY(-2px); }
-        .similar-card img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 6px; background: #e0e0e5; }
+        .similar-card img { width: 100%; height: 100px; object-fit: contain; border-radius: 8px; margin-bottom: 6px; background: #ffffff; }
         .similar-name { font-size: 10px; font-weight: 600; color: var(--dark); line-height: 1.3; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 26px; }
         .similar-price { font-size: 12px; font-weight: 800; color: var(--blue); }
         @media (max-width: 480px) {
@@ -216,16 +249,20 @@
             .similar-name { font-size: 9px; }
             .similar-price { font-size: 10px; }
         }
+
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: rgba(0,0,0,0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); animation: fadeIn 0.3s ease; }
         .modal-content { background: var(--white); border-radius: var(--radius-xl); padding: 28px 24px; max-width: 460px; width: 94%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 88vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.15); animation: modalIn 0.4s ease; }
         .modal-close { position: absolute; right: 14px; top: 14px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: none; font-size: 16px; cursor: pointer; color: var(--gray); display: flex; align-items: center; justify-content: center; }
         .modal-close:hover { background: #e0e0e5; }
         .modal h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 20px; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
-        .cart-item-name { font-weight: 600; font-size: 14px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04); gap: 10px; }
+        .cart-item > div:first-child { flex: 1; min-width: 0; }
+        .cart-item-name { font-weight: 600; font-size: 14px; word-break: break-word; line-height: 1.3; }
         .cart-item-price { color: var(--gray); font-size: 12px; margin-top: 2px; }
-        .cart-item-remove { background: none; border: none; color: var(--red); cursor: pointer; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 16px; }
+        .cart-item-remove { background: none; border: none; color: var(--red); cursor: pointer; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 16px; flex-shrink: 0; }
         .cart-item-remove:hover { background: rgba(255,59,48,0.07); }
+        .cart-item > div:last-child { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .cart-item > div:last-child > span { font-weight: 700; white-space: nowrap; }
         .cart-empty { text-align: center; color: var(--gray); padding: 36px 0; font-size: 14px; }
         .cart-empty i { font-size: 40px; margin-bottom: 12px; display: block; color: var(--gray-light); }
         .cart-total { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; font-size: 18px; font-weight: 800; border-top: 2px solid var(--dark); margin-top: 8px; }
@@ -246,6 +283,8 @@
         .promo-remove-btn:hover { background: rgba(255,59,48,0.08); }
         .promo-error { color: var(--red); font-size: 12px; font-weight: 600; margin-top: 6px; }
         .promo-discount-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 14px; color: var(--green); font-weight: 700; }
+        .promo-hint-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--blue); margin-top: 8px; cursor: pointer; transition: opacity 0.2s; }
+        .promo-hint-link:hover { opacity: 0.7; text-decoration: underline; }
         #orderForm { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
         #orderForm input, #orderForm textarea, #orderForm select { padding: 12px 14px; border: 1.5px solid #e5e5ea; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; width: 100%; transition: all var(--transition); background: var(--bg); -webkit-appearance: none; }
         #orderForm input:focus, #orderForm textarea:focus, #orderForm select:focus { outline: none; border-color: var(--blue); background: white; box-shadow: 0 0 0 4px rgba(0,113,227,0.05); }
@@ -379,6 +418,24 @@
                     <div class="feature-item"><i class="fa-solid fa-credit-card"></i><div class="feature-label">Оплата</div><div class="feature-value">QR / Менеджер</div></div>
                     <div class="feature-item"><i class="fa-solid fa-rotate-left"></i><div class="feature-label">Возврат</div><div class="feature-value">14 дней</div></div>
                 </div>
+
+                <!-- ПРОМОКОД В КАРТОЧКЕ -->
+                <div class="modal-promo" id="modalPromoBlock">
+                    <div class="modal-promo-title"><i class="fa-solid fa-ticket"></i> Есть промокод?</div>
+                    <div id="modalPromoArea">
+                        <div class="modal-promo-row">
+                            <input type="text" class="modal-promo-input" id="modalPromoInput" placeholder="Введите код" maxlength="30">
+                            <button class="modal-promo-btn" onclick="applyPromoFromModal()">Применить</button>
+                        </div>
+                        <div class="modal-promo-error" id="modalPromoError" style="display:none;"></div>
+                    </div>
+                    <div class="modal-promo-applied" id="modalPromoApplied" style="display:none;">
+                        <span class="modal-promo-applied-text"><i class="fa-solid fa-check-circle"></i> <span id="modalPromoAppliedText"></span></span>
+                        <button class="modal-promo-remove" onclick="removePromoFromModal()">Убрать</button>
+                    </div>
+                    <a class="modal-promo-hint" onclick="openPromoHint(event)"><i class="fa-solid fa-circle-question"></i> Откуда взять промокод?</a>
+                </div>
+
                 <div class="product-modal-buttons">
                     <button class="product-modal-buy" id="modalBuyBtn"><i class="fa-solid fa-bolt"></i> Купить</button>
                     <button class="product-modal-cart" id="modalCartBtn"><i class="fa-solid fa-cart-plus"></i> В корзину</button>
@@ -396,6 +453,62 @@
                     <div class="similar-grid" id="similarGrid"></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ПАСХАЛКА: модалка о промокодах -->
+    <div class="promo-hint-modal" id="promoHintModal" onclick="if(event.target===this)closePromoHint()">
+        <div class="promo-hint-content">
+            <button class="promo-hint-close" onclick="closePromoHint()"><i class="fa-solid fa-xmark"></i></button>
+            <span class="promo-hint-emoji">🎁</span>
+            <h2 class="promo-hint-title">Промокод выдаёт менеджер</h2>
+            <p class="promo-hint-subtitle">Просто напишите нам — повод всегда найдётся. Вот лишь несколько причин, по которым вы можете получить скидку:</p>
+            <div class="promo-reasons">
+                <div class="promo-reason">
+                    <div class="promo-reason-icon"><i class="fa-solid fa-birthday-cake"></i></div>
+                    <div class="promo-reason-text">
+                        <div class="promo-reason-title">День рождения</div>
+                        <div class="promo-reason-desc">7 дней до и 7 дней после — свяжитесь с менеджером</div>
+                    </div>
+                </div>
+                <div class="promo-reason">
+                    <div class="promo-reason-icon"><i class="fa-solid fa-box-open"></i></div>
+                    <div class="promo-reason-text">
+                        <div class="promo-reason-title">Витринные образцы</div>
+                        <div class="promo-reason-desc">Скидка на модели, которые стояли в шоуруме</div>
+                    </div>
+                </div>
+                <div class="promo-reason">
+                    <div class="promo-reason-icon"><i class="fa-solid fa-repeat"></i></div>
+                    <div class="promo-reason-text">
+                        <div class="promo-reason-title">Повторная покупка</div>
+                        <div class="promo-reason-desc">Уже покупали у нас? Скажите об этом — будет бонус</div>
+                    </div>
+                </div>
+                <div class="promo-reason">
+                    <div class="promo-reason-icon"><i class="fa-solid fa-user-group"></i></div>
+                    <div class="promo-reason-text">
+                        <div class="promo-reason-title">Приведи друга</div>
+                        <div class="promo-reason-desc">Скидка и вам, и другу за рекомендацию</div>
+                    </div>
+                </div>
+                <div class="promo-reason">
+                    <div class="promo-reason-icon"><i class="fa-solid fa-face-smile"></i></div>
+                    <div class="promo-reason-text">
+                        <div class="promo-reason-title">У менеджера хорошее настроение</div>
+                        <div class="promo-reason-desc">Серьёзно. Иногда мы просто даём скидку за приятное общение</div>
+                    </div>
+                </div>
+                <div class="promo-reason">
+                    <div class="promo-reason-icon"><i class="fa-solid fa-comment-dots"></i></div>
+                    <div class="promo-reason-text">
+                        <div class="promo-reason-title">Просто попросить</div>
+                        <div class="promo-reason-desc">Не стесняйтесь. Честно — часто срабатывает</div>
+                    </div>
+                </div>
+            </div>
+            <button class="promo-hint-cta" onclick="contactManagerFromPromo()"><i class="fa-brands fa-telegram"></i> Написать менеджеру</button>
+            <p class="promo-hint-note">Отвечаем в течение минуты. Договоримся 😉</p>
         </div>
     </div>
 
@@ -417,6 +530,7 @@
                     <span class="promo-applied-text" id="promoAppliedText"></span>
                     <button class="promo-remove-btn" onclick="removePromo()">Убрать</button>
                 </div>
+                <a class="promo-hint-link" onclick="openPromoHint(event)"><i class="fa-solid fa-circle-question"></i> Откуда взять промокод?</a>
             </div>
             <div class="promo-discount-row" id="promoDiscountRow" style="display:none;">
                 <span>Скидка по промокоду:</span>
@@ -855,6 +969,7 @@
             updateProductSchema(p);
             updateSeoForProduct(p);
             renderSimilarProducts(p);
+            showModalPromoState();
             if (!fromUrl) {
                 const newUrl = `${location.pathname}?id=${p.id}`;
                 history.pushState({ productId: p.id }, '', newUrl);
@@ -1073,7 +1188,7 @@
                 const price = getEffectivePrice(item.product);
                 const st = price * item.quantity;
                 subtotal += st;
-                return `<div class="cart-item"><div><div class="cart-item-name">${item.product.name}</div><div class="cart-item-price">${item.quantity} × ${fmt(price)}</div></div><div style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;">${fmt(st)}</span><button class="cart-item-remove" onclick="removeFromCart(${i})"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
+                return `<div class="cart-item"><div><div class="cart-item-name">${item.product.name}</div><div class="cart-item-price">${item.quantity} × ${fmt(price)}</div></div><div><span>${fmt(st)}</span><button class="cart-item-remove" onclick="removeFromCart(${i})"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
             }).join('');
             let promoDiscount = 0;
             if (appliedPromo) {
@@ -1125,7 +1240,19 @@
             input.value = '';
             showPromoApplied();
             renderCart();
+            showModalPromoState();
             showNotification(`Промокод ${appliedPromo.code} применён: −${appliedPromo.percent}%`);
+        }
+
+        function removePromo() {
+            appliedPromo = null;
+            try { localStorage.removeItem('appliedPromo'); } catch(e) {}
+            document.getElementById('promoInput').value = '';
+            document.getElementById('promoError').style.display = 'none';
+            showPromoApplied();
+            renderCart();
+            showModalPromoState();
+            showNotification('Промокод убран');
         }
 
         function showPromoApplied() {
@@ -1142,14 +1269,67 @@
             }
         }
 
-        function removePromo() {
+        // ---------- ПРОМОКОД В КАРТОЧКЕ ТОВАРА ----------
+        function applyPromoFromModal() {
+            const input = document.getElementById('modalPromoInput');
+            const errorEl = document.getElementById('modalPromoError');
+            const code = input.value.trim();
+            const result = validatePromo(code);
+            if (!result.ok) {
+                errorEl.textContent = result.error;
+                errorEl.style.display = 'block';
+                return;
+            }
+            appliedPromo = { code: result.promo.code, percent: parseInt(result.promo.percent || 0) };
+            try { localStorage.setItem('appliedPromo', JSON.stringify(appliedPromo)); } catch(e) {}
+            errorEl.style.display = 'none';
+            input.value = '';
+            showModalPromoState();
+            showPromoApplied();
+            if (document.getElementById('cartModal').style.display === 'block') renderCart();
+            showNotification(`Промокод ${appliedPromo.code} применён: −${appliedPromo.percent}%`);
+        }
+
+        function removePromoFromModal() {
             appliedPromo = null;
             try { localStorage.removeItem('appliedPromo'); } catch(e) {}
-            document.getElementById('promoInput').value = '';
-            document.getElementById('promoError').style.display = 'none';
+            document.getElementById('modalPromoInput').value = '';
+            document.getElementById('modalPromoError').style.display = 'none';
+            showModalPromoState();
             showPromoApplied();
-            renderCart();
+            if (document.getElementById('cartModal').style.display === 'block') renderCart();
             showNotification('Промокод убран');
+        }
+
+        function showModalPromoState() {
+            const area = document.getElementById('modalPromoArea');
+            const applied = document.getElementById('modalPromoApplied');
+            const appliedText = document.getElementById('modalPromoAppliedText');
+            const errorEl = document.getElementById('modalPromoError');
+            if (!area || !applied) return;
+            if (errorEl) errorEl.style.display = 'none';
+            if (appliedPromo) {
+                area.style.display = 'none';
+                applied.style.display = 'flex';
+                if (appliedText) appliedText.textContent = `${appliedPromo.code} (−${appliedPromo.percent}%)`;
+            } else {
+                area.style.display = 'block';
+                applied.style.display = 'none';
+            }
+        }
+
+        // ---------- ПАСХАЛКА ПРО ПРОМОКОДЫ ----------
+        function openPromoHint(e) {
+            if (e) e.preventDefault();
+            document.getElementById('promoHintModal').style.display = 'block';
+            window.omTrack('promo_hint_open', {});
+        }
+        function closePromoHint() {
+            document.getElementById('promoHintModal').style.display = 'none';
+        }
+        function contactManagerFromPromo() {
+            closePromoHint();
+            contactManager();
         }
 
         function openCart() {
@@ -1422,6 +1602,14 @@
         });
         document.getElementById('promoInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') { e.preventDefault(); applyPromo(); }
+        });
+        document.getElementById('modalPromoInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); applyPromoFromModal(); }
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (document.getElementById('promoHintModal').style.display === 'block') closePromoHint();
+            }
         });
         function showNotification(msg) {
             const old = document.querySelector('.notification');
