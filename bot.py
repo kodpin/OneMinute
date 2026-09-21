@@ -49,7 +49,7 @@ CATEGORY_MAP = {
     'casual': 'Для жизни'
 }
 
-# ---------- CORS (чтобы сайт мог отправлять заказы на бота) ----------
+# ---------- CORS ----------
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -1148,17 +1148,16 @@ def submit_order():
 
     message = format_order_message(data)
 
-    # 1. Отправляем в группу (если настроена)
+    # Заказы уходят: сначала в группу, потом админам
     if GROUP_CHAT_ID:
         send_message(GROUP_CHAT_ID, message)
 
-    # 2. Дублируем в личку админам
     for admin_id in ADMIN_IDS:
         send_message(admin_id, message)
 
     return jsonify({'status': 'ok'})
 
-# ---------- Маршрут: приём чека с сайта ----------
+# ---------- Маршрут: приём чека с сайта (только в группу!) ----------
 @app.route('/upload-receipt', methods=['POST', 'OPTIONS'])
 def upload_receipt():
     if request.method == 'OPTIONS':
@@ -1176,12 +1175,15 @@ def upload_receipt():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
-    sent = 0
+    # ВАЖНО: чек уходит ТОЛЬКО в группу, если она настроена.
+    # Если группа не настроена — как запасной вариант летит админам.
     targets = []
     if GROUP_CHAT_ID:
         targets.append(GROUP_CHAT_ID)
-    targets.extend(ADMIN_IDS)
+    else:
+        targets.extend(ADMIN_IDS)
 
+    sent = 0
     for chat_id in targets:
         try:
             url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendDocument'

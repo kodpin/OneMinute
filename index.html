@@ -495,7 +495,6 @@
         }
 
         function attachFilterListeners() {
-            // Дублирующие обработчики для надёжности
             ['priceMin', 'priceMax'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -957,45 +956,50 @@
             wrap.querySelector('i').className = 'fa-solid fa-file-circle-check';
             document.getElementById('sendReceiptBtn').disabled = false;
         }
+
+        // ОТПРАВКА ЧЕКА — идёт в группу «Заявки» через бота
         function sendReceiptToManager() {
             if (!lastOrderData || !selectedFile) return;
             const btn = document.getElementById('sendReceiptBtn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Отправка...';
-            const formData = new FormData();
-            formData.append('document', selectedFile);
+
             const order = lastOrderData;
             const itemsText = order.items.map(item => `• ${item.product.name} ×${item.quantity} = ${fmt(item.product.price * item.quantity)}`).join('\n');
-            const caption = `🧾 *ЧЕК ОПЛАТЫ* #${order.orderNumber}\n📅 ${order.date}\n👤 ${order.lastName} ${order.firstName}\n📞 ${order.phone}\n🚚 ${order.delivery}\n💰 ИТОГО: ${fmt(order.total)}`;
+            const caption = `🧾 ЧЕК ОПЛАТЫ #${order.orderNumber}\n📅 ${order.date}\n👤 ${order.lastName} ${order.firstName}\n📞 ${order.phone}\n🚚 ${order.delivery}\n💰 ИТОГО: ${fmt(order.total)}\n\n${itemsText}`;
+
+            const formData = new FormData();
+            formData.append('document', selectedFile);
             formData.append('caption', caption);
-            const botToken = SETTINGS.bot_token || '';
-            const chatId = (SETTINGS.manager_telegram || '').replace('https://t.me/','').replace('@','');
-            if (botToken && chatId) {
-                formData.append('chat_id', chatId);
-                fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, { method:'POST', body: formData })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.ok) {
-                            btn.innerHTML = '<i class="fa-solid fa-check"></i> Чек отправлен!';
-                            btn.style.background = 'var(--green)';
-                            showNotification('Чек отправлен менеджеру');
-                            setTimeout(() => { closePayment(); showThankYouPage(true); }, 1500);
-                        } else {
-                            fallbackSend(btn, caption);
-                        }
-                    })
-                    .catch(() => fallbackSend(btn, caption));
-            } else {
-                fallbackSend(btn, caption);
-            }
+
+            fetch(`${BOT_SERVER_URL}/upload-receipt`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Чек отправлен!';
+                    btn.style.background = 'var(--green)';
+                    showNotification('Чек отправлен в группу заявок');
+                    setTimeout(() => { closePayment(); showThankYouPage(true); }, 1500);
+                } else {
+                    throw new Error('send failed');
+                }
+            })
+            .catch(err => {
+                console.error('Ошибка отправки чека:', err);
+                btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Не удалось отправить';
+                btn.style.background = 'var(--red)';
+                showNotification('Не удалось отправить чек. Попробуйте ещё раз.');
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру';
+                    btn.style.background = '';
+                }, 3000);
+            });
         }
-        function fallbackSend(btn, caption) {
-            const link = SETTINGS.manager_telegram || 'https://t.me/manager';
-            window.open(`${link}?text=${encodeURIComponent(caption)}`, '_blank');
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Отправлено!';
-            btn.style.background = 'var(--green)';
-            setTimeout(() => { closePayment(); showThankYouPage(true); }, 1000);
-        }
+
         function showThankYouPage(receiptSent = false) {
             if (!lastOrderData) return;
             cart = [];
