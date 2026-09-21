@@ -252,7 +252,7 @@ def edit_photo_step_kb():
 def settings_kb():
     return {"inline_keyboard": [
         [{"text": "📝 Изменить ИП", "callback_data": "edit_ip"}],
-        [{"text": "📱 Изменить QR-код", "callback_data": "edit_qr"}],
+        [{"text": "📱 Загрузить QR-код (файл)", "callback_data": "edit_qr"}],
         [{"text": "🔗 Изменить ссылку оплаты", "callback_data": "edit_link"}],
         [{"text": "👤 Изменить менеджера", "callback_data": "edit_manager"}],
         [{"text": "🗂 Управление категориями", "callback_data": "manage_categories"}],
@@ -324,9 +324,10 @@ def process_update(update):
         elif data == 'edit_ip':
             start_edit(chat_id, 'ip_info', '📝 Введите информацию об ИП:')
         elif data == 'edit_qr':
-            start_edit(chat_id, 'payment_qr', '📱 Отправьте ссылку на QR-код (или отправьте "-" чтобы очистить):')
+            user_states[chat_id] = {'action': 'edit_qr_file'}
+            send_message(chat_id, '📱 <b>Загрузка QR-кода</b>\n\nОтправьте QR-код <b>файлом или фото</b> — я его сохраню и он появится на сайте.\n\nЛибо можно ввести ссылку на изображение текстом.\n\nЧтобы <b>очистить</b> QR — отправьте <b>-</b>.', cancel_kb())
         elif data == 'edit_link':
-            start_edit(chat_id, 'payment_link', '🔗 Отправьте ссылку для оплаты (или отправьте "-" чтобы очистить):')
+            start_edit(chat_id, 'payment_link', '🔗 Отправьте ссылку для оплаты (или "-" чтобы очистить):')
         elif data == 'edit_manager':
             start_edit(chat_id, 'manager_telegram', '👤 Отправьте ссылку на менеджера:')
         elif data == 'export_csv':
@@ -410,8 +411,11 @@ def process_update(update):
     if 'photo' in msg or (msg.get('document') and msg['document'].get('mime_type', '').startswith('image/')):
         state = user_states.get(chat_id)
         if state:
-            if state.get('action') == 'edit_product_photo':
+            action = state.get('action')
+            if action == 'edit_product_photo':
                 handle_edit_photo(chat_id, msg)
+            elif action == 'edit_qr_file':
+                handle_qr_upload(chat_id, msg)
             elif state.get('step') == 'photo':
                 handle_photo(chat_id, msg)
             else:
@@ -424,26 +428,47 @@ def process_update(update):
     state = user_states.get(chat_id)
 
     if state:
-        if state.get('action') == 'waiting_text':
+        action = state.get('action')
+        if action == 'edit_qr_file':
+            value = text.strip()
+            if value == '-':
+                value = ''
+            data, sha = get_data()
+            if not data:
+                return
+            if 'settings' not in data:
+                data['settings'] = {}
+            data['settings']['payment_qr'] = value
+            resp = save_data(data, sha)
+            if resp.status_code in [200, 201]:
+                if value:
+                    send_message(chat_id, f'✅ QR-код сохранён как ссылка:\n{value}', main_reply_kb())
+                else:
+                    send_message(chat_id, '✅ QR-код очищен.', main_reply_kb())
+            else:
+                send_message(chat_id, '❌ Ошибка сохранения.')
+            del user_states[chat_id]
+            return
+        elif action == 'waiting_text':
             handle_text_step(chat_id, text)
             return
-        elif state.get('action') == 'new_promo':
+        elif action == 'new_promo':
             handle_promo_step(chat_id, text)
             return
-        elif state.get('action') == 'edit_product' and state.get('step') == 'edit_value':
+        elif action == 'edit_product' and state.get('step') == 'edit_value':
             save_edit(chat_id, text)
             return
-        elif state.get('action') == 'add_category':
+        elif action == 'add_category':
             save_new_category(chat_id, text)
             return
-        elif state.get('action') == 'mass_price_percent':
+        elif action == 'mass_price_percent':
             try:
                 pct = float(text.replace(',', '.'))
                 apply_mass_price(chat_id, pct)
             except:
                 send_message(chat_id, '❌ Введите число.')
             return
-        elif state.get('action') == 'mass_discount_percent':
+        elif action == 'mass_discount_percent':
             try:
                 pct = int(text)
                 if 0 <= pct <= 100:
@@ -453,7 +478,7 @@ def process_update(update):
             except:
                 send_message(chat_id, '❌ 0-100.')
             return
-        elif state.get('action') == 'mass_discount_end':
+        elif action == 'mass_discount_end':
             discount_end = text.strip()
             apply_mass_discount(chat_id, state['mass_discount_category'], state['mass_discount_percent'], discount_end)
             return
@@ -475,6 +500,45 @@ def process_update(update):
         show_settings(chat_id)
     else:
         send_main_menu(chat_id)
+
+def handle_qr_upload(chat_id, message):
+    try:
+        if 'photo' in message:
+            file_id = message['photo'][-1]['file_id']
+        else:
+            file_id = message['document']['file_id']
+        get_url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}'
+        resp = requests.get(get_url).json()
+        if not resp.get('ok'):
+            send_message(chat_id, '❌ Не удалось получить файл от Telegram.')
+            return
+        file_path = resp['result']['file_path']
+        img_url = f'https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}'
+        img_data = requests.get(img_url).content
+        # QR важно сохранять в высоком качестве, но ограничим размер 1200px
+        compressed = compress_image(img_data, max_width=1200)
+        filename = f"qr_{int(time.time())}.jpg"
+        github_url = upload_image_to_site(compressed, filename)
+        if github_url:
+            data, sha = get_data()
+            if not data:
+                send_message(chat_id, '❌ Ошибка чтения данных.')
+                return
+            if 'settings' not in data:
+                data['settings'] = {}
+            data['settings']['payment_qr'] = github_url
+            resp2 = save_data(data, sha)
+            if resp2.status_code in [200, 201]:
+                send_message(chat_id, f'✅ <b>QR-код загружен и сохранён!</b>\n\n📍 {github_url}\n\nТеперь он появится на сайте при оформлении заказа.', main_reply_kb())
+            else:
+                send_message(chat_id, '❌ Ошибка сохранения QR в products.json.')
+        else:
+            send_message(chat_id, '❌ Не удалось загрузить QR на GitHub. Проверьте GITHUB_TOKEN.')
+    except Exception as e:
+        send_message(chat_id, f'❌ Ошибка: {e}')
+    finally:
+        if chat_id in user_states:
+            del user_states[chat_id]
 
 def send_main_menu(chat_id):
     data, _ = get_data()
@@ -1053,7 +1117,6 @@ def save_setting(chat_id, value):
         return
     if 'settings' not in data:
         data['settings'] = {}
-    # Поддержка очистки через "-"
     value = value.strip()
     if value == '-':
         value = ''
