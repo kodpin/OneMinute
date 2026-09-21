@@ -2,10 +2,90 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OneMinute — Премиальные часы</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+
+    <!-- ==== SEO (обновляется динамически при открытии товара) ==== -->
+    <title>OneMinute — Премиальные часы Garmin | Официальный магазин</title>
+    <meta name="description" content="Премиальные спортивные и тактические часы Garmin. Официальная гарантия, доставка по всей России. fenix, tactix, Instinct, Venu, Forerunner и другие модели.">
+    <meta name="keywords" content="Garmin, купить часы, fenix, tactix, Instinct, Venu, Forerunner, спортивные часы, тактические часы, премиальные часы">
+    <meta name="author" content="OneMinute">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://oneminuteshop.com/">
+    <meta name="theme-color" content="#1d1d1f">
+
+    <!-- ==== Open Graph ==== -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="OneMinute">
+    <meta property="og:title" content="OneMinute — Премиальные часы Garmin">
+    <meta property="og:description" content="Официальный магазин премиальных часов Garmin. Доставка по РФ.">
+    <meta property="og:url" content="https://oneminuteshop.com/">
+    <meta property="og:image" content="https://oneminuteshop.com/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="ru_RU">
+
+    <!-- ==== Twitter Card ==== -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OneMinute — Премиальные часы Garmin">
+    <meta name="twitter:description" content="Официальный магазин премиальных часов Garmin. Доставка по РФ.">
+    <meta name="twitter:image" content="https://oneminuteshop.com/og-image.jpg">
+
+    <!-- ==== Мобильные PWA ==== -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="OneMinute">
+
+    <!-- ==== Favicon / Manifest ==== -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <!--
+    ============================================================
+    МЕСТО ДЛЯ ВЕРИФИКАЦИИ ПОИСКОВИКОВ
+    ============================================================
+    Яндекс.Вебмастер:
+    <meta name="yandex-verification" content="КОД_ИЗ_ВЕБМАСТЕРА" />
+
+    Google Search Console:
+    <meta name="google-site-verification" content="КОД_ОТ_GOOGLE" />
+    ============================================================
+    -->
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!--
+    ============================================================
+    МЕСТО ДЛЯ ЯНДЕКС.МЕТРИКИ И ДРУГИХ СЧЁТЧИКОВ
+    ============================================================
+    Метрист вставляет код счётчика СЮДА.
+
+    Все события сайта уже вызывают window.omTrack(name, params).
+    Чтобы связать с Метрикой, добавь в код счётчика:
+
+        window.omTrack = function(name, params) {
+            ym(НОМЕР_СЧЁТЧИКА, 'reachGoal', name, params);
+        };
+
+    Список событий:
+      - view_product       — открытие карточки товара
+      - add_to_cart        — добавил в корзину
+      - remove_from_cart   — удалил из корзины
+      - open_cart          — открыл корзину
+      - checkout_start     — начал оформлять
+      - order_submit       — форма заказа отправлена
+      - order_via_manager  — заказ через менеджера
+      - payment_open       — окно оплаты открылось
+      - payment_link_click — нажал на ссылку оплаты
+      - receipt_selected   — выбрал файл чека
+      - receipt_upload     — отправил чек
+      - search             — использовал поиск
+      - filter_category    — выбрал категорию
+      - sort_change        — изменил сортировку
+    ============================================================
+    -->
+
     <style>
         :root {
             --bg: #f5f5f7; --dark: #1d1d1f; --blue: #0071e3; --blue-dark: #0066cc;
@@ -302,7 +382,7 @@
     <button class="floating-cart" id="floatingCart" onclick="openCart()"><i class="fa-solid fa-bag-shopping"></i><span class="float-cart-count" id="floatCartCount">0</span></button>
 
     <main class="catalog" id="catalog">
-        <h2 class="section-title">Каталог часов</h2>
+        <h1 class="section-title">Каталог часов Garmin</h1>
         <p class="section-subtitle">Найдите идеальные часы для любого момента</p>
         <div class="search-filter-bar">
             <div class="search-wrap">
@@ -331,7 +411,7 @@
         <div class="products-grid" id="productsGrid"></div>
     </main>
 
-    <!-- Карточка товара -->
+    <!-- Карточка товара (SEO: <h1> + alt-теги) -->
     <div class="product-modal" id="productModal">
         <div class="product-modal-content">
             <button class="product-modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -341,7 +421,7 @@
                     <span class="product-modal-category" id="modalCategory"></span>
                     <span class="product-modal-brand" id="modalBrand"><i class="fa-solid fa-certificate"></i> <span id="modalBrandText">Garmin</span></span>
                 </div>
-                <h2 class="product-modal-name" id="modalName"></h2>
+                <h1 class="product-modal-name" id="modalName"></h1>
                 <div class="price-block" id="modalPriceBlock"></div>
                 <p class="product-modal-description" id="modalDescription"></p>
                 <div class="product-modal-features">
@@ -408,7 +488,7 @@
                 <p><span class="step-num">3</span> Сумма к оплате: <strong id="paymentAmount">0 ₽</strong></p>
                 <p><span class="step-num">4</span> После оплаты отправьте чек</p>
             </div>
-            <div class="payment-qr-section"><img id="qrImage" src="" alt="QR-код оплаты"></div>
+            <div class="payment-qr-section"><img id="qrImage" src="" alt="QR-код для оплаты заказа в магазине OneMinute"></div>
             <button class="payment-link-btn" onclick="openPaymentLink()"><i class="fa-solid fa-arrow-up-right-from-square"></i> Нажмите для оплаты</button>
             <div class="payment-divider"><span>или</span></div>
             <div class="payment-receipt-section">
@@ -438,26 +518,30 @@
     </footer>
 
     <script>
-        // Жёстко заданные категории (только эти три) — с заглавной буквы
+        // ============================================================
+        // ГЛОБАЛЬНАЯ ФУНКЦИЯ ДЛЯ АНАЛИТИКИ
+        // ============================================================
+        window.omTrack = function(name, params) {
+            params = params || {};
+            try { console.log('[omTrack]', name, params); } catch(e) {}
+            // Метрист добавит сюда:
+            // if (typeof ym === 'function') ym(НОМЕР_СЧЁТЧИКА, 'reachGoal', name, params);
+        };
+
         const ALLOWED_CATEGORIES = ['Спорт', 'Для жизни', 'Тактические'];
         const DEFAULT_BRAND = 'Garmin';
         const BOT_SERVER_URL = 'https://oneminute-bot.onrender.com';
+        const SITE_URL = 'https://oneminuteshop.com';
 
         function normalizeCategory(cat) {
             if (!cat) return 'Без категории';
             const trimmed = String(cat).trim().toLowerCase();
             const map = {
-                'tactical': 'Тактические',
-                'тактические': 'Тактические',
-                'travel': 'Для жизни',
-                'для жизни': 'Для жизни',
-                'running': 'Спорт',
-                'diving': 'Спорт',
-                'run': 'Спорт',
-                'спорт': 'Спорт',
-                'life': 'Для жизни',
-                'sport': 'Спорт',
-                'casual': 'Для жизни'
+                'tactical': 'Тактические', 'тактические': 'Тактические',
+                'travel': 'Для жизни', 'для жизни': 'Для жизни',
+                'running': 'Спорт', 'diving': 'Спорт', 'run': 'Спорт',
+                'спорт': 'Спорт', 'life': 'Для жизни',
+                'sport': 'Спорт', 'casual': 'Для жизни'
             };
             return map[trimmed] || cat;
         }
@@ -466,6 +550,19 @@
             if (!brand || !String(brand).trim()) return DEFAULT_BRAND;
             const b = String(brand).trim();
             return b.charAt(0).toUpperCase() + b.slice(1);
+        }
+
+        // Делает slug из названия: "Garmin fenix 8 - 47мм" → "garmin-fenix-8-47mm"
+        function slugify(str) {
+            return String(str || '')
+                .toLowerCase()
+                .replace(/[а-яё]/g, function(ch) {
+                    const map = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
+                    return map[ch] || ch;
+                })
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .slice(0, 80);
         }
 
         let PRODUCTS = [], SETTINGS = {}, cart = [], currentFilter = 'all', suggestionIndex = -1;
@@ -489,8 +586,30 @@
                 updateFooter();
                 updateLinks();
                 attachFilterListeners();
+                injectProductListSchema();
+                // Автооткрытие товара из URL
+                handleDeepLink();
+                window.addEventListener('popstate', handleDeepLink);
             } catch(e) {
+                console.error(e);
                 document.getElementById('productsGrid').innerHTML = '<p style="text-align:center;color:var(--gray);padding:50px 0;grid-column:1/-1;">Ошибка загрузки</p>';
+            }
+        }
+
+        // Читает ?id=N из URL и открывает товар
+        function handleDeepLink() {
+            const params = new URLSearchParams(location.search);
+            const id = parseInt(params.get('id') || '', 10);
+            if (!id || isNaN(id)) {
+                if (document.getElementById('productModal').style.display === 'block') {
+                    document.getElementById('productModal').style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+                return;
+            }
+            const p = PRODUCTS.find(x => x.id === id);
+            if (p) {
+                openProductModal(id, true);
             }
         }
 
@@ -504,7 +623,10 @@
                 }
             });
             const sortEl = document.getElementById('sortSelect');
-            if (sortEl) sortEl.addEventListener('change', renderAllProducts);
+            if (sortEl) sortEl.addEventListener('change', function() {
+                window.omTrack('sort_change', { value: this.value });
+                renderAllProducts();
+            });
         }
 
         function updateLinks() {
@@ -579,11 +701,7 @@
             const sortVal = sortEl ? sortEl.value : 'default';
 
             let f = [...PRODUCTS];
-
-            if (currentFilter !== 'all') {
-                f = f.filter(p => p.category === currentFilter);
-            }
-
+            if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter);
             if (q) {
                 f = f.filter(p => {
                     const name = (p.name || '').toLowerCase();
@@ -592,30 +710,18 @@
                     return name.includes(q) || desc.includes(q) || brand.includes(q);
                 });
             }
-
             f = f.filter(p => {
                 const price = getEffectivePrice(p);
                 return price >= minPrice && price <= maxPrice;
             });
 
             switch (sortVal) {
-                case 'price-asc':
-                    f.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
-                    break;
-                case 'price-desc':
-                    f.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
-                    break;
-                case 'name-asc':
-                    f.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru'));
-                    break;
-                case 'name-desc':
-                    f.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'ru'));
-                    break;
-                case 'new':
-                    f.sort((a, b) => (b.id || 0) - (a.id || 0));
-                    break;
+                case 'price-asc': f.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b)); break;
+                case 'price-desc': f.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a)); break;
+                case 'name-asc': f.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru')); break;
+                case 'name-desc': f.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'ru')); break;
+                case 'new': f.sort((a, b) => (b.id || 0) - (a.id || 0)); break;
             }
-
             return f;
         }
 
@@ -642,9 +748,11 @@
 
                 const imageUrl = Array.isArray(p.image) ? p.image[0] : p.image;
                 const brand = p.brand || DEFAULT_BRAND;
+                // SEO alt-тег для карточки
+                const altText = `${brand} ${p.name} — купить за ${fmt(p.price)} в OneMinute`;
 
                 return `<div class="product-card" style="animation-delay:${i*0.03}s" onclick="openProductModal(${p.id})">
-                    <div class="product-image-wrap"><img src="${imageUrl}" alt="${p.name}" class="product-image" loading="lazy"><span class="product-badge">${p.category || ''}</span></div>
+                    <div class="product-image-wrap"><img src="${imageUrl}" alt="${altText}" class="product-image" loading="lazy"><span class="product-badge">${p.category || ''}</span></div>
                     <div class="product-info">
                         <div class="product-brand"><i class="fa-solid fa-certificate"></i> ${brand}</div>
                         <h3 class="product-name">${p.name}</h3>
@@ -668,6 +776,7 @@
             currentFilter = cat;
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             if (el) el.classList.add('active');
+            window.omTrack('filter_category', { category: cat });
             renderAllProducts();
         }
         function applyFilterAndClose(cat) {
@@ -686,7 +795,12 @@
             showSuggestions();
             renderAllProducts();
         }
-        function filterAndRender() { closeSuggestions(); renderAllProducts(); }
+        function filterAndRender() {
+            closeSuggestions();
+            const q = document.getElementById('searchInput').value.trim();
+            if (q) window.omTrack('search', { query: q });
+            renderAllProducts();
+        }
         function showSuggestions() {
             const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
             const c = document.getElementById('searchSuggestions');
@@ -708,6 +822,7 @@
             document.getElementById('searchInput').value = n;
             document.getElementById('searchClear').classList.add('visible');
             closeSuggestions();
+            window.omTrack('search', { query: n, from_suggestion: true });
             renderAllProducts();
         }
         function closeSuggestions() { document.getElementById('searchSuggestions').classList.remove('active'); }
@@ -725,9 +840,18 @@
         }
         function fmt(p) { return Number(p).toLocaleString('ru-RU') + ' ₽'; }
 
-        function openProductModal(id) {
+        function openProductModal(id, fromUrl) {
             const p = PRODUCTS.find(x => x.id === id);
             if (!p) return;
+
+            window.omTrack('view_product', {
+                id: p.id,
+                name: p.name,
+                price: getEffectivePrice(p),
+                category: p.category,
+                brand: p.brand
+            });
+
             document.getElementById('modalCategory').textContent = p.category || 'Без категории';
             document.getElementById('modalBrandText').textContent = p.brand || DEFAULT_BRAND;
             document.getElementById('modalName').textContent = p.name;
@@ -755,12 +879,23 @@
             const gallery = document.getElementById('modalGallery');
             galleryImages = Array.isArray(p.image) ? p.image : [p.image];
             currentSlide = 0;
+            // SEO: alt-теги для каждой картинки
+            const altBase = `${p.brand || DEFAULT_BRAND} ${p.name} — купить за ${fmt(getEffectivePrice(p))} в OneMinute`;
             gallery.innerHTML = `
-                <div class="gallery-slides" id="gallerySlides">${galleryImages.map(src => `<img src="${src}" alt="">`).join('')}</div>
+                <div class="gallery-slides" id="gallerySlides">${galleryImages.map((src, i) => `<img src="${src}" alt="${altBase} (фото ${i+1})">`).join('')}</div>
                 ${galleryImages.length > 1 ? `<button class="gallery-prev" onclick="changeSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button><button class="gallery-next" onclick="changeSlide(1)"><i class="fa-solid fa-chevron-right"></i></button><div class="gallery-dots">${galleryImages.map((_, i) => `<span class="gallery-dot ${i===0?'active':''}" onclick="goToSlide(${i})"></span>`).join('')}</div>` : ''}
             `;
             document.getElementById('productModal').style.display = 'block';
             document.body.style.overflow = 'hidden';
+
+            updateProductSchema(p);
+            updateSeoForProduct(p);
+
+            // Обновляем URL только если не пришли по прямой ссылке
+            if (!fromUrl) {
+                const newUrl = `${location.pathname}?id=${p.id}`;
+                history.pushState({ productId: p.id }, '', newUrl);
+            }
         }
 
         function changeSlide(dir) { currentSlide = (currentSlide + dir + galleryImages.length) % galleryImages.length; updateGallery(); }
@@ -769,11 +904,119 @@
             document.getElementById('gallerySlides').style.transform = `translateX(-${currentSlide * 100}%)`;
             document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
         }
-        function closeProductModal() { document.getElementById('productModal').style.display = 'none'; document.body.style.overflow = ''; }
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+            document.body.style.overflow = '';
+            // Вернуть URL к базовому
+            history.pushState({}, '', location.pathname);
+            resetSeoToDefault();
+        }
+
+        // ==== SEO: обновление title/meta/og/canonical под товар ====
+        function updateSeoForProduct(p) {
+            const price = getEffectivePrice(p);
+            const url = `${SITE_URL}/?id=${p.id}`;
+            const img = Array.isArray(p.image) ? p.image[0] : p.image;
+            const title = `${p.brand} ${p.name} — купить за ${fmt(price)} | OneMinute`;
+            const description = `Купить ${p.brand} ${p.name} в магазине OneMinute. Цена ${fmt(price)}. Официальная гарантия 2 года. Доставка по всей России.`;
+
+            document.title = title;
+            setMeta('name', 'description', description);
+            setMeta('property', 'og:title', title);
+            setMeta('property', 'og:description', description);
+            setMeta('property', 'og:image', img);
+            setMeta('property', 'og:type', 'product');
+            setMeta('property', 'og:url', url);
+            setMeta('name', 'twitter:title', title);
+            setMeta('name', 'twitter:description', description);
+            setMeta('name', 'twitter:image', img);
+            // Canonical
+            let canonical = document.querySelector('link[rel="canonical"]');
+            if (canonical) canonical.setAttribute('href', url);
+        }
+
+        function resetSeoToDefault() {
+            document.title = 'OneMinute — Премиальные часы Garmin | Официальный магазин';
+            setMeta('name', 'description', 'Премиальные спортивные и тактические часы Garmin. Официальная гарантия, доставка по всей России.');
+            setMeta('property', 'og:title', 'OneMinute — Премиальные часы Garmin');
+            setMeta('property', 'og:description', 'Официальный магазин премиальных часов Garmin. Доставка по РФ.');
+            setMeta('property', 'og:image', 'https://oneminuteshop.com/og-image.jpg');
+            setMeta('property', 'og:type', 'website');
+            setMeta('property', 'og:url', 'https://oneminuteshop.com/');
+            let canonical = document.querySelector('link[rel="canonical"]');
+            if (canonical) canonical.setAttribute('href', 'https://oneminuteshop.com/');
+        }
+
+        // ==== SEO: Schema.org Product ====
+        function updateProductSchema(p) {
+            const img = Array.isArray(p.image) ? p.image : [p.image];
+            const price = getEffectivePrice(p);
+            const schema = {
+                "@context": "https://schema.org/",
+                "@type": "Product",
+                "name": `${p.brand} ${p.name}`,
+                "image": img,
+                "description": (p.description || '').slice(0, 1000),
+                "sku": `OM-${p.id}`,
+                "brand": { "@type": "Brand", "name": p.brand || DEFAULT_BRAND },
+                "category": p.category,
+                "offers": {
+                    "@type": "Offer",
+                    "url": `${SITE_URL}/?id=${p.id}`,
+                    "priceCurrency": "RUB",
+                    "price": price,
+                    "priceValidUntil": "2030-12-31",
+                    "availability": "https://schema.org/InStock",
+                    "seller": { "@type": "Organization", "name": "OneMinute" }
+                }
+            };
+            let el = document.getElementById('product-schema');
+            if (!el) {
+                el = document.createElement('script');
+                el.type = 'application/ld+json';
+                el.id = 'product-schema';
+                document.head.appendChild(el);
+            }
+            el.textContent = JSON.stringify(schema);
+        }
+
+        function injectProductListSchema() {
+            const schema = {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": "Каталог часов OneMinute",
+                "numberOfItems": PRODUCTS.length,
+                "itemListElement": PRODUCTS.slice(0, 50).map((p, i) => ({
+                    "@type": "ListItem",
+                    "position": i + 1,
+                    "url": `${SITE_URL}/?id=${p.id}`,
+                    "name": `${p.brand} ${p.name}`
+                }))
+            };
+            let el = document.getElementById('list-schema');
+            if (!el) {
+                el = document.createElement('script');
+                el.type = 'application/ld+json';
+                el.id = 'list-schema';
+                document.head.appendChild(el);
+            }
+            el.textContent = JSON.stringify(schema);
+        }
+
+        function setMeta(attr, name, content) {
+            let el = document.querySelector(`meta[${attr}="${name}"]`);
+            if (!el) {
+                el = document.createElement('meta');
+                el.setAttribute(attr, name);
+                document.head.appendChild(el);
+            }
+            el.setAttribute('content', content);
+        }
 
         function buyNow(id) {
             const p = PRODUCTS.find(x => x.id === id);
             if (!p) return;
+            window.omTrack('checkout_start', { id: p.id, name: p.name, price: getEffectivePrice(p), mode: 'direct_buy' });
             lastOrderData = {
                 items: [{ product: p, quantity: 1 }],
                 total: p.price,
@@ -792,8 +1035,21 @@
             updateCartDisplay();
             showFloatingCart();
             showNotification(p.name + ' добавлен в корзину');
+            window.omTrack('add_to_cart', {
+                id: p.id, name: p.name, price: getEffectivePrice(p),
+                quantity: ex ? ex.quantity : 1,
+                cart_total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0)
+            });
         }
-        function removeFromCart(i) { cart.splice(i,1); updateCartDisplay(); renderCart(); }
+        function removeFromCart(i) {
+            const removed = cart[i];
+            if (removed) {
+                window.omTrack('remove_from_cart', { id: removed.product.id, name: removed.product.name });
+            }
+            cart.splice(i,1);
+            updateCartDisplay();
+            renderCart();
+        }
         function updateCartDisplay() {
             const cnt = cart.reduce((s,i) => s + i.quantity, 0);
             const total = cart.reduce((s,i) => s + i.product.price * i.quantity, 0);
@@ -817,10 +1073,20 @@
             }).join('');
             t.textContent = fmt(total);
         }
-        function openCart() { renderCart(); document.getElementById('cartModal').style.display = 'block'; document.body.style.overflow = 'hidden'; }
+        function openCart() {
+            renderCart();
+            document.getElementById('cartModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            window.omTrack('open_cart', { cart_total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0), items_count: cart.length });
+        }
         function closeCart() { document.getElementById('cartModal').style.display = 'none'; document.body.style.overflow = ''; }
         function checkout() {
             if (!cart.length) { showNotification('Корзина пуста'); return; }
+            window.omTrack('checkout_start', {
+                mode: 'cart',
+                items: cart.map(i => ({ id: i.product.id, name: i.product.name, price: i.product.price, quantity: i.quantity })),
+                total: cart.reduce((s,i) => s + i.product.price * i.quantity, 0)
+            });
             closeCart();
             lastOrderData = {
                 items: [...cart],
@@ -850,13 +1116,9 @@
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const form = e.target;
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
+            if (!form.checkValidity()) { form.reportValidity(); return; }
 
-            let items = [];
-            let total = 0;
+            let items = [], total = 0;
             if (isDirectBuy && lastOrderData && lastOrderData.items) {
                 items = lastOrderData.items;
                 total = lastOrderData.total;
@@ -879,24 +1141,24 @@
                 date: new Date().toLocaleString('ru-RU')
             };
             submitOrderToBot(lastOrderData);
+            window.omTrack('order_submit', {
+                order_number: lastOrderData.orderNumber,
+                total: total,
+                items_count: items.length,
+                delivery: lastOrderData.delivery
+            });
             closeOrder();
             openPaymentModal();
         });
 
         function orderViaManager() {
             const form = document.getElementById('orderForm');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-            let items = [];
-            let total = 0;
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+            let items = [], total = 0;
             if (isDirectBuy && lastOrderData && lastOrderData.items) {
-                items = lastOrderData.items;
-                total = lastOrderData.total;
+                items = lastOrderData.items; total = lastOrderData.total;
             } else {
-                items = cart;
-                total = cart.reduce((s,i) => s + i.product.price * i.quantity, 0);
+                items = cart; total = cart.reduce((s,i) => s + i.product.price * i.quantity, 0);
             }
 
             const orderData = {
@@ -908,16 +1170,12 @@
                 email: form.querySelector('input[type="email"]').value || '—',
                 address: form.querySelector('textarea').value,
                 delivery: form.querySelector('select').value,
-                items: items,
-                total: total,
+                items: items, total: total,
                 date: new Date().toLocaleString('ru-RU')
             };
             submitOrderToBot(orderData).then(success => {
-                if (success) {
-                    showNotification('Заявка отправлена менеджеру');
-                } else {
-                    showNotification('Не удалось отправить заявку, но вы можете связаться с менеджером напрямую');
-                }
+                showNotification(success ? 'Заявка отправлена менеджеру' : 'Не удалось отправить заявку');
+                window.omTrack('order_via_manager', { order_number: orderData.orderNumber, total: total, success: success });
                 contactManager();
             });
             closeOrder();
@@ -935,6 +1193,7 @@
             wrap.classList.remove('has-file');
             wrap.querySelector('.upload-text').textContent = 'Нажмите для загрузки чека';
             wrap.querySelector('i').className = 'fa-solid fa-cloud-arrow-up';
+            window.omTrack('payment_open', { total: total });
         }
         function closePayment() {
             document.getElementById('paymentModal').style.display = 'none';
@@ -943,8 +1202,12 @@
         }
         function openPaymentLink() {
             const link = SETTINGS.payment_link;
-            if (link) window.open(link, '_blank');
-            else showNotification('Ссылка для оплаты не настроена');
+            if (link) {
+                window.open(link, '_blank');
+                window.omTrack('payment_link_click', { link: link });
+            } else {
+                showNotification('Ссылка для оплаты не настроена');
+            }
         }
         function handleFileSelect(event) {
             const file = event.target.files[0];
@@ -955,9 +1218,9 @@
             wrap.querySelector('.upload-text').textContent = file.name;
             wrap.querySelector('i').className = 'fa-solid fa-file-circle-check';
             document.getElementById('sendReceiptBtn').disabled = false;
+            window.omTrack('receipt_selected', { filename: file.name, size: file.size });
         }
 
-        // ОТПРАВКА ЧЕКА — идёт в группу «Заявки» через бота
         function sendReceiptToManager() {
             if (!lastOrderData || !selectedFile) return;
             const btn = document.getElementById('sendReceiptBtn');
@@ -972,26 +1235,23 @@
             formData.append('document', selectedFile);
             formData.append('caption', caption);
 
-            fetch(`${BOT_SERVER_URL}/upload-receipt`, {
-                method: 'POST',
-                body: formData
-            })
+            fetch(`${BOT_SERVER_URL}/upload-receipt`, { method: 'POST', body: formData })
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'ok') {
                     btn.innerHTML = '<i class="fa-solid fa-check"></i> Чек отправлен!';
                     btn.style.background = 'var(--green)';
                     showNotification('Чек отправлен в группу заявок');
+                    window.omTrack('receipt_upload', { order_number: order.orderNumber, total: order.total, success: true });
                     setTimeout(() => { closePayment(); showThankYouPage(true); }, 1500);
-                } else {
-                    throw new Error('send failed');
-                }
+                } else { throw new Error('send failed'); }
             })
             .catch(err => {
                 console.error('Ошибка отправки чека:', err);
                 btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Не удалось отправить';
                 btn.style.background = 'var(--red)';
                 showNotification('Не удалось отправить чек. Попробуйте ещё раз.');
+                window.omTrack('receipt_upload', { order_number: order.orderNumber, total: order.total, success: false });
                 setTimeout(() => {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру';
@@ -1029,8 +1289,8 @@
         document.querySelectorAll('.modal,.product-modal').forEach(m => {
             m.addEventListener('click', function(e) {
                 if (e.target === this) {
-                    this.style.display = 'none';
-                    document.body.style.overflow = '';
+                    if (this.id === 'productModal') closeProductModal();
+                    else { this.style.display = 'none'; document.body.style.overflow = ''; }
                 }
             });
         });
