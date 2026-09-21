@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /thankyou.html
+Disallow: /privacy.html
+
+Sitemap: https://oneminuteshop.com/sitemap.xml
