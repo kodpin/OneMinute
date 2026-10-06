@@ -18,6 +18,21 @@
     <meta property="og:locale" content="ru_RU">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]function(){(m[i].a=m[i].a[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113481982', 'ym');
+
+        ym(113481982, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/113481982" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
+
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -677,9 +692,19 @@
     </footer>
     
     <script>
+        // ============================================================
+        // СВЯЗКА С ЯНДЕКС.МЕТРИКОЙ
+        // Все события сайта автоматически уходят в Метрику как цели.
+        // Проверить: в Метрике открой «Цели» — там появятся reachGoal с этими именами.
+        // ============================================================
         window.omTrack = function(name, params) {
             params = params || {};
             try { console.log('[omTrack]', name, params); } catch(e) {}
+            try {
+                if (typeof ym === 'function') {
+                    ym(113481982, 'reachGoal', name, params);
+                }
+            } catch(e) {}
         };
 
         const ALLOWED_CATEGORIES = ['Спорт', 'Для жизни', 'Тактические'];
@@ -1314,6 +1339,7 @@
                     errorEl.textContent = result.error;
                     errorEl.style.display = 'block';
                 }
+                window.omTrack('promo_failed', { code: code, reason: result.error });
                 return;
             }
             if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
@@ -1612,6 +1638,7 @@
             wrap.querySelector('.upload-text').textContent = file.name;
             wrap.querySelector('i').className = 'fa-solid fa-file-circle-check';
             document.getElementById('sendReceiptBtn').disabled = false;
+            window.omTrack('receipt_selected', { filename: file.name, size: file.size });
         }
 
         function sendReceiptToManager() {
@@ -1634,6 +1661,7 @@
                     btn.innerHTML = '<i class="fa-solid fa-check"></i> Чек отправлен!';
                     btn.style.background = 'var(--green)';
                     showNotification('Чек отправлен в группу заявок');
+                    window.omTrack('receipt_upload', { order_number: order.orderNumber, total: order.total, success: true });
                     setTimeout(() => { closePayment(); showThankYouPage(true); }, 1500);
                 } else { throw new Error('send failed'); }
             })
@@ -1642,6 +1670,7 @@
                 btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Не удалось отправить';
                 btn.style.background = 'var(--red)';
                 showNotification('Не удалось отправить чек. Попробуйте ещё раз.');
+                window.omTrack('receipt_upload', { order_number: order.orderNumber, total: order.total, success: false });
                 setTimeout(() => {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру';
@@ -1661,7 +1690,10 @@
             const receiptParam = receiptSent ? '&receipt=uploaded' : '';
             window.location.href = `thankyou.html?order=${orderParam}${receiptParam}`;
         }
-        function contactManager() { window.open(SETTINGS.manager_telegram || 'https://t.me/manager', '_blank'); }
+        function contactManager() {
+            window.omTrack('contact_manager_click', {});
+            window.open(SETTINGS.manager_telegram || 'https://t.me/manager', '_blank');
+        }
 
         function debounce(fn, delay) {
             let timer = null;
