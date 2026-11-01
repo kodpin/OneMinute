@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверьте ваши данные — OneMinute</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #f5f5f7; --dark: #1d1d1f; --blue: #0071e3; --blue-dark: #0066cc; --gray: #86868b; --gray-light: #aeaeb2; --white: #ffffff; --border: #d2d2d7; --red: #ff3b30; --green: #34c759; --radius-sm: 10px; --radius-md: 16px; --radius-lg: 22px; --radius-xl: 28px; --shadow-md: 0 8px 30px rgba(0,0,0,0.08); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--dark); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; -webkit-font-smoothing: antialiased; }
+        .container { background: var(--white); border-radius: var(--radius-xl); padding: 32px 24px; max-width: 500px; width: 100%; box-shadow: var(--shadow-md); }
+        .header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+        .header i { color: var(--green); font-size: 24px; }
+        .section-title { font-size: 14px; font-weight: 700; margin: 20px 0 10px; color: var(--dark); display: flex; align-items: center; gap: 6px; }
+        .section-title i { color: var(--blue); }
+        .order-confirm-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; gap: 12px; }
+        .order-confirm-row:last-child { border-bottom: none; }
+        .order-confirm-label { color: var(--gray); font-weight: 500; flex-shrink: 0; }
+        .order-confirm-value { color: var(--dark); font-weight: 600; text-align: right; word-break: break-word; max-width: 65%; }
+        .order-confirm-item { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; background: var(--bg); border-radius: var(--radius-sm); margin-bottom: 8px; gap: 10px; }
+        .order-confirm-item-name { font-size: 13px; font-weight: 600; flex: 1; line-height: 1.35; word-break: break-word; }
+        .order-confirm-item-qty { color: var(--gray); font-size: 12px; font-weight: 500; margin-left: 4px; }
+        .order-confirm-item-price { font-size: 14px; font-weight: 700; white-space: nowrap; }
+        .cart-total { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; font-size: 18px; font-weight: 800; border-top: 2px solid var(--dark); margin-top: 8px; }
+        .order-confirm-total-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+        .order-confirm-total-old { font-size: 11px; color: var(--gray); text-decoration: line-through; font-weight: 500; }
+        .order-confirm-total-discount { font-size: 11px; color: var(--green); font-weight: 600; }
+        .submit-btn, .manager-order-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 15px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.25s ease; border: none; margin-top: 10px; }
+        .submit-btn { background: var(--blue); color: white; }
+        .submit-btn:hover { background: var(--blue-dark); }
+        .manager-order-btn { background: var(--green); color: white; margin-top: 8px; }
+        .manager-order-btn:hover { background: #30b350; }
+        .back-link { display: inline-block; margin-top: 16px; font-size: 13px; color: var(--gray); text-decoration: none; text-align: center; width: 100%; }
+        .back-link:hover { color: var(--dark); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <i class="fa-solid fa-circle-check"></i>
+            <h1>Проверьте ваши данные</h1>
+        </div>
+        <div id="customerInfo"></div>
+        <div class="section-title"><i class="fa-solid fa-bag-shopping"></i> Ваш заказ</div>
+        <div id="orderItems"></div>
+        <div class="cart-total"><span>Итого</span><span class="order-confirm-total-wrap" id="orderTotal">0 ₽</span></div>
+        <button class="submit-btn" onclick="goToPayment()"><i class="fa-solid fa-wallet"></i> Перейти к оплате</button>
+        <button class="manager-order-btn" onclick="contactManager()"><i class="fa-brands fa-telegram"></i> Оформить через менеджера</button>
+        <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Вернуться в каталог</a>
+    </div>
+
+    <script>
+        let order = null;
+        let settings = { manager_telegram: 'https://t.me/manager' };
+
+        function fmt(p) { return Number(p).toLocaleString('ru-RU') + ' ₽'; }
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+            });
+        }
+
+        function loadData() {
+            const saved = sessionStorage.getItem('lastOrderData');
+            if (!saved) {
+                window.location.href = 'index.html';
+                return;
+            }
+            order = JSON.parse(saved);
+
+            fetch('https://raw.githubusercontent.com/kodpin/OneMinute-data/main/products.json', { cache: 'no-store' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.settings) settings = d.settings;
+                    render();
+                })
+                .catch(() => {
+                    render();
+                });
+        }
+
+        function render() {
+            if (!order) return;
+            const fio = `${order.lastName} ${order.firstName}${order.middleName !== '—' ? ' ' + order.middleName : ''}`;
+            let html = '';
+            html += `<div class="order-confirm-row"><span class="order-confirm-label">ФИО</span><span class="order-confirm-value">${escapeHtml(fio)}</span></div>`;
+            html += `<div class="order-confirm-row"><span class="order-confirm-label">Телефон</span><span class="order-confirm-value">${escapeHtml(order.phone)}</span></div>`;
+            if (order.email !== '—') {
+                html += `<div class="order-confirm-row"><span class="order-confirm-label">Email</span><span class="order-confirm-value">${escapeHtml(order.email)}</span></div>`;
+            }
+            html += `<div class="order-confirm-row"><span class="order-confirm-label">Адрес</span><span class="order-confirm-value">${escapeHtml(order.address)}</span></div>`;
+            html += `<div class="order-confirm-row"><span class="order-confirm-label">Доставка</span><span class="order-confirm-value">${escapeHtml(order.delivery)}</span></div>`;
+            document.getElementById('customerInfo').innerHTML = html;
+
+            document.getElementById('orderItems').innerHTML = order.items.map(item => `
+                <div class="order-confirm-item">
+                    <div class="order-confirm-item-name">${escapeHtml(item.product.name)}<span class="order-confirm-item-qty">×${item.quantity}</span></div>
+                    <div class="order-confirm-item-price">${fmt(item.product.price * item.quantity)}</div>
+                </div>
+            `).join('');
+
+            const totalEl = document.getElementById('orderTotal');
+            if (order.promo_discount > 0) {
+                totalEl.innerHTML = `<span class="order-confirm-total-old">${fmt(order.subtotal)}</span><span class="order-confirm-total-discount">−${fmt(order.promo_discount)}</span><span>${fmt(order.total)}</span>`;
+            } else {
+                totalEl.innerHTML = `<span>${fmt(order.total)}</span>`;
+            }
+        }
+
+        function goToPayment() {
+            window.location.href = 'payment.html';
+        }
+
+        function contactManager() {
+            window.open(settings.manager_telegram || 'https://t.me/manager', '_blank');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>

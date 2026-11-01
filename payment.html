@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата заказа — OneMinute</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #f5f5f7; --dark: #1d1d1f; --blue: #0071e3; --blue-dark: #0066cc; --blue-light: #e8f4fd; --gray: #86868b; --gray-light: #aeaeb2; --white: #ffffff; --border: #d2d2d7; --red: #ff3b30; --green: #34c759; --radius-sm: 10px; --radius-md: 16px; --radius-lg: 22px; --radius-xl: 28px; --shadow-md: 0 8px 30px rgba(0,0,0,0.08); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--dark); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; -webkit-font-smoothing: antialiased; }
+        .container { background: var(--white); border-radius: var(--radius-xl); padding: 32px 24px; max-width: 500px; width: 100%; box-shadow: var(--shadow-md); text-align: center; }
+        .header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; justify-content: center; }
+        .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+        .header i { color: var(--blue); font-size: 24px; }
+        .payment-instruction { text-align: left; background: var(--bg); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; font-size: 13px; color: var(--dark); line-height: 1.8; }
+        .payment-instruction p { display: flex; align-items: flex-start; gap: 8px; }
+        .payment-instruction .step-num { color: var(--blue); font-weight: 700; font-size: 12px; width: 18px; text-align: center; flex-shrink: 0; }
+        .payment-qr-section img { max-width: 200px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); border: 1px solid var(--border); margin-top: 12px; }
+        .payment-link-btn { display: block; width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--blue); color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 12px; transition: 0.25s; }
+        .payment-link-btn:hover { background: var(--blue-dark); }
+        .payment-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--gray); font-size: 13px; }
+        .payment-divider::before, .payment-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .payment-receipt-section { margin-top: 16px; }
+        .payment-receipt-label { font-size: 13px; color: var(--gray); margin-bottom: 10px; }
+        .file-upload-wrap { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 20px; text-align: center; cursor: pointer; transition: 0.25s; }
+        .file-upload-wrap:hover { border-color: var(--blue); background: var(--blue-light); }
+        .file-upload-wrap i { font-size: 28px; color: var(--gray); margin-bottom: 8px; display: block; }
+        .file-upload-wrap .upload-text { font-size: 13px; color: var(--gray); }
+        .file-upload-wrap .upload-hint { font-size: 11px; color: var(--gray-light); margin-top: 4px; }
+        .file-upload-wrap.has-file { border-color: var(--green); background: rgba(52,199,89,0.05); }
+        .file-upload-wrap.has-file i { color: var(--green); }
+        #fileInput { display: none; }
+        .send-receipt-btn { width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--green); color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 12px; transition: 0.25s; }
+        .send-receipt-btn:hover { background: #30b350; }
+        .send-receipt-btn:disabled { background: var(--gray-light); cursor: not-allowed; }
+        .manager-block { margin-top: 20px; padding: 26px 22px; background: linear-gradient(135deg, #f0faf4 0%, #d9f4e3 100%); border-radius: var(--radius-lg); border: 1px solid rgba(52,199,89,0.28); text-align: center; position: relative; overflow: hidden; }
+        .manager-block-emoji { font-size: 46px; margin-bottom: 8px; display: block; line-height: 1; }
+        .manager-block-badge { display: inline-block; background: var(--green); color: white; padding: 4px 12px; border-radius: 14px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+        .manager-block h3 { font-size: 20px; font-weight: 800; color: var(--dark); margin-bottom: 10px; line-height: 1.3; }
+        .manager-block > p { font-size: 14px; color: #2d5a3d; line-height: 1.6; margin-bottom: 18px; }
+        .manager-block-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left; }
+        .manager-block-feature { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #1f4a2e; font-weight: 500; }
+        .manager-block-feature i { color: var(--green); font-size: 15px; margin-top: 2px; flex-shrink: 0; }
+        .manager-block-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; background: var(--green); color: white; border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.25s; }
+        .manager-block-btn:hover { background: #30b350; }
+        .manager-block-note { font-size: 11px; color: #4d7a5d; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .back-link { display: inline-block; margin-top: 20px; font-size: 13px; color: var(--gray); text-decoration: none; }
+        .back-link:hover { color: var(--dark); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="paymentContent"></div>
+        <a href="confirm.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Назад к проверке данных</a>
+    </div>
+
+    <script>
+        const BOT_SERVER_URL = 'https://oneminute-bot.onrender.com';
+        let order = null;
+        let settings = { manager_telegram: 'https://t.me/manager' };
+        let selectedFile = null;
+
+        function fmt(p) { return Number(p).toLocaleString('ru-RU') + ' ₽'; }
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+            });
+        }
+
+        function loadData() {
+            const savedOrder = sessionStorage.getItem('lastOrderData');
+            if (!savedOrder) {
+                window.location.href = 'index.html';
+                return;
+            }
+            order = JSON.parse(savedOrder);
+
+            fetch('https://raw.githubusercontent.com/kodpin/OneMinute-data/main/products.json', { cache: 'no-store' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.settings) settings = d.settings;
+                    render();
+                })
+                .catch(() => {
+                    render();
+                });
+        }
+
+        function render() {
+            if (!order) return;
+            const hasQR = settings.payment_qr && settings.payment_qr.trim() !== '';
+            const hasLink = settings.payment_link && settings.payment_link.trim() !== '';
+            const paymentAvailable = hasQR || hasLink;
+            const container = document.getElementById('paymentContent');
+
+            if (paymentAvailable) {
+                let html = `
+                    <div class="header">
+                        <i class="fa-solid fa-wallet"></i>
+                        <h1>Способ оплаты</h1>
+                    </div>
+                    <div class="payment-instruction">
+                        <p><span class="step-num">1</span> Отсканируйте QR-код для оплаты</p>
+                        <p><span class="step-num">2</span> Или нажмите на кнопку ниже — выберите ваш банк</p>
+                        <p><span class="step-num">3</span> Сумма к оплате: <strong>${fmt(order.total)}</strong></p>
+                        <p><span class="step-num">4</span> После оплаты отправьте чек</p>
+                    </div>
+                `;
+                if (hasQR) {
+                    html += `<div class="payment-qr-section"><img src="${settings.payment_qr}" alt="QR-код для оплаты"></div>`;
+                }
+                if (hasLink) {
+                    html += `<button class="payment-link-btn" onclick="openPaymentLink()"><i class="fa-solid fa-arrow-up-right-from-square"></i> Нажмите для оплаты</button>`;
+                }
+                if (hasQR && hasLink) {
+                    html += `<div class="payment-divider"><span>или</span></div>`;
+                }
+                html += `
+                    <div class="payment-receipt-section">
+                        <p class="payment-receipt-label">Отправьте чек об оплате на проверку:</p>
+                        <div class="file-upload-wrap" id="fileUploadWrap" onclick="document.getElementById('fileInput').click()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span class="upload-text">Нажмите для загрузки чека</span>
+                            <span class="upload-hint">Фото или PDF файл</span>
+                        </div>
+                        <input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFileSelect(event)">
+                        <button class="send-receipt-btn" id="sendReceiptBtn" disabled onclick="sendReceiptToManager()"><i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру</button>
+                    </div>
+                `;
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `
+                    <div class="header">
+                        <i class="fa-solid fa-handshake"></i>
+                        <h1>Оформление заказа</h1>
+                    </div>
+                    <div class="manager-block">
+                        <span class="manager-block-emoji">✨</span>
+                        <div class="manager-block-badge">Оформим за минуту</div>
+                        <h3>Мы поможем вам с оформлением заказа</h3>
+                        <p>Оплата онлайн сейчас обновляется, но это даже к лучшему — <strong>менеджер оформит заказ персонально под вас</strong>. Ответит на все вопросы, подберёт модель и оформит доставку за пару минут.</p>
+                        <div class="manager-block-features">
+                            <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Персональный подбор модели под ваш запрос</span></div>
+                            <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Ответит на любые вопросы о часах</span></div>
+                            <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Оформит доставку в любой город России</span></div>
+                            <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Подскажет по гарантии и условиям</span></div>
+                        </div>
+                        <button class="manager-block-btn" onclick="contactManager()"><i class="fa-brands fa-telegram"></i> Написать менеджеру в Telegram</button>
+                        <div class="manager-block-note"><i class="fa-solid fa-clock"></i> Отвечает в течение минуты</div>
+                    </div>
+                `;
+            }
+        }
+
+        function openPaymentLink() {
+            if (settings.payment_link && settings.payment_link.trim() !== '') {
+                window.open(settings.payment_link, '_blank');
+            } else {
+                alert('Ссылка для оплаты не настроена');
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            selectedFile = file;
+            const wrap = document.getElementById('fileUploadWrap');
+            wrap.classList.add('has-file');
+            wrap.querySelector('.upload-text').textContent = file.name;
+            wrap.querySelector('i').className = 'fa-solid fa-file-circle-check';
+            document.getElementById('sendReceiptBtn').disabled = false;
+        }
+
+        function sendReceiptToManager() {
+            if (!order || !selectedFile) return;
+            const btn = document.getElementById('sendReceiptBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Отправка...';
+            const itemsText = order.items.map(item => `• ${item.product.name} ×${item.quantity} = ${fmt(item.product.price * item.quantity)}`).join('\n');
+            let caption = `🧾 ЧЕК ОПЛАТЫ #${order.orderNumber}\n📅 ${order.date}\n👤 ${order.lastName} ${order.firstName}\n📞 ${order.phone}\n🚚 ${order.delivery}\n`;
+            if (order.promo) caption += `🎟 Промокод: ${order.promo} (−${order.promo_discount} ₽)\n`;
+            caption += `💰 ИТОГО: ${fmt(order.total)}\n\n${itemsText}`;
+            const formData = new FormData();
+            formData.append('document', selectedFile);
+            formData.append('caption', caption);
+            fetch(`${BOT_SERVER_URL}/upload-receipt`, { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i> Чек отправлен!';
+                        btn.style.background = 'var(--green)';
+                        setTimeout(() => {
+                            window.location.href = 'thankyou.html';
+                        }, 1500);
+                    } else {
+                        throw new Error('send failed');
+                    }
+                })
+                .catch(() => {
+                    btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Не удалось отправить';
+                    btn.style.background = 'var(--red)';
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру';
+                        btn.style.background = '';
+                    }, 3000);
+                });
+        }
+
+        function contactManager() {
+            window.open(settings.manager_telegram || 'https://t.me/manager', '_blank');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
