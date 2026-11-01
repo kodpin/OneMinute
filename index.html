@@ -344,16 +344,111 @@
         .promo-discount-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 14px; color: var(--green); font-weight: 700; }
         .promo-hint-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--blue); margin-top: 8px; cursor: pointer; transition: opacity 0.2s; }
         .promo-hint-link:hover { opacity: 0.7; text-decoration: underline; }
+
         #orderForm { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
-        #orderForm input, #orderForm textarea, #orderForm select { padding: 12px 14px; border: 1.5px solid #e5e5ea; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; width: 100%; transition: all var(--transition); background: var(--bg); -webkit-appearance: none; }
-        #orderForm input:focus, #orderForm textarea:focus, #orderForm select:focus { outline: none; border-color: var(--blue); background: white; box-shadow: 0 0 0 4px rgba(0,113,227,0.05); }
+        #orderForm input:not([type="checkbox"]), #orderForm textarea, #orderForm select { padding: 12px 14px; border: 1.5px solid #e5e5ea; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; width: 100%; transition: all var(--transition); background: var(--bg); -webkit-appearance: none; }
+        #orderForm input:not([type="checkbox"]):focus, #orderForm textarea:focus, #orderForm select:focus { outline: none; border-color: var(--blue); background: white; box-shadow: 0 0 0 4px rgba(0,113,227,0.05); }
         #orderForm textarea { resize: vertical; min-height: 70px; }
         #orderForm select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+        /* ============ ВАЛИДАЦИЯ ФОРМЫ ЗАКАЗА ============ */
+        #orderForm input.touched:invalid:not([type="checkbox"]),
+        #orderForm textarea.touched:invalid,
+        #orderForm select.touched:invalid,
+        #orderForm.was-validated input:invalid:not([type="checkbox"]),
+        #orderForm.was-validated textarea:invalid,
+        #orderForm.was-validated select:invalid {
+            border-color: var(--red);
+            box-shadow: 0 0 0 4px rgba(255,59,48,0.08);
+        }
+        #orderForm input.touched:invalid:not([type="checkbox"]):focus,
+        #orderForm textarea.touched:invalid:focus,
+        #orderForm select.touched:invalid:focus,
+        #orderForm.was-validated input:invalid:not([type="checkbox"]):focus,
+        #orderForm.was-validated textarea:invalid:focus,
+        #orderForm.was-validated select:invalid:focus {
+            border-color: var(--red);
+            box-shadow: 0 0 0 4px rgba(255,59,48,0.14);
+        }
+        #orderForm input.touched:valid:not([type="checkbox"]),
+        #orderForm textarea.touched:valid,
+        #orderForm select.touched:valid {
+            border-color: rgba(52,199,89,0.5);
+        }
+
+        /* ============ ЧЕКБОКС СОГЛАСИЯ С ПОЛИТИКОЙ ============ */
+        .consent-wrap {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 2px 4px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            border-radius: var(--radius-sm);
+        }
+        .consent-wrap input[type="checkbox"] {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            margin: 1px 0 0;
+            padding: 0;
+            background-color: white;
+            border: 1.5px solid #c7c7cc;
+            border-radius: 5px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            transition: all 0.2s ease;
+            position: relative;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .consent-wrap input[type="checkbox"]:hover {
+            border-color: var(--blue);
+        }
+        .consent-wrap input[type="checkbox"]:checked {
+            background-color: var(--blue);
+            border-color: var(--blue);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+        }
+        .consent-text {
+            font-size: 13px;
+            color: var(--gray);
+            line-height: 1.5;
+            padding-top: 1px;
+            flex: 1;
+        }
+        .consent-wrap input[type="checkbox"]:checked ~ .consent-text {
+            color: var(--dark);
+        }
+        .consent-text a {
+            color: var(--blue);
+            text-decoration: underline;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .consent-text a:hover {
+            color: var(--blue-dark);
+        }
+        .consent-wrap.was-invalid {
+            animation: shakeConsent 0.5s;
+        }
+        .consent-wrap.was-invalid input[type="checkbox"] {
+            border-color: var(--red);
+            box-shadow: 0 0 0 4px rgba(255,59,48,0.12);
+        }
+        @keyframes shakeConsent {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
         .order-summary { background: var(--bg); padding: 12px 14px; border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; }
         .form-row { display: flex; gap: 10px; }
         .form-row input, .form-row select { flex: 1; }
-        .consent { font-size: 12px; color: var(--gray); line-height: 1.5; }
-        .consent a { color: var(--blue); text-decoration: underline; cursor: pointer; }
         .payment-content { text-align: center; }
         .payment-instruction { text-align: left; background: var(--bg); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; font-size: 13px; color: var(--dark); line-height: 1.8; }
         .payment-instruction p { display: flex; align-items: flex-start; gap: 8px; }
@@ -599,20 +694,28 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeOrder()"><i class="fa-solid fa-xmark"></i></button>
             <h2><i class="fa-solid fa-clipboard-list"></i> Оформление заказа</h2>
-            <form id="orderForm">
-                <div class="form-row"><input type="text" placeholder="Фамилия" required><input type="text" placeholder="Имя" required></div>
-                <input type="text" placeholder="Отчество (при наличии)">
-                <input type="tel" placeholder="Номер телефона" required>
-                <input type="email" placeholder="Email">
-                <textarea placeholder="Адрес доставки" required></textarea>
-                <select required>
+            <form id="orderForm" novalidate>
+                <div class="form-row">
+                    <input type="text" id="orderLastName" name="lastName" placeholder="Фамилия" required minlength="2" maxlength="50" pattern="[А-Яа-яЁёA-Za-z\-\s]{2,50}" title="Только буквы, дефис и пробел (2–50 символов)" autocomplete="family-name">
+                    <input type="text" id="orderFirstName" name="firstName" placeholder="Имя" required minlength="2" maxlength="50" pattern="[А-Яа-яЁёA-Za-z\-\s]{2,50}" title="Только буквы, дефис и пробел (2–50 символов)" autocomplete="given-name">
+                </div>
+                <input type="text" id="orderMiddleName" name="middleName" placeholder="Отчество (при наличии)" minlength="2" maxlength="50" pattern="[А-Яа-яЁёA-Za-z\-\s]{2,50}" title="Только буквы, дефис и пробел (2–50 символов)" autocomplete="additional-name">
+                <input type="tel" id="orderPhone" name="phone" placeholder="Номер телефона" required inputmode="tel" autocomplete="tel" title="Введите телефон в формате +7 (999) 123-45-67">
+                <input type="email" id="orderEmail" name="email" placeholder="Email" maxlength="100" autocomplete="email" title="Введите корректный email, например name@example.com">
+                <textarea id="orderAddress" name="address" placeholder="Адрес доставки" required minlength="10" maxlength="300" title="Адрес должен содержать минимум 10 символов"></textarea>
+                <select id="orderDelivery" name="delivery" required title="Выберите способ доставки">
                     <option value="" disabled selected>Предпочитаемый способ доставки</option>
                     <option value="Почта России">Почта России</option>
                     <option value="СДЭК">СДЭК</option>
                     <option value="Boxberry">Boxberry</option>
                 </select>
                 <div class="order-summary" id="orderSummary"></div>
-                <div class="consent">Продолжая, вы соглашаетесь с <a href="privacy.html" target="_blank">политикой конфиденциальности</a></div>
+                <label class="consent-wrap" id="consentWrap">
+                    <input type="checkbox" id="orderConsent" name="consent" required>
+                    <span class="consent-text">
+                        Я согласен(на) с <a href="privacy.html" target="_blank" rel="noopener" onclick="event.stopPropagation()">политикой конфиденциальности</a>
+                    </span>
+                </label>
                 <button type="submit" class="submit-btn">Перейти к оплате</button>
                 <button type="button" class="manager-order-btn" onclick="orderViaManager()"><i class="fa-solid fa-headset"></i> Заказать через менеджера</button>
             </form>
@@ -690,852 +793,946 @@
             </div>
         </div>
     </footer>
-    
     <script>
-        // ============================================================
-        // СВЯЗКА С ЯНДЕКС.МЕТРИКОЙ
-        // Все события сайта автоматически уходят в Метрику как цели.
-        // Проверить: в Метрике открой «Цели» — там появятся reachGoal с этими именами.
-        // ============================================================
-        window.omTrack = function(name, params) {
-            params = params || {};
-            try { console.log('[omTrack]', name, params); } catch(e) {}
-            try {
-                if (typeof ym === 'function') {
-                    ym(113481982, 'reachGoal', name, params);
-                }
-            } catch(e) {}
+    // ============================================================
+    // СВЯЗКА С ЯНДЕКС.МЕТРИКОЙ
+    // Все события сайта автоматически уходят в Метрику как цели.
+    // Проверить: в Метрике открой «Цели» — там появятся reachGoal с этими именами.
+    // ============================================================
+    window.omTrack = function(name, params) {
+        params = params || {};
+        try { console.log('[omTrack]', name, params); } catch(e) {}
+        try {
+            if (typeof ym === 'function') {
+                ym(113481982, 'reachGoal', name, params);
+            }
+        } catch(e) {}
+    };
+
+    const ALLOWED_CATEGORIES = ['Спорт', 'Для жизни', 'Тактические'];
+    const DEFAULT_BRAND = 'Garmin';
+    const BOT_SERVER_URL = 'https://oneminute-bot.onrender.com';
+    const SITE_URL = 'https://oneminuteshop.com';
+
+    function normalizeCategory(cat) {
+        if (!cat) return 'Без категории';
+        const trimmed = String(cat).trim().toLowerCase();
+        const map = {
+            'tactical': 'Тактические', 'тактические': 'Тактические',
+            'travel': 'Для жизни', 'для жизни': 'Для жизни',
+            'running': 'Спорт', 'diving': 'Спорт', 'run': 'Спорт',
+            'спорт': 'Спорт', 'life': 'Для жизни',
+            'sport': 'Спорт', 'casual': 'Для жизни'
         };
+        return map[trimmed] || cat;
+    }
 
-        const ALLOWED_CATEGORIES = ['Спорт', 'Для жизни', 'Тактические'];
-        const DEFAULT_BRAND = 'Garmin';
-        const BOT_SERVER_URL = 'https://oneminute-bot.onrender.com';
-        const SITE_URL = 'https://oneminuteshop.com';
+    function normalizeBrand(brand) {
+        if (!brand || !String(brand).trim()) return DEFAULT_BRAND;
+        const b = String(brand).trim();
+        return b.charAt(0).toUpperCase() + b.slice(1);
+    }
 
-        function normalizeCategory(cat) {
-            if (!cat) return 'Без категории';
-            const trimmed = String(cat).trim().toLowerCase();
-            const map = {
-                'tactical': 'Тактические', 'тактические': 'Тактические',
-                'travel': 'Для жизни', 'для жизни': 'Для жизни',
-                'running': 'Спорт', 'diving': 'Спорт', 'run': 'Спорт',
-                'спорт': 'Спорт', 'life': 'Для жизни',
-                'sport': 'Спорт', 'casual': 'Для жизни'
-            };
-            return map[trimmed] || cat;
-        }
+    let PRODUCTS = [], SETTINGS = {}, cart = [], currentFilter = 'all';
+    let lastOrderData = null, selectedFile = null;
+    let galleryImages = [], currentSlide = 0;
+    let isDirectBuy = false;
+    let appliedPromo = null;
+    let currentModalProductId = null;
 
-        function normalizeBrand(brand) {
-            if (!brand || !String(brand).trim()) return DEFAULT_BRAND;
-            const b = String(brand).trim();
-            return b.charAt(0).toUpperCase() + b.slice(1);
-        }
-
-        let PRODUCTS = [], SETTINGS = {}, cart = [], currentFilter = 'all';
-        let lastOrderData = null, selectedFile = null;
-        let galleryImages = [], currentSlide = 0;
-        let isDirectBuy = false;
-        let appliedPromo = null;
-        let currentModalProductId = null;
-
-        async function loadData() {
+    async function loadData() {
+        try {
+            const r = await fetch('https://raw.githubusercontent.com/kodpin/OneMinute-data/main/products.json', { cache: 'no-store' });
+            if (!r.ok) throw new Error('no data');
+            const d = await r.json();
+            PRODUCTS = (d.products || []).map(p => ({
+                ...p,
+                category: normalizeCategory(p.category),
+                brand: normalizeBrand(p.brand)
+            }));
+            SETTINGS = d.settings || {};
+            buildCategoryFilters();
+            renderAllProducts();
+            updateFooter();
+            updateLinks();
+            attachFilterListeners();
+            injectProductListSchema();
+            handleDeepLink();
+            window.addEventListener('popstate', handleDeepLink);
             try {
-                const r = await fetch('https://raw.githubusercontent.com/kodpin/OneMinute-data/main/products.json', { cache: 'no-store' });
-                if (!r.ok) throw new Error('no data');
-                const d = await r.json();
-                PRODUCTS = (d.products || []).map(p => ({
-                    ...p,
-                    category: normalizeCategory(p.category),
-                    brand: normalizeBrand(p.brand)
-                }));
-                SETTINGS = d.settings || {};
-                buildCategoryFilters();
-                renderAllProducts();
-                updateFooter();
-                updateLinks();
-                attachFilterListeners();
-                injectProductListSchema();
-                handleDeepLink();
-                window.addEventListener('popstate', handleDeepLink);
-                try {
-                    const savedPromo = localStorage.getItem('appliedPromo');
-                    if (savedPromo) appliedPromo = JSON.parse(savedPromo);
-                } catch(e) {}
-            } catch(e) {
-                console.error(e);
-                document.getElementById('productsGrid').innerHTML = '<p style="text-align:center;color:var(--gray);padding:50px 0;grid-column:1/-1;">Ошибка загрузки</p>';
+                const savedPromo = localStorage.getItem('appliedPromo');
+                if (savedPromo) appliedPromo = JSON.parse(savedPromo);
+            } catch(e) {}
+        } catch(e) {
+            console.error(e);
+            document.getElementById('productsGrid').innerHTML = '<p style="text-align:center;color:var(--gray);padding:50px 0;grid-column:1/-1;">Ошибка загрузки</p>';
+        }
+    }
+
+    function handleDeepLink() {
+        const params = new URLSearchParams(location.search);
+        const id = parseInt(params.get('id') || '', 10);
+        if (!id || isNaN(id)) {
+            if (document.getElementById('productModal').style.display === 'block') {
+                document.getElementById('productModal').style.display = 'none';
+                document.body.style.overflow = '';
+                currentModalProductId = null;
             }
+            return;
         }
+        const p = PRODUCTS.find(x => x.id === id);
+        if (p) openProductModal(id, true);
+    }
 
-        function handleDeepLink() {
-            const params = new URLSearchParams(location.search);
-            const id = parseInt(params.get('id') || '', 10);
-            if (!id || isNaN(id)) {
-                if (document.getElementById('productModal').style.display === 'block') {
-                    document.getElementById('productModal').style.display = 'none';
-                    document.body.style.overflow = '';
-                    currentModalProductId = null;
-                }
-                return;
+    function attachFilterListeners() {
+        ['priceMin', 'priceMax'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', renderAllProducts);
+                el.addEventListener('change', renderAllProducts);
+                el.addEventListener('keyup', renderAllProducts);
             }
-            const p = PRODUCTS.find(x => x.id === id);
-            if (p) openProductModal(id, true);
-        }
+        });
+        const sortEl = document.getElementById('sortSelect');
+        if (sortEl) sortEl.addEventListener('change', function() {
+            window.omTrack('sort_change', { value: this.value });
+            renderAllProducts();
+        });
+    }
 
-        function attachFilterListeners() {
-            ['priceMin', 'priceMax'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener('input', renderAllProducts);
-                    el.addEventListener('change', renderAllProducts);
-                    el.addEventListener('keyup', renderAllProducts);
-                }
-            });
-            const sortEl = document.getElementById('sortSelect');
-            if (sortEl) sortEl.addEventListener('change', function() {
-                window.omTrack('sort_change', { value: this.value });
-                renderAllProducts();
-            });
-        }
+    function updateLinks() {
+        const l = SETTINGS.manager_telegram || 'https://t.me/manager';
+        document.getElementById('supportLink').href = l;
+    }
 
-        function updateLinks() {
-            const l = SETTINGS.manager_telegram || 'https://t.me/manager';
-            document.getElementById('supportLink').href = l;
-        }
+    function updateFooter() {
+        const ip = SETTINGS.ip_info || 'ИП Иванов Иван Иванович\nИНН: 1234567890\nг. Москва, ул. Часовая, 1';
+        document.getElementById('ipInfo').textContent = ip;
+    }
 
-        function updateFooter() {
-            const ip = SETTINGS.ip_info || 'ИП Иванов Иван Иванович\nИНН: 1234567890\nг. Москва, ул. Часовая, 1';
-            document.getElementById('ipInfo').textContent = ip;
-        }
+    function buildCategoryFilters() {
+        const chipsContainer = document.getElementById('filterChips');
+        chipsContainer.innerHTML = '';
+        const allChip = document.createElement('button');
+        allChip.className = 'filter-chip active';
+        allChip.setAttribute('onclick', "setFilter('all', this)");
+        allChip.textContent = 'Все часы';
+        chipsContainer.appendChild(allChip);
+        ALLOWED_CATEGORIES.forEach(cat => {
+            const chip = document.createElement('button');
+            chip.className = 'filter-chip';
+            chip.setAttribute('onclick', `setFilter('${cat}', this)`);
+            chip.textContent = cat;
+            chipsContainer.appendChild(chip);
+        });
+        const navCats = document.getElementById('navCategories');
+        navCats.innerHTML = '';
+        const aAll = document.createElement('a');
+        aAll.className = 'nav-cat-link';
+        aAll.setAttribute('onclick', "applyFilterAndClose('all')");
+        aAll.textContent = 'Все часы';
+        navCats.appendChild(aAll);
+        ALLOWED_CATEGORIES.forEach(cat => {
+            const a = document.createElement('a');
+            a.className = 'nav-cat-link';
+            a.setAttribute('onclick', `applyFilterAndClose('${cat}')`);
+            a.textContent = cat;
+            navCats.appendChild(a);
+        });
+    }
 
-        function buildCategoryFilters() {
-            const chipsContainer = document.getElementById('filterChips');
-            chipsContainer.innerHTML = '';
-            const allChip = document.createElement('button');
-            allChip.className = 'filter-chip active';
-            allChip.setAttribute('onclick', "setFilter('all', this)");
-            allChip.textContent = 'Все часы';
-            chipsContainer.appendChild(allChip);
-            ALLOWED_CATEGORIES.forEach(cat => {
-                const chip = document.createElement('button');
-                chip.className = 'filter-chip';
-                chip.setAttribute('onclick', `setFilter('${cat}', this)`);
-                chip.textContent = cat;
-                chipsContainer.appendChild(chip);
-            });
-            const navCats = document.getElementById('navCategories');
-            navCats.innerHTML = '';
-            const aAll = document.createElement('a');
-            aAll.className = 'nav-cat-link';
-            aAll.setAttribute('onclick', "applyFilterAndClose('all')");
-            aAll.textContent = 'Все часы';
-            navCats.appendChild(aAll);
-            ALLOWED_CATEGORIES.forEach(cat => {
-                const a = document.createElement('a');
-                a.className = 'nav-cat-link';
-                a.setAttribute('onclick', `applyFilterAndClose('${cat}')`);
-                a.textContent = cat;
-                navCats.appendChild(a);
-            });
-        }
+    function getEffectivePrice(p) {
+        if (!p || p.price === undefined || p.price === null) return 0;
+        const price = Number(p.price) || 0;
+        const hasDiscount = Number(p.discount_percent) > 0 && p.discount_end;
+        const now = new Date();
+        const endDate = hasDiscount ? new Date(p.discount_end) : null;
+        const isActive = hasDiscount && endDate && endDate > now;
+        return isActive ? Math.round(price * (1 - Number(p.discount_percent) / 100)) : price;
+    }
 
-        function getEffectivePrice(p) {
-            if (!p || p.price === undefined || p.price === null) return 0;
-            const price = Number(p.price) || 0;
-            const hasDiscount = Number(p.discount_percent) > 0 && p.discount_end;
-            const now = new Date();
-            const endDate = hasDiscount ? new Date(p.discount_end) : null;
-            const isActive = hasDiscount && endDate && endDate > now;
-            return isActive ? Math.round(price * (1 - Number(p.discount_percent) / 100)) : price;
+    function getPriceWithPromo(p) {
+        const base = getEffectivePrice(p);
+        if (appliedPromo && appliedPromo.percent > 0) {
+            return Math.round(base * (1 - appliedPromo.percent / 100));
         }
+        return base;
+    }
 
-        function getPriceWithPromo(p) {
-            const base = getEffectivePrice(p);
-            if (appliedPromo && appliedPromo.percent > 0) {
-                return Math.round(base * (1 - appliedPromo.percent / 100));
-            }
-            return base;
-        }
-
-        function getFilteredProducts() {
-            const searchEl = document.getElementById('searchInput');
-            const minEl = document.getElementById('priceMin');
-            const maxEl = document.getElementById('priceMax');
-            const sortEl = document.getElementById('sortSelect');
-            const q = (searchEl && searchEl.value || '').toLowerCase().trim();
-            let minPrice = 0, maxPrice = Infinity;
-            if (minEl && minEl.value !== '') { const v = parseFloat(minEl.value); if (!isNaN(v) && v >= 0) minPrice = v; }
-            if (maxEl && maxEl.value !== '') { const v = parseFloat(maxEl.value); if (!isNaN(v) && v >= 0) maxPrice = v; }
-            const sortVal = sortEl ? sortEl.value : 'default';
-            let f = [...PRODUCTS];
-            if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter);
-            if (q) {
-                f = f.filter(p => {
-                    const name = (p.name || '').toLowerCase();
-                    const desc = (p.description || '').toLowerCase();
-                    const brand = (p.brand || '').toLowerCase();
-                    return name.includes(q) || desc.includes(q) || brand.includes(q);
-                });
-            }
+    function getFilteredProducts() {
+        const searchEl = document.getElementById('searchInput');
+        const minEl = document.getElementById('priceMin');
+        const maxEl = document.getElementById('priceMax');
+        const sortEl = document.getElementById('sortSelect');
+        const q = (searchEl && searchEl.value || '').toLowerCase().trim();
+        let minPrice = 0, maxPrice = Infinity;
+        if (minEl && minEl.value !== '') { const v = parseFloat(minEl.value); if (!isNaN(v) && v >= 0) minPrice = v; }
+        if (maxEl && maxEl.value !== '') { const v = parseFloat(maxEl.value); if (!isNaN(v) && v >= 0) maxPrice = v; }
+        const sortVal = sortEl ? sortEl.value : 'default';
+        let f = [...PRODUCTS];
+        if (currentFilter !== 'all') f = f.filter(p => p.category === currentFilter);
+        if (q) {
             f = f.filter(p => {
-                const price = getEffectivePrice(p);
-                return price >= minPrice && price <= maxPrice;
-            });
-            switch (sortVal) {
-                case 'price-asc': f.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b)); break;
-                case 'price-desc': f.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a)); break;
-                case 'name-asc': f.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru')); break;
-                case 'name-desc': f.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'ru')); break;
-                case 'new': f.sort((a, b) => (b.id || 0) - (a.id || 0)); break;
-            }
-            return f;
-        }
-
-        function renderAllProducts() {
-            const filtered = getFilteredProducts();
-            const grid = document.getElementById('productsGrid');
-            grid.innerHTML = '';
-            document.getElementById('resultsCount').textContent = `${filtered.length} из ${PRODUCTS.length}`;
-            if (!filtered.length) {
-                grid.innerHTML = '<div class="no-results"><i class="fa-solid fa-magnifying-glass"></i>Ничего не найдено</div>';
-                return;
-            }
-            grid.insertAdjacentHTML('beforeend', filtered.map((p, i) => {
-                const hasDiscount = p.discount_percent > 0 && p.discount_end;
-                const now = new Date();
-                const endDate = hasDiscount ? new Date(p.discount_end) : null;
-                const isActiveDiscount = hasDiscount && endDate && endDate > now;
-                const discountedPrice = isActiveDiscount ? calculateDiscountPrice(p.price, p.discount_percent) : null;
-                let priceHTML = `<span class="product-price">${fmt(p.price)}</span>`;
-                if (isActiveDiscount && discountedPrice) {
-                    priceHTML = `<span class="old-price">${fmt(p.price)}</span> <span class="product-price">${fmt(discountedPrice)}</span> <span class="discount-badge">-${p.discount_percent}%</span>`;
-                }
-                const imageUrl = Array.isArray(p.image) ? p.image[0] : p.image;
-                const brand = p.brand || DEFAULT_BRAND;
-                const altText = `${brand} ${p.name} — купить за ${fmt(p.price)} в OneMinute`;
-                return `<div class="product-card" style="animation-delay:${i*0.03}s" onclick="openProductModal(${p.id})">
-                    <div class="product-image-wrap"><img src="${imageUrl}" alt="${altText}" class="product-image" loading="lazy"><span class="product-badge">${p.category || ''}</span></div>
-                    <div class="product-info">
-                        <div class="product-brand"><i class="fa-solid fa-certificate"></i> ${brand}</div>
-                        <h3 class="product-name">${p.name}</h3>
-                        <p class="product-description">${p.description}</p>
-                        <div class="price-block">${priceHTML}</div>
-                        <div class="product-buttons">
-                            <button class="buy-btn" onclick="event.stopPropagation();buyNow(${p.id})"><i class="fa-solid fa-bolt"></i> Купить</button>
-                            <button class="cart-btn-sm" onclick="event.stopPropagation();addToCart(${p.id})"><i class="fa-solid fa-cart-plus"></i> В корзину</button>
-                        </div>
-                    </div>
-                </div>`;
-            }).join(''));
-        }
-
-        function calculateDiscountPrice(price, percent) {
-            if (!percent || percent <= 0) return null;
-            return Math.round(price * (1 - percent / 100));
-        }
-
-        function setFilter(cat, el) {
-            currentFilter = cat;
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            if (el) el.classList.add('active');
-            window.omTrack('filter_category', { category: cat });
-            renderAllProducts();
-        }
-        function applyFilterAndClose(cat) {
-            setFilter(cat, document.querySelector(`.filter-chip[onclick*="${cat}"]`));
-            closeMenu();
-        }
-        function closeMenu() {
-            burgerBtn.classList.remove('active');
-            navLinks.classList.remove('active');
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        function onSearchInput() {
-            document.getElementById('searchClear').classList.toggle('visible', document.getElementById('searchInput').value.length > 0);
-            showSuggestions();
-            renderAllProducts();
-        }
-        function filterAndRender() {
-            closeSuggestions();
-            const q = document.getElementById('searchInput').value.trim();
-            if (q) window.omTrack('search', { query: q });
-            renderAllProducts();
-        }
-        function showSuggestions() {
-            const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-            const c = document.getElementById('searchSuggestions');
-            if (!q) { c.classList.remove('active'); return; }
-            const m = PRODUCTS.filter(p => {
                 const name = (p.name || '').toLowerCase();
+                const desc = (p.description || '').toLowerCase();
                 const brand = (p.brand || '').toLowerCase();
-                return name.includes(q) || brand.includes(q);
-            }).slice(0, 5);
-            if (!m.length) { c.classList.remove('active'); return; }
-            c.innerHTML = m.map((p, i) => `<div class="suggestion-item" onclick="selectSuggestion('${p.name.replace(/'/g,"\\'")}')"><i class="fa-solid fa-magnifying-glass"></i><span class="suggestion-name">${p.name}</span><span class="suggestion-price">${fmt(p.price)}</span></div>`).join('');
-            c.classList.add('active');
+                return name.includes(q) || desc.includes(q) || brand.includes(q);
+            });
         }
-        function handleSearchKey(e) {
-            if (e.key === 'Escape') closeSuggestions();
-            else if (e.key === 'Enter') { e.preventDefault(); filterAndRender(); }
+        f = f.filter(p => {
+            const price = getEffectivePrice(p);
+            return price >= minPrice && price <= maxPrice;
+        });
+        switch (sortVal) {
+            case 'price-asc': f.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b)); break;
+            case 'price-desc': f.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a)); break;
+            case 'name-asc': f.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ru')); break;
+            case 'name-desc': f.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'ru')); break;
+            case 'new': f.sort((a, b) => (b.id || 0) - (a.id || 0)); break;
         }
-        function selectSuggestion(n) {
-            document.getElementById('searchInput').value = n;
-            document.getElementById('searchClear').classList.add('visible');
-            closeSuggestions();
-            renderAllProducts();
-        }
-        function closeSuggestions() { document.getElementById('searchSuggestions').classList.remove('active'); }
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            const minEl = document.getElementById('priceMin');
-            const maxEl = document.getElementById('priceMax');
-            const sortEl = document.getElementById('sortSelect');
-            if (minEl) minEl.value = '';
-            if (maxEl) maxEl.value = '';
-            if (sortEl) sortEl.value = 'default';
-            document.getElementById('searchClear').classList.remove('visible');
-            closeSuggestions();
-            renderAllProducts();
-        }
-        function fmt(p) { return Number(p).toLocaleString('ru-RU') + ' ₽'; }
+        return f;
+    }
 
-        function openProductModal(id, fromUrl) {
-            const p = PRODUCTS.find(x => x.id === id);
-            if (!p) return;
-            currentModalProductId = id;
-            window.omTrack('view_product', { id: p.id, name: p.name, price: getEffectivePrice(p), category: p.category, brand: p.brand });
-            document.getElementById('modalCategory').textContent = p.category || 'Без категории';
-            document.getElementById('modalBrandText').textContent = p.brand || DEFAULT_BRAND;
-            document.getElementById('modalName').textContent = p.name;
-            document.getElementById('modalDescription').textContent = p.description;
-            document.getElementById('modalBuyBtn').onclick = () => { closeProductModal(); buyNow(id); };
-            document.getElementById('modalCartBtn').onclick = () => { closeProductModal(); addToCart(id); };
-
-            renderModalPrice(p);
-
-            const gallery = document.getElementById('modalGallery');
-            galleryImages = Array.isArray(p.image) ? p.image : [p.image];
-            currentSlide = 0;
-            const altBase = `${p.brand || DEFAULT_BRAND} ${p.name} — купить за ${fmt(getEffectivePrice(p))} в OneMinute`;
-            gallery.innerHTML = `
-                <div class="gallery-slides" id="gallerySlides">${galleryImages.map((src, i) => `<img src="${src}" alt="${altBase} (фото ${i+1})">`).join('')}</div>
-                ${galleryImages.length > 1 ? `<button class="gallery-prev" onclick="changeSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button><button class="gallery-next" onclick="changeSlide(1)"><i class="fa-solid fa-chevron-right"></i></button><div class="gallery-dots">${galleryImages.map((_, i) => `<span class="gallery-dot ${i===0?'active':''}" onclick="goToSlide(${i})"></span>`).join('')}</div>` : ''}
-            `;
-            document.getElementById('productModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            updateProductSchema(p);
-            updateSeoForProduct(p);
-            renderSimilarProducts(p);
-            showModalPromoState();
-            if (!fromUrl) {
-                const newUrl = `${location.pathname}?id=${p.id}`;
-                history.pushState({ productId: p.id }, '', newUrl);
-            }
+    function renderAllProducts() {
+        const filtered = getFilteredProducts();
+        const grid = document.getElementById('productsGrid');
+        grid.innerHTML = '';
+        document.getElementById('resultsCount').textContent = `${filtered.length} из ${PRODUCTS.length}`;
+        if (!filtered.length) {
+            grid.innerHTML = '<div class="no-results"><i class="fa-solid fa-magnifying-glass"></i>Ничего не найдено</div>';
+            return;
         }
-
-        function renderModalPrice(p) {
+        grid.insertAdjacentHTML('beforeend', filtered.map((p, i) => {
             const hasDiscount = p.discount_percent > 0 && p.discount_end;
             const now = new Date();
             const endDate = hasDiscount ? new Date(p.discount_end) : null;
             const isActiveDiscount = hasDiscount && endDate && endDate > now;
             const discountedPrice = isActiveDiscount ? calculateDiscountPrice(p.price, p.discount_percent) : null;
-            const basePrice = isActiveDiscount && discountedPrice ? discountedPrice : p.price;
+            let priceHTML = `<span class="product-price">${fmt(p.price)}</span>`;
+            if (isActiveDiscount && discountedPrice) {
+                priceHTML = `<span class="old-price">${fmt(p.price)}</span> <span class="product-price">${fmt(discountedPrice)}</span> <span class="discount-badge">-${p.discount_percent}%</span>`;
+            }
+            const imageUrl = Array.isArray(p.image) ? p.image[0] : p.image;
+            const brand = p.brand || DEFAULT_BRAND;
+            const altText = `${brand} ${p.name} — купить за ${fmt(p.price)} в OneMinute`;
+            return `<div class="product-card" style="animation-delay:${i*0.03}s" onclick="openProductModal(${p.id})">
+                <div class="product-image-wrap"><img src="${imageUrl}" alt="${altText}" class="product-image" loading="lazy"><span class="product-badge">${p.category || ''}</span></div>
+                <div class="product-info">
+                    <div class="product-brand"><i class="fa-solid fa-certificate"></i> ${brand}</div>
+                    <h3 class="product-name">${p.name}</h3>
+                    <p class="product-description">${p.description}</p>
+                    <div class="price-block">${priceHTML}</div>
+                    <div class="product-buttons">
+                        <button class="buy-btn" onclick="event.stopPropagation();buyNow(${p.id})"><i class="fa-solid fa-bolt"></i> Купить</button>
+                        <button class="cart-btn-sm" onclick="event.stopPropagation();addToCart(${p.id})"><i class="fa-solid fa-cart-plus"></i> В корзину</button>
+                    </div>
+                </div>
+            </div>`;
+        }).join(''));
+    }
 
-            let priceHTML = '';
-            if (appliedPromo && appliedPromo.percent > 0) {
-                const finalPrice = Math.round(basePrice * (1 - appliedPromo.percent / 100));
-                if (isActiveDiscount && discountedPrice) {
-                    priceHTML = `<span class="old-price">${fmt(p.price)}</span> <span class="product-modal-price">${fmt(finalPrice)}</span> <span class="discount-badge">-${p.discount_percent}%</span>`;
-                } else {
-                    priceHTML = `<span class="old-price">${fmt(p.price)}</span> <span class="product-modal-price">${fmt(finalPrice)}</span>`;
-                }
-                priceHTML += `<div class="promo-price-note"><i class="fa-solid fa-ticket"></i> Промокод ${appliedPromo.code}: −${appliedPromo.percent}%</div>`;
+    function calculateDiscountPrice(price, percent) {
+        if (!percent || percent <= 0) return null;
+        return Math.round(price * (1 - percent / 100));
+    }
+
+    function setFilter(cat, el) {
+        currentFilter = cat;
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        if (el) el.classList.add('active');
+        window.omTrack('filter_category', { category: cat });
+        renderAllProducts();
+    }
+    function applyFilterAndClose(cat) {
+        setFilter(cat, document.querySelector(`.filter-chip[onclick*="${cat}"]`));
+        closeMenu();
+    }
+    function closeMenu() {
+        burgerBtn.classList.remove('active');
+        navLinks.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function onSearchInput() {
+        document.getElementById('searchClear').classList.toggle('visible', document.getElementById('searchInput').value.length > 0);
+        showSuggestions();
+        renderAllProducts();
+    }
+    function filterAndRender() {
+        closeSuggestions();
+        const q = document.getElementById('searchInput').value.trim();
+        if (q) window.omTrack('search', { query: q });
+        renderAllProducts();
+    }
+    function showSuggestions() {
+        const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+        const c = document.getElementById('searchSuggestions');
+        if (!q) { c.classList.remove('active'); return; }
+        const m = PRODUCTS.filter(p => {
+            const name = (p.name || '').toLowerCase();
+            const brand = (p.brand || '').toLowerCase();
+            return name.includes(q) || brand.includes(q);
+        }).slice(0, 5);
+        if (!m.length) { c.classList.remove('active'); return; }
+        c.innerHTML = m.map((p, i) => `<div class="suggestion-item" onclick="selectSuggestion('${p.name.replace(/'/g,"\\'")}')"><i class="fa-solid fa-magnifying-glass"></i><span class="suggestion-name">${p.name}</span><span class="suggestion-price">${fmt(p.price)}</span></div>`).join('');
+        c.classList.add('active');
+    }
+    function handleSearchKey(e) {
+        if (e.key === 'Escape') closeSuggestions();
+        else if (e.key === 'Enter') { e.preventDefault(); filterAndRender(); }
+    }
+    function selectSuggestion(n) {
+        document.getElementById('searchInput').value = n;
+        document.getElementById('searchClear').classList.add('visible');
+        closeSuggestions();
+        renderAllProducts();
+    }
+    function closeSuggestions() { document.getElementById('searchSuggestions').classList.remove('active'); }
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        const minEl = document.getElementById('priceMin');
+        const maxEl = document.getElementById('priceMax');
+        const sortEl = document.getElementById('sortSelect');
+        if (minEl) minEl.value = '';
+        if (maxEl) maxEl.value = '';
+        if (sortEl) sortEl.value = 'default';
+        document.getElementById('searchClear').classList.remove('visible');
+        closeSuggestions();
+        renderAllProducts();
+    }
+    function fmt(p) { return Number(p).toLocaleString('ru-RU') + ' ₽'; }
+
+    function openProductModal(id, fromUrl) {
+        const p = PRODUCTS.find(x => x.id === id);
+        if (!p) return;
+        currentModalProductId = id;
+        window.omTrack('view_product', { id: p.id, name: p.name, price: getEffectivePrice(p), category: p.category, brand: p.brand });
+        document.getElementById('modalCategory').textContent = p.category || 'Без категории';
+        document.getElementById('modalBrandText').textContent = p.brand || DEFAULT_BRAND;
+        document.getElementById('modalName').textContent = p.name;
+        document.getElementById('modalDescription').textContent = p.description;
+        document.getElementById('modalBuyBtn').onclick = () => { closeProductModal(); buyNow(id); };
+        document.getElementById('modalCartBtn').onclick = () => { closeProductModal(); addToCart(id); };
+
+        renderModalPrice(p);
+
+        const gallery = document.getElementById('modalGallery');
+        galleryImages = Array.isArray(p.image) ? p.image : [p.image];
+        currentSlide = 0;
+        const altBase = `${p.brand || DEFAULT_BRAND} ${p.name} — купить за ${fmt(getEffectivePrice(p))} в OneMinute`;
+        gallery.innerHTML = `
+            <div class="gallery-slides" id="gallerySlides">${galleryImages.map((src, i) => `<img src="${src}" alt="${altBase} (фото ${i+1})">`).join('')}</div>
+            ${galleryImages.length > 1 ? `<button class="gallery-prev" onclick="changeSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button><button class="gallery-next" onclick="changeSlide(1)"><i class="fa-solid fa-chevron-right"></i></button><div class="gallery-dots">${galleryImages.map((_, i) => `<span class="gallery-dot ${i===0?'active':''}" onclick="goToSlide(${i})"></span>`).join('')}</div>` : ''}
+        `;
+        document.getElementById('productModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        updateProductSchema(p);
+        updateSeoForProduct(p);
+        renderSimilarProducts(p);
+        showModalPromoState();
+        if (!fromUrl) {
+            const newUrl = `${location.pathname}?id=${p.id}`;
+            history.pushState({ productId: p.id }, '', newUrl);
+        }
+    }
+
+    function renderModalPrice(p) {
+        const hasDiscount = p.discount_percent > 0 && p.discount_end;
+        const now = new Date();
+        const endDate = hasDiscount ? new Date(p.discount_end) : null;
+        const isActiveDiscount = hasDiscount && endDate && endDate > now;
+        const discountedPrice = isActiveDiscount ? calculateDiscountPrice(p.price, p.discount_percent) : null;
+        const basePrice = isActiveDiscount && discountedPrice ? discountedPrice : p.price;
+
+        let priceHTML = '';
+        if (appliedPromo && appliedPromo.percent > 0) {
+            const finalPrice = Math.round(basePrice * (1 - appliedPromo.percent / 100));
+            if (isActiveDiscount && discountedPrice) {
+                priceHTML = `<span class="old-price">${fmt(p.price)}</span> <span class="product-modal-price">${fmt(finalPrice)}</span> <span class="discount-badge">-${p.discount_percent}%</span>`;
             } else {
-                if (isActiveDiscount && discountedPrice) {
-                    priceHTML = `<span class="old-price">${fmt(p.price)}</span> <span class="product-modal-price">${fmt(discountedPrice)}</span> <span class="discount-badge">-${p.discount_percent}%</span>`;
-                    if (endDate) {
-                        const diff = endDate - now;
-                        const days = Math.floor(diff / (1000*60*60*24));
-                        const hours = Math.floor((diff / (1000*60*60)) % 24);
-                        priceHTML += `<div class="discount-timer"><i class="fa-regular fa-clock"></i> ${days}д ${hours}ч</div>`;
-                    }
-                } else {
-                    priceHTML = `<span class="product-modal-price">${fmt(p.price)}</span>`;
+                priceHTML = `<span class="old-price">${fmt(p.price)}</span> <span class="product-modal-price">${fmt(finalPrice)}</span>`;
+            }
+            priceHTML += `<div class="promo-price-note"><i class="fa-solid fa-ticket"></i> Промокод ${appliedPromo.code}: −${appliedPromo.percent}%</div>`;
+        } else {
+            if (isActiveDiscount && discountedPrice) {
+                priceHTML = `<span class="old-price">${fmt(p.price)}</span> <span class="product-modal-price">${fmt(discountedPrice)}</span> <span class="discount-badge">-${p.discount_percent}%</span>`;
+                if (endDate) {
+                    const diff = endDate - now;
+                    const days = Math.floor(diff / (1000*60*60*24));
+                    const hours = Math.floor((diff / (1000*60*60)) % 24);
+                    priceHTML += `<div class="discount-timer"><i class="fa-regular fa-clock"></i> ${days}д ${hours}ч</div>`;
                 }
+            } else {
+                priceHTML = `<span class="product-modal-price">${fmt(p.price)}</span>`;
             }
-            document.getElementById('modalPriceBlock').innerHTML = priceHTML;
         }
+        document.getElementById('modalPriceBlock').innerHTML = priceHTML;
+    }
 
-        function refreshModalPrice() {
-            if (!currentModalProductId) return;
-            const p = PRODUCTS.find(x => x.id === currentModalProductId);
-            if (p) renderModalPrice(p);
-        }
+    function refreshModalPrice() {
+        if (!currentModalProductId) return;
+        const p = PRODUCTS.find(x => x.id === currentModalProductId);
+        if (p) renderModalPrice(p);
+    }
 
-        function renderSimilarProducts(current) {
-            const block = document.getElementById('similarBlock');
-            const grid = document.getElementById('similarGrid');
-            const currentPrice = getEffectivePrice(current);
-            let similar = PRODUCTS.filter(p => {
-                if (p.id === current.id) return false;
-                if (p.category !== current.category) return false;
-                const price = getEffectivePrice(p);
-                const ratio = price / currentPrice;
-                return ratio >= 0.5 && ratio <= 2.0;
-            });
-            if (similar.length < 3) {
-                similar = PRODUCTS.filter(p => p.id !== current.id && p.category === current.category);
-            }
-            if (similar.length < 3) {
-                similar = PRODUCTS.filter(p => p.id !== current.id);
-            }
-            similar.sort((a, b) => Math.abs(getEffectivePrice(a) - currentPrice) - Math.abs(getEffectivePrice(b) - currentPrice));
-            similar = similar.slice(0, 3);
-            if (!similar.length) {
-                block.style.display = 'none';
-                return;
-            }
-            grid.innerHTML = similar.map(p => {
-                const img = Array.isArray(p.image) ? p.image[0] : p.image;
-                return `<div class="similar-card" onclick="event.stopPropagation();openSimilar(${p.id})">
-                    <img src="${img}" alt="${p.name}">
-                    <div class="similar-name">${p.name}</div>
-                    <div class="similar-price">${fmt(getEffectivePrice(p))}</div>
-                </div>`;
-            }).join('');
-            block.style.display = 'block';
-        }
-
-        function openSimilar(id) {
-            closeProductModal();
-            setTimeout(() => openProductModal(id), 100);
-        }
-
-        function changeSlide(dir) { currentSlide = (currentSlide + dir + galleryImages.length) % galleryImages.length; updateGallery(); }
-        function goToSlide(n) { currentSlide = n; updateGallery(); }
-        function updateGallery() {
-            document.getElementById('gallerySlides').style.transform = `translateX(-${currentSlide * 100}%)`;
-            document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
-        }
-        function closeProductModal() {
-            document.getElementById('productModal').style.display = 'none';
-            document.body.style.overflow = '';
-            currentModalProductId = null;
-            history.pushState({}, '', location.pathname);
-            resetSeoToDefault();
-        }
-
-        function updateSeoForProduct(p) {
+    function renderSimilarProducts(current) {
+        const block = document.getElementById('similarBlock');
+        const grid = document.getElementById('similarGrid');
+        const currentPrice = getEffectivePrice(current);
+        let similar = PRODUCTS.filter(p => {
+            if (p.id === current.id) return false;
+            if (p.category !== current.category) return false;
             const price = getEffectivePrice(p);
-            const url = `${SITE_URL}/?id=${p.id}`;
+            const ratio = price / currentPrice;
+            return ratio >= 0.5 && ratio <= 2.0;
+        });
+        if (similar.length < 3) {
+            similar = PRODUCTS.filter(p => p.id !== current.id && p.category === current.category);
+        }
+        if (similar.length < 3) {
+            similar = PRODUCTS.filter(p => p.id !== current.id);
+        }
+        similar.sort((a, b) => Math.abs(getEffectivePrice(a) - currentPrice) - Math.abs(getEffectivePrice(b) - currentPrice));
+        similar = similar.slice(0, 3);
+        if (!similar.length) {
+            block.style.display = 'none';
+            return;
+        }
+        grid.innerHTML = similar.map(p => {
             const img = Array.isArray(p.image) ? p.image[0] : p.image;
-            const title = `${p.brand} ${p.name} — купить за ${fmt(price)} | OneMinute`;
-            const description = `Купить ${p.brand} ${p.name} в магазине OneMinute. Цена ${fmt(price)}. Официальная гарантия 2 года. Доставка по всей России.`;
-            document.title = title;
-            setMeta('name', 'description', description);
-            setMeta('property', 'og:title', title);
-            setMeta('property', 'og:description', description);
-            setMeta('property', 'og:image', img);
-            setMeta('property', 'og:type', 'product');
-            setMeta('property', 'og:url', url);
-            setMeta('name', 'twitter:title', title);
-            setMeta('name', 'twitter:description', description);
-            setMeta('name', 'twitter:image', img);
-            let canonical = document.querySelector('link[rel="canonical"]');
-            if (canonical) canonical.setAttribute('href', url);
-        }
+            return `<div class="similar-card" onclick="event.stopPropagation();openSimilar(${p.id})">
+                <img src="${img}" alt="${p.name}">
+                <div class="similar-name">${p.name}</div>
+                <div class="similar-price">${fmt(getEffectivePrice(p))}</div>
+            </div>`;
+        }).join('');
+        block.style.display = 'block';
+    }
 
-        function resetSeoToDefault() {
-            document.title = 'OneMinute — Премиальные часы Garmin | Официальный магазин';
-            setMeta('name', 'description', 'Премиальные спортивные и тактические часы Garmin. Официальная гарантия, доставка по всей России.');
-            setMeta('property', 'og:title', 'OneMinute — Премиальные часы Garmin');
-            setMeta('property', 'og:description', 'Официальный магазин премиальных часов Garmin. Доставка по РФ.');
-            setMeta('property', 'og:image', 'https://oneminuteshop.com/og-image.jpg');
-            setMeta('property', 'og:type', 'website');
-            setMeta('property', 'og:url', 'https://oneminuteshop.com/');
-            let canonical = document.querySelector('link[rel="canonical"]');
-            if (canonical) canonical.setAttribute('href', 'https://oneminuteshop.com/');
-        }
+    function openSimilar(id) {
+        closeProductModal();
+        setTimeout(() => openProductModal(id), 100);
+    }
 
-        function updateProductSchema(p) {
-            const img = Array.isArray(p.image) ? p.image : [p.image];
-            const price = getEffectivePrice(p);
-            const schema = {
-                "@context": "https://schema.org/",
-                "@type": "Product",
-                "name": `${p.brand} ${p.name}`,
-                "image": img,
-                "description": (p.description || '').slice(0, 1000),
-                "sku": `OM-${p.id}`,
-                "brand": { "@type": "Brand", "name": p.brand || DEFAULT_BRAND },
-                "category": p.category,
-                "offers": {
-                    "@type": "Offer",
-                    "url": `${SITE_URL}/?id=${p.id}`,
-                    "priceCurrency": "RUB",
-                    "price": price,
-                    "priceValidUntil": "2030-12-31",
-                    "availability": "https://schema.org/InStock",
-                    "seller": { "@type": "Organization", "name": "OneMinute" }
-                }
-            };
-            let el = document.getElementById('product-schema');
-            if (!el) {
-                el = document.createElement('script');
-                el.type = 'application/ld+json';
-                el.id = 'product-schema';
-                document.head.appendChild(el);
+    function changeSlide(dir) { currentSlide = (currentSlide + dir + galleryImages.length) % galleryImages.length; updateGallery(); }
+    function goToSlide(n) { currentSlide = n; updateGallery(); }
+    function updateGallery() {
+        document.getElementById('gallerySlides').style.transform = `translateX(-${currentSlide * 100}%)`;
+        document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+    }
+    function closeProductModal() {
+        document.getElementById('productModal').style.display = 'none';
+        document.body.style.overflow = '';
+        currentModalProductId = null;
+        history.pushState({}, '', location.pathname);
+        resetSeoToDefault();
+    }
+
+    function updateSeoForProduct(p) {
+        const price = getEffectivePrice(p);
+        const url = `${SITE_URL}/?id=${p.id}`;
+        const img = Array.isArray(p.image) ? p.image[0] : p.image;
+        const title = `${p.brand} ${p.name} — купить за ${fmt(price)} | OneMinute`;
+        const description = `Купить ${p.brand} ${p.name} в магазине OneMinute. Цена ${fmt(price)}. Официальная гарантия 2 года. Доставка по всей России.`;
+        document.title = title;
+        setMeta('name', 'description', description);
+        setMeta('property', 'og:title', title);
+        setMeta('property', 'og:description', description);
+        setMeta('property', 'og:image', img);
+        setMeta('property', 'og:type', 'product');
+        setMeta('property', 'og:url', url);
+        setMeta('name', 'twitter:title', title);
+        setMeta('name', 'twitter:description', description);
+        setMeta('name', 'twitter:image', img);
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (canonical) canonical.setAttribute('href', url);
+    }
+
+    function resetSeoToDefault() {
+        document.title = 'OneMinute — Премиальные часы Garmin | Официальный магазин';
+        setMeta('name', 'description', 'Премиальные спортивные и тактические часы Garmin. Официальная гарантия, доставка по всей России.');
+        setMeta('property', 'og:title', 'OneMinute — Премиальные часы Garmin');
+        setMeta('property', 'og:description', 'Официальный магазин премиальных часов Garmin. Доставка по РФ.');
+        setMeta('property', 'og:image', 'https://oneminuteshop.com/og-image.jpg');
+        setMeta('property', 'og:type', 'website');
+        setMeta('property', 'og:url', 'https://oneminuteshop.com/');
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (canonical) canonical.setAttribute('href', 'https://oneminuteshop.com/');
+    }
+
+    function updateProductSchema(p) {
+        const img = Array.isArray(p.image) ? p.image : [p.image];
+        const price = getEffectivePrice(p);
+        const schema = {
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": `${p.brand} ${p.name}`,
+            "image": img,
+            "description": (p.description || '').slice(0, 1000),
+            "sku": `OM-${p.id}`,
+            "brand": { "@type": "Brand", "name": p.brand || DEFAULT_BRAND },
+            "category": p.category,
+            "offers": {
+                "@type": "Offer",
+                "url": `${SITE_URL}/?id=${p.id}`,
+                "priceCurrency": "RUB",
+                "price": price,
+                "priceValidUntil": "2030-12-31",
+                "availability": "https://schema.org/InStock",
+                "seller": { "@type": "Organization", "name": "OneMinute" }
             }
-            el.textContent = JSON.stringify(schema);
+        };
+        let el = document.getElementById('product-schema');
+        if (!el) {
+            el = document.createElement('script');
+            el.type = 'application/ld+json';
+            el.id = 'product-schema';
+            document.head.appendChild(el);
         }
+        el.textContent = JSON.stringify(schema);
+    }
 
-        function injectProductListSchema() {
-            const schema = {
-                "@context": "https://schema.org",
-                "@type": "ItemList",
-                "name": "Каталог часов OneMinute",
-                "numberOfItems": PRODUCTS.length,
-                "itemListElement": PRODUCTS.slice(0, 50).map((p, i) => ({
-                    "@type": "ListItem",
-                    "position": i + 1,
-                    "url": `${SITE_URL}/?id=${p.id}`,
-                    "name": `${p.brand} ${p.name}`
-                }))
-            };
-            let el = document.getElementById('list-schema');
-            if (!el) {
-                el = document.createElement('script');
-                el.type = 'application/ld+json';
-                el.id = 'list-schema';
-                document.head.appendChild(el);
-            }
-            el.textContent = JSON.stringify(schema);
+    function injectProductListSchema() {
+        const schema = {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": "Каталог часов OneMinute",
+            "numberOfItems": PRODUCTS.length,
+            "itemListElement": PRODUCTS.slice(0, 50).map((p, i) => ({
+                "@type": "ListItem",
+                "position": i + 1,
+                "url": `${SITE_URL}/?id=${p.id}`,
+                "name": `${p.brand} ${p.name}`
+            }))
+        };
+        let el = document.getElementById('list-schema');
+        if (!el) {
+            el = document.createElement('script');
+            el.type = 'application/ld+json';
+            el.id = 'list-schema';
+            document.head.appendChild(el);
         }
+        el.textContent = JSON.stringify(schema);
+    }
 
-        function setMeta(attr, name, content) {
-            let el = document.querySelector(`meta[${attr}="${name}"]`);
-            if (!el) {
-                el = document.createElement('meta');
-                el.setAttribute(attr, name);
-                document.head.appendChild(el);
-            }
-            el.setAttribute('content', content);
+    function setMeta(attr, name, content) {
+        let el = document.querySelector(`meta[${attr}="${name}"]`);
+        if (!el) {
+            el = document.createElement('meta');
+            el.setAttribute(attr, name);
+            document.head.appendChild(el);
         }
+        el.setAttribute('content', content);
+    }
 
-        function buyNow(id) {
-            const p = PRODUCTS.find(x => x.id === id);
-            if (!p) return;
-            const finalPrice = getPriceWithPromo(p);
-            window.omTrack('checkout_start', { id: p.id, name: p.name, price: finalPrice, mode: 'direct_buy' });
-            lastOrderData = {
-                items: [{ product: p, quantity: 1 }],
-                total: finalPrice,
-                subtotal: getEffectivePrice(p),
-                promo: appliedPromo ? appliedPromo.code : null,
-                promo_discount: getEffectivePrice(p) - finalPrice,
-                productName: p.name
-            };
-            isDirectBuy = true;
-            updateOrderSummaryText();
-            document.getElementById('orderModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
+    function buyNow(id) {
+        const p = PRODUCTS.find(x => x.id === id);
+        if (!p) return;
+        const finalPrice = getPriceWithPromo(p);
+        window.omTrack('checkout_start', { id: p.id, name: p.name, price: finalPrice, mode: 'direct_buy' });
+        lastOrderData = {
+            items: [{ product: p, quantity: 1 }],
+            total: finalPrice,
+            subtotal: getEffectivePrice(p),
+            promo: appliedPromo ? appliedPromo.code : null,
+            promo_discount: getEffectivePrice(p) - finalPrice,
+            productName: p.name
+        };
+        isDirectBuy = true;
+        updateOrderSummaryText();
+        document.getElementById('orderModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
 
-        function addToCart(id) {
-            const p = PRODUCTS.find(x => x.id === id);
-            if (!p) return;
-            const ex = cart.find(x => x.product.id === id);
-            ex ? ex.quantity++ : cart.push({ product: p, quantity: 1 });
-            updateCartDisplay();
-            showFloatingCart();
-            showNotification(p.name + ' добавлен в корзину');
-            window.omTrack('add_to_cart', { id: p.id, name: p.name, price: getEffectivePrice(p) });
-        }
+    function addToCart(id) {
+        const p = PRODUCTS.find(x => x.id === id);
+        if (!p) return;
+        const ex = cart.find(x => x.product.id === id);
+        ex ? ex.quantity++ : cart.push({ product: p, quantity: 1 });
+        updateCartDisplay();
+        showFloatingCart();
+        showNotification(p.name + ' добавлен в корзину');
+        window.omTrack('add_to_cart', { id: p.id, name: p.name, price: getEffectivePrice(p) });
+    }
 
-        function removeFromCart(i) {
-            const removed = cart[i];
-            if (removed) window.omTrack('remove_from_cart', { id: removed.product.id, name: removed.product.name });
-            cart.splice(i,1);
-            updateCartDisplay();
-            renderCart();
-        }
+    function removeFromCart(i) {
+        const removed = cart[i];
+        if (removed) window.omTrack('remove_from_cart', { id: removed.product.id, name: removed.product.name });
+        cart.splice(i,1);
+        updateCartDisplay();
+        renderCart();
+    }
 
-        function updateCartDisplay() {
-            const cnt = cart.reduce((s,i) => s + i.quantity, 0);
-            const total = cart.reduce((s,i) => s + getEffectivePrice(i.product) * i.quantity, 0);
-            document.getElementById('cartCount').textContent = cnt;
-            document.getElementById('floatCartCount').textContent = cnt;
-            document.getElementById('cartAmount').textContent = fmt(total);
-            const el = document.getElementById('cartCount');
-            el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 300);
-            if (cnt === 0) hideFloatingCart();
-        }
-        function showFloatingCart() { document.getElementById('floatingCart').classList.add('visible'); }
-        function hideFloatingCart() { document.getElementById('floatingCart').classList.remove('visible'); }
+    function updateCartDisplay() {
+        const cnt = cart.reduce((s,i) => s + i.quantity, 0);
+        const total = cart.reduce((s,i) => s + getEffectivePrice(i.product) * i.quantity, 0);
+        document.getElementById('cartCount').textContent = cnt;
+        document.getElementById('floatCartCount').textContent = cnt;
+        document.getElementById('cartAmount').textContent = fmt(total);
+        const el = document.getElementById('cartCount');
+        el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 300);
+        if (cnt === 0) hideFloatingCart();
+    }
+    function showFloatingCart() { document.getElementById('floatingCart').classList.add('visible'); }
+    function hideFloatingCart() { document.getElementById('floatingCart').classList.remove('visible'); }
 
-        function renderCart() {
-            const c = document.getElementById('cartItems'), t = document.getElementById('cartTotal');
-            if (!cart.length) {
-                c.innerHTML = '<div class="cart-empty"><i class="fa-solid fa-bag-shopping"></i>Корзина пуста</div>';
-                t.textContent = '0 ₽';
-                document.getElementById('promoDiscountRow').style.display = 'none';
-                return;
-            }
-            let subtotal = 0;
-            c.innerHTML = cart.map((item, i) => {
-                const price = getEffectivePrice(item.product);
-                const st = price * item.quantity;
-                subtotal += st;
-                return `<div class="cart-item"><div><div class="cart-item-name">${item.product.name}</div><div class="cart-item-price">${item.quantity} × ${fmt(price)}</div></div><div><span>${fmt(st)}</span><button class="cart-item-remove" onclick="removeFromCart(${i})"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
-            }).join('');
-            let promoDiscount = 0;
-            if (appliedPromo) {
-                promoDiscount = Math.round(subtotal * appliedPromo.percent / 100);
-                document.getElementById('promoDiscountRow').style.display = 'flex';
-                document.getElementById('promoDiscountAmount').textContent = '−' + fmt(promoDiscount);
-            } else {
-                document.getElementById('promoDiscountRow').style.display = 'none';
-            }
-            const total = Math.max(0, subtotal - promoDiscount);
-            t.textContent = fmt(total);
+    function renderCart() {
+        const c = document.getElementById('cartItems'), t = document.getElementById('cartTotal');
+        if (!cart.length) {
+            c.innerHTML = '<div class="cart-empty"><i class="fa-solid fa-bag-shopping"></i>Корзина пуста</div>';
+            t.textContent = '0 ₽';
+            document.getElementById('promoDiscountRow').style.display = 'none';
+            return;
         }
+        let subtotal = 0;
+        c.innerHTML = cart.map((item, i) => {
+            const price = getEffectivePrice(item.product);
+            const st = price * item.quantity;
+            subtotal += st;
+            return `<div class="cart-item"><div><div class="cart-item-name">${item.product.name}</div><div class="cart-item-price">${item.quantity} × ${fmt(price)}</div></div><div><span>${fmt(st)}</span><button class="cart-item-remove" onclick="removeFromCart(${i})"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
+        }).join('');
+        let promoDiscount = 0;
+        if (appliedPromo) {
+            promoDiscount = Math.round(subtotal * appliedPromo.percent / 100);
+            document.getElementById('promoDiscountRow').style.display = 'flex';
+            document.getElementById('promoDiscountAmount').textContent = '−' + fmt(promoDiscount);
+        } else {
+            document.getElementById('promoDiscountRow').style.display = 'none';
+        }
+        const total = Math.max(0, subtotal - promoDiscount);
+        t.textContent = fmt(total);
+    }
 
-        function getPromos() {
-            return (SETTINGS.promocodes || []).map(p => ({...p}));
-        }
+    function getPromos() {
+        return (SETTINGS.promocodes || []).map(p => ({...p}));
+    }
 
-        function validatePromo(code) {
-            const codeUpper = code.trim().toUpperCase();
-            if (!codeUpper) return { ok: false, error: 'Введите промокод' };
-            const promos = getPromos();
-            const found = promos.find(p => (p.code || '').toUpperCase() === codeUpper);
-            if (!found) return { ok: false, error: 'Промокод не найден' };
-            if (found.expires) {
-                try {
-                    const expDate = new Date(found.expires);
-                    if (expDate < new Date()) return { ok: false, error: 'Срок действия промокода истёк' };
-                } catch(e) {}
-            }
-            const limit = parseInt(found.limit || 0);
-            const used = parseInt(found.used || 0);
-            if (limit > 0 && used >= limit) return { ok: false, error: 'Промокод больше не действует' };
-            return { ok: true, promo: found };
-        }
-
-        function tryApplyPromo(rawCode, errorEl, onSuccess) {
-            const code = (rawCode || '').trim();
-            if (!code) {
-                if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
-                if (appliedPromo) {
-                    removePromoGlobal();
-                }
-                return;
-            }
-            const result = validatePromo(code);
-            if (!result.ok) {
-                if (errorEl) {
-                    errorEl.textContent = result.error;
-                    errorEl.style.display = 'block';
-                }
-                window.omTrack('promo_failed', { code: code, reason: result.error });
-                return;
-            }
-            if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
-            appliedPromo = { code: result.promo.code, percent: parseInt(result.promo.percent || 0) };
-            try { localStorage.setItem('appliedPromo', JSON.stringify(appliedPromo)); } catch(e) {}
-            if (typeof onSuccess === 'function') onSuccess();
-            showPromoApplied();
-            showModalPromoState();
-            if (document.getElementById('cartModal').style.display === 'block') renderCart();
-            refreshModalPrice();
-            showNotification(`Промокод ${appliedPromo.code} применён: −${appliedPromo.percent}%`);
-            window.omTrack('promo_applied', { code: appliedPromo.code, percent: appliedPromo.percent });
-        }
-
-        function applyPromoFromModal(rawValue) {
-            const input = document.getElementById('modalPromoInput');
-            const errorEl = document.getElementById('modalPromoError');
-            const value = rawValue !== undefined ? rawValue : (input ? input.value : '');
-            tryApplyPromo(value, errorEl, function() {
-                if (input) input.value = '';
-            });
-        }
-
-        function applyPromo(rawValue) {
-            const input = document.getElementById('promoInput');
-            const errorEl = document.getElementById('promoError');
-            const value = rawValue !== undefined ? rawValue : (input ? input.value : '');
-            tryApplyPromo(value, errorEl, function() {
-                if (input) input.value = '';
-            });
-        }
-
-        function removePromoGlobal() {
-            appliedPromo = null;
-            try { localStorage.removeItem('appliedPromo'); } catch(e) {}
-            const pi = document.getElementById('promoInput');
-            const mpi = document.getElementById('modalPromoInput');
-            const pe = document.getElementById('promoError');
-            const mpe = document.getElementById('modalPromoError');
-            if (pi) pi.value = '';
-            if (mpi) mpi.value = '';
-            if (pe) { pe.style.display = 'none'; pe.textContent = ''; }
-            if (mpe) { mpe.style.display = 'none'; mpe.textContent = ''; }
-            showPromoApplied();
-            showModalPromoState();
-            if (document.getElementById('cartModal').style.display === 'block') renderCart();
-            refreshModalPrice();
-        }
-
-        function removePromo() {
-            removePromoGlobal();
-            showNotification('Промокод убран');
-        }
-
-        function removePromoFromModal() {
-            removePromoGlobal();
-            showNotification('Промокод убран');
-        }
-
-        function showPromoApplied() {
-            const area = document.getElementById('promoArea');
-            const applied = document.getElementById('promoApplied');
-            const appliedText = document.getElementById('promoAppliedText');
-            if (!area || !applied) return;
-            if (appliedPromo) {
-                area.style.display = 'none';
-                applied.style.display = 'flex';
-                if (appliedText) appliedText.textContent = `✓ ${appliedPromo.code} (−${appliedPromo.percent}%)`;
-            } else {
-                area.style.display = 'block';
-                applied.style.display = 'none';
-            }
-        }
-
-        function showModalPromoState() {
-            const area = document.getElementById('modalPromoArea');
-            const applied = document.getElementById('modalPromoApplied');
-            const appliedText = document.getElementById('modalPromoAppliedText');
-            const errorEl = document.getElementById('modalPromoError');
-            if (!area || !applied) return;
-            if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
-            if (appliedPromo) {
-                area.style.display = 'none';
-                applied.style.display = 'flex';
-                if (appliedText) appliedText.textContent = `${appliedPromo.code} (−${appliedPromo.percent}%)`;
-            } else {
-                area.style.display = 'block';
-                applied.style.display = 'none';
-            }
-        }
-
-        function openPromoHint(e) {
-            if (e) e.preventDefault();
-            document.getElementById('promoHintModal').style.display = 'block';
-            window.omTrack('promo_hint_open', {});
-        }
-        function closePromoHint() {
-            document.getElementById('promoHintModal').style.display = 'none';
-        }
-        function contactManagerFromPromo() {
-            closePromoHint();
-            contactManager();
-        }
-
-        function openCart() {
-            renderCart();
-            showPromoApplied();
-            document.getElementById('cartModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            window.omTrack('open_cart', {});
-        }
-        function closeCart() { document.getElementById('cartModal').style.display = 'none'; document.body.style.overflow = ''; }
-
-        function calcCartTotal() {
-            const subtotal = cart.reduce((s,i) => s + getEffectivePrice(i.product) * i.quantity, 0);
-            let discount = 0;
-            if (appliedPromo) discount = Math.round(subtotal * appliedPromo.percent / 100);
-            return { subtotal, discount, total: Math.max(0, subtotal - discount) };
-        }
-
-        function updateOrderSummaryText() {
-            if (!lastOrderData) return;
-            const { subtotal, discount, total } = lastOrderData;
-            let html = '';
-            if (discount > 0 && appliedPromo) {
-                html = `Сумма: <strong>${fmt(subtotal)}</strong><br>Скидка (${appliedPromo.code}): <strong style="color:var(--green)">−${fmt(discount)}</strong><br>Итого: <strong>${fmt(total)}</strong>`;
-            } else {
-                html = `Сумма заказа: <strong>${fmt(total)}</strong>`;
-            }
-            document.getElementById('orderSummary').innerHTML = html;
-        }
-
-        function checkout() {
-            if (!cart.length) { showNotification('Корзина пуста'); return; }
-            const { subtotal, discount, total } = calcCartTotal();
-            window.omTrack('checkout_start', { mode: 'cart', subtotal, discount, total });
-            closeCart();
-            lastOrderData = {
-                items: [...cart],
-                subtotal: subtotal,
-                promo: appliedPromo ? appliedPromo.code : null,
-                promo_discount: discount,
-                total: total
-            };
-            isDirectBuy = false;
-            updateOrderSummaryText();
-            document.getElementById('orderModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-        function closeOrder() { document.getElementById('orderModal').style.display = 'none'; document.body.style.overflow = ''; }
-
-        async function submitOrderToBot(orderData) {
+    function validatePromo(code) {
+        const codeUpper = code.trim().toUpperCase();
+        if (!codeUpper) return { ok: false, error: 'Введите промокод' };
+        const promos = getPromos();
+        const found = promos.find(p => (p.code || '').toUpperCase() === codeUpper);
+        if (!found) return { ok: false, error: 'Промокод не найден' };
+        if (found.expires) {
             try {
-                const response = await fetch(`${BOT_SERVER_URL}/submit-order`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData)
+                const expDate = new Date(found.expires);
+                if (expDate < new Date()) return { ok: false, error: 'Срок действия промокода истёк' };
+            } catch(e) {}
+        }
+        const limit = parseInt(found.limit || 0);
+        const used = parseInt(found.used || 0);
+        if (limit > 0 && used >= limit) return { ok: false, error: 'Промокод больше не действует' };
+        return { ok: true, promo: found };
+    }
+
+    function tryApplyPromo(rawCode, errorEl, onSuccess) {
+        const code = (rawCode || '').trim();
+        if (!code) {
+            if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+            if (appliedPromo) {
+                removePromoGlobal();
+            }
+            return;
+        }
+        const result = validatePromo(code);
+        if (!result.ok) {
+            if (errorEl) {
+                errorEl.textContent = result.error;
+                errorEl.style.display = 'block';
+            }
+            window.omTrack('promo_failed', { code: code, reason: result.error });
+            return;
+        }
+        if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+        appliedPromo = { code: result.promo.code, percent: parseInt(result.promo.percent || 0) };
+        try { localStorage.setItem('appliedPromo', JSON.stringify(appliedPromo)); } catch(e) {}
+        if (typeof onSuccess === 'function') onSuccess();
+        showPromoApplied();
+        showModalPromoState();
+        if (document.getElementById('cartModal').style.display === 'block') renderCart();
+        refreshModalPrice();
+        showNotification(`Промокод ${appliedPromo.code} применён: −${appliedPromo.percent}%`);
+        window.omTrack('promo_applied', { code: appliedPromo.code, percent: appliedPromo.percent });
+    }
+
+    function applyPromoFromModal(rawValue) {
+        const input = document.getElementById('modalPromoInput');
+        const errorEl = document.getElementById('modalPromoError');
+        const value = rawValue !== undefined ? rawValue : (input ? input.value : '');
+        tryApplyPromo(value, errorEl, function() {
+            if (input) input.value = '';
+        });
+    }
+
+    function applyPromo(rawValue) {
+        const input = document.getElementById('promoInput');
+        const errorEl = document.getElementById('promoError');
+        const value = rawValue !== undefined ? rawValue : (input ? input.value : '');
+        tryApplyPromo(value, errorEl, function() {
+            if (input) input.value = '';
+        });
+    }
+
+    function removePromoGlobal() {
+        appliedPromo = null;
+        try { localStorage.removeItem('appliedPromo'); } catch(e) {}
+        const pi = document.getElementById('promoInput');
+        const mpi = document.getElementById('modalPromoInput');
+        const pe = document.getElementById('promoError');
+        const mpe = document.getElementById('modalPromoError');
+        if (pi) pi.value = '';
+        if (mpi) mpi.value = '';
+        if (pe) { pe.style.display = 'none'; pe.textContent = ''; }
+        if (mpe) { mpe.style.display = 'none'; mpe.textContent = ''; }
+        showPromoApplied();
+        showModalPromoState();
+        if (document.getElementById('cartModal').style.display === 'block') renderCart();
+        refreshModalPrice();
+    }
+
+    function removePromo() {
+        removePromoGlobal();
+        showNotification('Промокод убран');
+    }
+
+    function removePromoFromModal() {
+        removePromoGlobal();
+        showNotification('Промокод убран');
+    }
+
+    function showPromoApplied() {
+        const area = document.getElementById('promoArea');
+        const applied = document.getElementById('promoApplied');
+        const appliedText = document.getElementById('promoAppliedText');
+        if (!area || !applied) return;
+        if (appliedPromo) {
+            area.style.display = 'none';
+            applied.style.display = 'flex';
+            if (appliedText) appliedText.textContent = `✓ ${appliedPromo.code} (−${appliedPromo.percent}%)`;
+        } else {
+            area.style.display = 'block';
+            applied.style.display = 'none';
+        }
+    }
+
+    function showModalPromoState() {
+        const area = document.getElementById('modalPromoArea');
+        const applied = document.getElementById('modalPromoApplied');
+        const appliedText = document.getElementById('modalPromoAppliedText');
+        const errorEl = document.getElementById('modalPromoError');
+        if (!area || !applied) return;
+        if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+        if (appliedPromo) {
+            area.style.display = 'none';
+            applied.style.display = 'flex';
+            if (appliedText) appliedText.textContent = `${appliedPromo.code} (−${appliedPromo.percent}%)`;
+        } else {
+            area.style.display = 'block';
+            applied.style.display = 'none';
+        }
+    }
+
+    function openPromoHint(e) {
+        if (e) e.preventDefault();
+        document.getElementById('promoHintModal').style.display = 'block';
+        window.omTrack('promo_hint_open', {});
+    }
+    function closePromoHint() {
+        document.getElementById('promoHintModal').style.display = 'none';
+    }
+    function contactManagerFromPromo() {
+        closePromoHint();
+        contactManager();
+    }
+
+    function openCart() {
+        renderCart();
+        showPromoApplied();
+        document.getElementById('cartModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        window.omTrack('open_cart', {});
+    }
+    function closeCart() { document.getElementById('cartModal').style.display = 'none'; document.body.style.overflow = ''; }
+
+    function calcCartTotal() {
+        const subtotal = cart.reduce((s,i) => s + getEffectivePrice(i.product) * i.quantity, 0);
+        let discount = 0;
+        if (appliedPromo) discount = Math.round(subtotal * appliedPromo.percent / 100);
+        return { subtotal, discount, total: Math.max(0, subtotal - discount) };
+    }
+
+    function updateOrderSummaryText() {
+        if (!lastOrderData) return;
+        const { subtotal, discount, total } = lastOrderData;
+        let html = '';
+        if (discount > 0 && appliedPromo) {
+            html = `Сумма: <strong>${fmt(subtotal)}</strong><br>Скидка (${appliedPromo.code}): <strong style="color:var(--green)">−${fmt(discount)}</strong><br>Итого: <strong>${fmt(total)}</strong>`;
+        } else {
+            html = `Сумма заказа: <strong>${fmt(total)}</strong>`;
+        }
+        document.getElementById('orderSummary').innerHTML = html;
+    }
+
+    function checkout() {
+        if (!cart.length) { showNotification('Корзина пуста'); return; }
+        const { subtotal, discount, total } = calcCartTotal();
+        window.omTrack('checkout_start', { mode: 'cart', subtotal, discount, total });
+        closeCart();
+        lastOrderData = {
+            items: [...cart],
+            subtotal: subtotal,
+            promo: appliedPromo ? appliedPromo.code : null,
+            promo_discount: discount,
+            total: total
+        };
+        isDirectBuy = false;
+        updateOrderSummaryText();
+        document.getElementById('orderModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    function closeOrder() { document.getElementById('orderModal').style.display = 'none'; document.body.style.overflow = ''; }
+
+    async function submitOrderToBot(orderData) {
+        try {
+            const response = await fetch(`${BOT_SERVER_URL}/submit-order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            });
+            return response.ok;
+        } catch(e) {
+            console.error('Ошибка отправки заявки боту', e);
+            return false;
+        }
+    }
+
+    function buildOrderItemsForBot() {
+        let items = [];
+        if (isDirectBuy && lastOrderData && lastOrderData.items) {
+            items = lastOrderData.items;
+        } else {
+            items = cart;
+        }
+        return items.map(i => ({
+            product: {
+                id: i.product.id,
+                name: i.product.name,
+                price: getEffectivePrice(i.product)
+            },
+            quantity: i.quantity
+        }));
+    }
+            // ============================================================
+        // МАСКА ТЕЛЕФОНА
+        // ============================================================
+        function initPhoneMask() {
+            const phone = document.getElementById('orderPhone');
+            if (!phone) return;
+            phone.addEventListener('input', function() {
+                let digits = this.value.replace(/\D/g, '');
+                if (digits.startsWith('8')) digits = '7' + digits.slice(1);
+                if (!digits.startsWith('7')) digits = '7' + digits;
+                digits = digits.slice(0, 11);
+                let out = '+7';
+                if (digits.length > 1) out += ' (' + digits.slice(1, 4);
+                if (digits.length >= 5) out += ') ' + digits.slice(4, 7);
+                if (digits.length >= 8) out += '-' + digits.slice(7, 9);
+                if (digits.length >= 10) out += '-' + digits.slice(9, 11);
+                this.value = out;
+            });
+            phone.addEventListener('focus', function() {
+                if (!this.value) this.value = '+7 (';
+            });
+            phone.addEventListener('blur', function() {
+                if (this.value === '+7 (' || this.value === '+7') this.value = '';
+            });
+        }
+
+        // ============================================================
+        // ВАЛИДАЦИЯ ФОРМЫ ЗАКАЗА
+        // ============================================================
+        function initFormValidation() {
+            const form = document.getElementById('orderForm');
+            if (!form) return;
+            const fields = form.querySelectorAll('input:not([type="checkbox"]), textarea, select');
+            fields.forEach(el => {
+                el.addEventListener('blur', function() {
+                    this.classList.add('touched');
+                    if (this.checkValidity()) {
+                        this.classList.remove('touched');
+                    }
                 });
-                return response.ok;
-            } catch(e) {
-                console.error('Ошибка отправки заявки боту', e);
+                el.addEventListener('input', function() {
+                    if (this.classList.contains('touched') && this.checkValidity()) {
+                        this.classList.remove('touched');
+                    }
+                });
+                el.addEventListener('change', function() {
+                    if (this.tagName === 'SELECT') {
+                        this.classList.add('touched');
+                        if (this.checkValidity()) this.classList.remove('touched');
+                    }
+                });
+            });
+            const consent = document.getElementById('orderConsent');
+            const consentWrap = document.getElementById('consentWrap');
+            if (consent) {
+                consent.addEventListener('change', function() {
+                    if (this.checked) {
+                        consentWrap.classList.remove('was-invalid');
+                    }
+                });
+            }
+        }
+
+        function showConsentError() {
+            const consentWrap = document.getElementById('consentWrap');
+            if (!consentWrap) return;
+            consentWrap.classList.remove('was-invalid');
+            void consentWrap.offsetWidth;
+            consentWrap.classList.add('was-invalid');
+            setTimeout(() => consentWrap.classList.remove('was-invalid'), 700);
+        }
+
+        function validateFormOrReport() {
+            const form = document.getElementById('orderForm');
+            const consent = document.getElementById('orderConsent');
+            const consentWrap = document.getElementById('consentWrap');
+            form.classList.add('was-validated');
+
+            let firstInvalid = null;
+            const fields = form.querySelectorAll('input:not([type="checkbox"]), textarea, select');
+            fields.forEach(el => {
+                if (!el.checkValidity() && !firstInvalid) firstInvalid = el;
+            });
+
+            if (!consent.checked) {
+                showConsentError();
+                if (firstInvalid) firstInvalid.focus();
                 return false;
             }
-        }
 
-        function buildOrderItemsForBot() {
-            let items = [];
-            if (isDirectBuy && lastOrderData && lastOrderData.items) {
-                items = lastOrderData.items;
-            } else {
-                items = cart;
+            if (firstInvalid) {
+                firstInvalid.focus();
+                if (firstInvalid.reportValidity) firstInvalid.reportValidity();
+                return false;
             }
-            return items.map(i => ({
-                product: {
-                    id: i.product.id,
-                    name: i.product.name,
-                    price: getEffectivePrice(i.product)
-                },
-                quantity: i.quantity
-            }));
+
+            return true;
         }
 
-        document.getElementById('orderForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const form = e.target;
-            if (!form.checkValidity()) { form.reportValidity(); return; }
+        function buildOrderDataFromForm(form) {
             const { subtotal, discount, total } = lastOrderData || {};
-            lastOrderData = {
+            return {
                 orderNumber: 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase(),
-                lastName: form.querySelector('input[placeholder="Фамилия"]').value,
-                firstName: form.querySelector('input[placeholder="Имя"]').value,
-                middleName: form.querySelector('input[placeholder="Отчество (при наличии)"]').value || '—',
-                phone: form.querySelector('input[type="tel"]').value,
-                email: form.querySelector('input[type="email"]').value || '—',
-                address: form.querySelector('textarea').value,
-                delivery: form.querySelector('select').value,
+                lastName: document.getElementById('orderLastName').value.trim(),
+                firstName: document.getElementById('orderFirstName').value.trim(),
+                middleName: document.getElementById('orderMiddleName').value.trim() || '—',
+                phone: document.getElementById('orderPhone').value.trim(),
+                email: document.getElementById('orderEmail').value.trim() || '—',
+                address: document.getElementById('orderAddress').value.trim(),
+                delivery: document.getElementById('orderDelivery').value,
                 items: buildOrderItemsForBot(),
                 subtotal: subtotal || total,
                 promo: appliedPromo ? appliedPromo.code : null,
@@ -1543,6 +1740,16 @@
                 total: total,
                 date: new Date().toLocaleString('ru-RU')
             };
+        }
+
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!validateFormOrReport()) return;
+
+            const form = e.target;
+            const { subtotal, discount, total } = lastOrderData || {};
+            lastOrderData = buildOrderDataFromForm(form);
+
             submitOrderToBot(lastOrderData);
             window.omTrack('order_submit', { order_number: lastOrderData.orderNumber, total: total });
             closeOrder();
@@ -1550,25 +1757,12 @@
         });
 
         function orderViaManager() {
+            if (!validateFormOrReport()) return;
+
             const form = document.getElementById('orderForm');
-            if (!form.checkValidity()) { form.reportValidity(); return; }
             const { subtotal, discount, total } = lastOrderData || {};
-            const orderData = {
-                orderNumber: 'OM-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase(),
-                lastName: form.querySelector('input[placeholder="Фамилия"]').value,
-                firstName: form.querySelector('input[placeholder="Имя"]').value,
-                middleName: form.querySelector('input[placeholder="Отчество (при наличии)"]').value || '—',
-                phone: form.querySelector('input[type="tel"]').value,
-                email: form.querySelector('input[type="email"]').value || '—',
-                address: form.querySelector('textarea').value,
-                delivery: form.querySelector('select').value,
-                items: buildOrderItemsForBot(),
-                subtotal: subtotal || total,
-                promo: appliedPromo ? appliedPromo.code : null,
-                promo_discount: discount || 0,
-                total: total,
-                date: new Date().toLocaleString('ru-RU')
-            };
+            const orderData = buildOrderDataFromForm(form);
+
             submitOrderToBot(orderData).then(success => {
                 showNotification(success ? 'Заявка отправлена менеджеру' : 'Не удалось отправить заявку');
                 window.omTrack('order_via_manager', { order_number: orderData.orderNumber, total: total, success });
@@ -1775,6 +1969,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            initPhoneMask();
+            initFormValidation();
             loadData().then(() => {
                 showPromoApplied();
             });
