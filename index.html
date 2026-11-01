@@ -199,59 +199,14 @@
         .feature-item i { font-size: 16px; margin-bottom: 4px; color: var(--blue); display: block; }
         .feature-label { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; margin-bottom: 2px; }
         .feature-value { font-size: 12px; font-weight: 700; }
-
-        /* ПРОМОКОД В КАРТОЧКЕ — КОМПАКТНЫЙ */
-        .modal-promo {
-            margin: 22px 0 18px;
-            padding: 12px 14px;
-            background: var(--bg);
-            border: 1px solid rgba(0,113,227,0.1);
-            border-radius: 14px;
-        }
-        .modal-promo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-        .modal-promo-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            letter-spacing: -0.1px;
-        }
+        .modal-promo { margin: 22px 0 18px; padding: 12px 14px; background: var(--bg); border: 1px solid rgba(0,113,227,0.1); border-radius: 14px; }
+        .modal-promo-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .modal-promo-title { font-size: 13px; font-weight: 700; color: var(--dark); display: flex; align-items: center; gap: 7px; letter-spacing: -0.1px; }
         .modal-promo-title i { color: var(--blue); font-size: 13px; }
-        .modal-promo-hint {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--blue);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            white-space: nowrap;
-            transition: opacity 0.2s;
-            padding: 2px 6px;
-            border-radius: 8px;
-        }
+        .modal-promo-hint { font-size: 12px; font-weight: 600; color: var(--blue); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; white-space: nowrap; transition: opacity 0.2s; padding: 2px 6px; border-radius: 8px; }
         .modal-promo-hint:hover { opacity: 0.75; background: rgba(0,113,227,0.08); }
         .modal-promo-hint i { font-size: 12px; }
-        .modal-promo-input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1.5px solid #e5e5ea;
-            border-radius: 10px;
-            font-size: 13px;
-            font-family: inherit;
-            background: var(--white);
-            letter-spacing: 0.4px;
-            transition: all var(--transition);
-        }
+        .modal-promo-input { width: 100%; padding: 10px 14px; border: 1.5px solid #e5e5ea; border-radius: 10px; font-size: 13px; font-family: inherit; background: var(--white); letter-spacing: 0.4px; transition: all var(--transition); }
         .modal-promo-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.08); }
         .modal-promo-input::placeholder { color: var(--gray-light); letter-spacing: normal; font-family: inherit; }
         .modal-promo-applied { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(52,199,89,0.08); border: 1px solid rgba(52,199,89,0.35); border-radius: 10px; }
@@ -260,8 +215,6 @@
         .modal-promo-remove { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 12px; flex-shrink: 0; }
         .modal-promo-remove:hover { background: rgba(255,59,48,0.08); }
         .modal-promo-error { color: var(--red); font-size: 12px; font-weight: 600; margin-top: 8px; padding-left: 2px; }
-
-        /* ПАСХАЛКА */
         .promo-hint-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; background: rgba(0,0,0,0.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); animation: fadeIn 0.3s ease; }
         .promo-hint-content { background: var(--white); border-radius: var(--radius-xl); max-width: 500px; width: 94%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 88vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.25); padding: 32px 26px; animation: modalIn 0.4s ease; }
         .promo-hint-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--bg); border: none; font-size: 16px; cursor: pointer; color: var(--gray); display: flex; align-items: center; justify-content: center; }
@@ -279,7 +232,6 @@
         .promo-hint-cta:hover { background: #30b350; transform: translateY(-2px); box-shadow: 0 8px 26px rgba(52,199,89,0.45); }
         .promo-hint-cta i { font-size: 18px; }
         .promo-hint-note { font-size: 11px; color: var(--gray); text-align: center; margin-top: 12px; }
-
         .product-modal-buttons { display: flex; gap: 10px; margin-top: 4px; }
         .product-modal-buy, .product-modal-cart { border: none; padding: 15px 0; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; transition: all var(--transition); flex: 1; }
         .product-modal-buy { background: var(--blue); color: white; }
@@ -310,7 +262,6 @@
             .similar-name { font-size: 9px; }
             .similar-price { font-size: 10px; }
         }
-
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: rgba(0,0,0,0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); animation: fadeIn 0.3s ease; }
         .modal-content { background: var(--white); border-radius: var(--radius-xl); padding: 28px 24px; max-width: 460px; width: 94%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 88vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.15); animation: modalIn 0.4s ease; }
         .modal-close { position: absolute; right: 14px; top: 14px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: none; font-size: 16px; cursor: pointer; color: var(--gray); display: flex; align-items: center; justify-content: center; }
@@ -344,123 +295,25 @@
         .promo-discount-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 14px; color: var(--green); font-weight: 700; }
         .promo-hint-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--blue); margin-top: 8px; cursor: pointer; transition: opacity 0.2s; }
         .promo-hint-link:hover { opacity: 0.7; text-decoration: underline; }
-
         #orderForm { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
         #orderForm input:not([type="checkbox"]), #orderForm textarea, #orderForm select { padding: 12px 14px; border: 1.5px solid #e5e5ea; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; width: 100%; transition: all var(--transition); background: var(--bg); -webkit-appearance: none; }
         #orderForm input:not([type="checkbox"]):focus, #orderForm textarea:focus, #orderForm select:focus { outline: none; border-color: var(--blue); background: white; box-shadow: 0 0 0 4px rgba(0,113,227,0.05); }
         #orderForm textarea { resize: vertical; min-height: 70px; }
         #orderForm select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-
-        /* ============ ВАЛИДАЦИЯ ФОРМЫ ЗАКАЗА ============ */
-        #orderForm input.touched:invalid:not([type="checkbox"]),
-        #orderForm textarea.touched:invalid,
-        #orderForm select.touched:invalid,
-        #orderForm.was-validated input:invalid:not([type="checkbox"]),
-        #orderForm.was-validated textarea:invalid,
-        #orderForm.was-validated select:invalid {
-            border-color: var(--red);
-            box-shadow: 0 0 0 4px rgba(255,59,48,0.08);
-        }
-        #orderForm input.touched:invalid:not([type="checkbox"]):focus,
-        #orderForm textarea.touched:invalid:focus,
-        #orderForm select.touched:invalid:focus,
-        #orderForm.was-validated input:invalid:not([type="checkbox"]):focus,
-        #orderForm.was-validated textarea:invalid:focus,
-        #orderForm.was-validated select:invalid:focus {
-            border-color: var(--red);
-            box-shadow: 0 0 0 4px rgba(255,59,48,0.14);
-        }
-        #orderForm input.touched:valid:not([type="checkbox"]),
-        #orderForm textarea.touched:valid,
-        #orderForm select.touched:valid {
-            border-color: rgba(52,199,89,0.5);
-        }
-
-        /* ============ ЧЕКБОКС СОГЛАСИЯ С ПОЛИТИКОЙ ============ */
-        .consent-wrap {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 10px 2px 4px;
-            cursor: pointer;
-            user-select: none;
-            -webkit-user-select: none;
-            border-radius: var(--radius-sm);
-        }
-        .consent-wrap input[type="checkbox"] {
-            flex-shrink: 0;
-            width: 20px;
-            height: 20px;
-            margin: 1px 0 0;
-            padding: 0;
-            background-color: white;
-            border: 1.5px solid #c7c7cc;
-            border-radius: 5px;
-            cursor: pointer;
-            -webkit-appearance: none;
-            appearance: none;
-            transition: all 0.2s ease;
-            position: relative;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        .consent-wrap input[type="checkbox"]:hover {
-            border-color: var(--blue);
-        }
-        .consent-wrap input[type="checkbox"]:checked {
-            background-color: var(--blue);
-            border-color: var(--blue);
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-        }
-        .consent-text {
-            font-size: 13px;
-            color: var(--gray);
-            line-height: 1.5;
-            padding-top: 1px;
-            flex: 1;
-        }
-        .consent-wrap input[type="checkbox"]:checked ~ .consent-text {
-            color: var(--dark);
-        }
-        .consent-text a {
-            color: var(--blue);
-            text-decoration: underline;
-            font-weight: 600;
-            transition: color 0.2s;
-        }
-        .consent-text a:hover {
-            color: var(--blue-dark);
-        }
-        .consent-wrap.was-invalid {
-            animation: shakeConsent 0.5s;
-        }
-        .consent-wrap.was-invalid input[type="checkbox"] {
-            border-color: var(--red);
-            box-shadow: 0 0 0 4px rgba(255,59,48,0.12);
-        }
-        @keyframes shakeConsent {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-6px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(4px); }
-        }
-
-        /* ============ ПОДТВЕРЖДЕНИЕ ЗАКАЗА (orderConfirm) ============ */
-        .order-confirm-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13px; gap: 12px; }
-        .order-confirm-row:last-child { border-bottom: none; }
-        .order-confirm-label { color: var(--gray); font-weight: 500; flex-shrink: 0; }
-        .order-confirm-value { color: var(--dark); font-weight: 600; text-align: right; word-break: break-word; max-width: 65%; }
-        .order-confirm-section-title { font-size: 14px; font-weight: 700; margin: 18px 0 10px; color: var(--dark); display: flex; align-items: center; gap: 6px; }
-        .order-confirm-section-title i { color: var(--blue); font-size: 13px; }
-        .order-confirm-item { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; background: var(--bg); border-radius: var(--radius-sm); margin-bottom: 8px; gap: 10px; }
-        .order-confirm-item-name { font-size: 13px; font-weight: 600; flex: 1; line-height: 1.35; word-break: break-word; }
-        .order-confirm-item-qty { color: var(--gray); font-size: 12px; font-weight: 500; margin-left: 4px; white-space: nowrap; }
-        .order-confirm-item-price { font-size: 14px; font-weight: 700; white-space: nowrap; }
-        .order-confirm-total-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-        .order-confirm-total-old { font-size: 11px; color: var(--gray); text-decoration: line-through; font-weight: 500; }
-        .order-confirm-total-discount { font-size: 11px; color: var(--green); font-weight: 600; }
-
+        #orderForm input.touched:invalid:not([type="checkbox"]), #orderForm textarea.touched:invalid, #orderForm select.touched:invalid, #orderForm.was-validated input:invalid:not([type="checkbox"]), #orderForm.was-validated textarea:invalid, #orderForm.was-validated select:invalid { border-color: var(--red); box-shadow: 0 0 0 4px rgba(255,59,48,0.08); }
+        #orderForm input.touched:invalid:not([type="checkbox"]):focus, #orderForm textarea.touched:invalid:focus, #orderForm select.touched:invalid:focus, #orderForm.was-validated input:invalid:not([type="checkbox"]):focus, #orderForm.was-validated textarea:invalid:focus, #orderForm.was-validated select:invalid:focus { border-color: var(--red); box-shadow: 0 0 0 4px rgba(255,59,48,0.14); }
+        #orderForm input.touched:valid:not([type="checkbox"]), #orderForm textarea.touched:valid, #orderForm select.touched:valid { border-color: rgba(52,199,89,0.5); }
+        .consent-wrap { display: flex; align-items: flex-start; gap: 10px; padding: 10px 2px 4px; cursor: pointer; user-select: none; -webkit-user-select: none; border-radius: var(--radius-sm); }
+        .consent-wrap input[type="checkbox"] { flex-shrink: 0; width: 20px; height: 20px; margin: 1px 0 0; padding: 0; background-color: white; border: 1.5px solid #c7c7cc; border-radius: 5px; cursor: pointer; -webkit-appearance: none; appearance: none; transition: all 0.2s ease; position: relative; background-repeat: no-repeat; background-position: center; }
+        .consent-wrap input[type="checkbox"]:hover { border-color: var(--blue); }
+        .consent-wrap input[type="checkbox"]:checked { background-color: var(--blue); border-color: var(--blue); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E"); }
+        .consent-text { font-size: 13px; color: var(--gray); line-height: 1.5; padding-top: 1px; flex: 1; }
+        .consent-wrap input[type="checkbox"]:checked ~ .consent-text { color: var(--dark); }
+        .consent-text a { color: var(--blue); text-decoration: underline; font-weight: 600; transition: color 0.2s; }
+        .consent-text a:hover { color: var(--blue-dark); }
+        .consent-wrap.was-invalid { animation: shakeConsent 0.5s; }
+        .consent-wrap.was-invalid input[type="checkbox"] { border-color: var(--red); box-shadow: 0 0 0 4px rgba(255,59,48,0.12); }
+        @keyframes shakeConsent { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
         .order-summary { background: var(--bg); padding: 12px 14px; border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; }
         .form-row { display: flex; gap: 10px; }
         .form-row input, .form-row select { flex: 1; }
@@ -514,7 +367,6 @@
 <body>
     <div class="bg-ambient"></div>
     <div class="overlay" id="overlay"></div>
-
     <nav class="navbar" id="navbar">
         <div class="nav-container">
             <div class="nav-left">
@@ -535,7 +387,6 @@
             </div>
         </div>
     </nav>
-
     <button class="manager-fab" onclick="contactManager()" title="Менеджер"><i class="fa-solid fa-headset"></i></button>
     <button class="floating-cart" id="floatingCart" onclick="openCart()"><i class="fa-solid fa-bag-shopping"></i><span class="float-cart-count" id="floatCartCount">0</span></button>
 
@@ -587,7 +438,6 @@
                     <div class="feature-item"><i class="fa-solid fa-credit-card"></i><div class="feature-label">Оплата</div><div class="feature-value">QR / Менеджер</div></div>
                     <div class="feature-item"><i class="fa-solid fa-rotate-left"></i><div class="feature-label">Возврат</div><div class="feature-value">14 дней</div></div>
                 </div>
-
                 <div class="modal-promo" id="modalPromoBlock">
                     <div class="modal-promo-header">
                         <span class="modal-promo-title"><i class="fa-solid fa-ticket"></i> Есть промокод?</span>
@@ -602,7 +452,6 @@
                         <button class="modal-promo-remove" onclick="removePromoFromModal()">Убрать</button>
                     </div>
                 </div>
-
                 <div class="product-modal-buttons">
                     <button class="product-modal-buy" id="modalBuyBtn"><i class="fa-solid fa-bolt"></i> Купить</button>
                     <button class="product-modal-cart" id="modalCartBtn"><i class="fa-solid fa-cart-plus"></i> В корзину</button>
@@ -632,45 +481,27 @@
             <div class="promo-reasons">
                 <div class="promo-reason">
                     <div class="promo-reason-icon"><i class="fa-solid fa-birthday-cake"></i></div>
-                    <div class="promo-reason-text">
-                        <div class="promo-reason-title">День рождения</div>
-                        <div class="promo-reason-desc">7 дней до и 7 дней после — свяжитесь с менеджером</div>
-                    </div>
+                    <div class="promo-reason-text"><div class="promo-reason-title">День рождения</div><div class="promo-reason-desc">7 дней до и 7 дней после — свяжитесь с менеджером</div></div>
                 </div>
                 <div class="promo-reason">
                     <div class="promo-reason-icon"><i class="fa-solid fa-box-open"></i></div>
-                    <div class="promo-reason-text">
-                        <div class="promo-reason-title">Витринные образцы</div>
-                        <div class="promo-reason-desc">Скидка на модели, которые стояли в шоуруме</div>
-                    </div>
+                    <div class="promo-reason-text"><div class="promo-reason-title">Витринные образцы</div><div class="promo-reason-desc">Скидка на модели, которые стояли в шоуруме</div></div>
                 </div>
                 <div class="promo-reason">
                     <div class="promo-reason-icon"><i class="fa-solid fa-repeat"></i></div>
-                    <div class="promo-reason-text">
-                        <div class="promo-reason-title">Повторная покупка</div>
-                        <div class="promo-reason-desc">Уже покупали у нас? Скажите об этом — будет бонус</div>
-                    </div>
+                    <div class="promo-reason-text"><div class="promo-reason-title">Повторная покупка</div><div class="promo-reason-desc">Уже покупали у нас? Скажите об этом — будет бонус</div></div>
                 </div>
                 <div class="promo-reason">
                     <div class="promo-reason-icon"><i class="fa-solid fa-user-group"></i></div>
-                    <div class="promo-reason-text">
-                        <div class="promo-reason-title">Приведи друга</div>
-                        <div class="promo-reason-desc">Скидка и вам, и другу за рекомендацию</div>
-                    </div>
+                    <div class="promo-reason-text"><div class="promo-reason-title">Приведи друга</div><div class="promo-reason-desc">Скидка и вам, и другу за рекомендацию</div></div>
                 </div>
                 <div class="promo-reason">
                     <div class="promo-reason-icon"><i class="fa-solid fa-face-smile"></i></div>
-                    <div class="promo-reason-text">
-                        <div class="promo-reason-title">У менеджера хорошее настроение</div>
-                        <div class="promo-reason-desc">Серьёзно. Иногда мы просто даём скидку за приятное общение</div>
-                    </div>
+                    <div class="promo-reason-text"><div class="promo-reason-title">У менеджера хорошее настроение</div><div class="promo-reason-desc">Серьёзно. Иногда мы просто даём скидку за приятное общение</div></div>
                 </div>
                 <div class="promo-reason">
                     <div class="promo-reason-icon"><i class="fa-solid fa-comment-dots"></i></div>
-                    <div class="promo-reason-text">
-                        <div class="promo-reason-title">Просто попросить</div>
-                        <div class="promo-reason-desc">Не стесняйтесь. Честно — часто срабатывает</div>
-                    </div>
+                    <div class="promo-reason-text"><div class="promo-reason-title">Просто попросить</div><div class="promo-reason-desc">Не стесняйтесь. Честно — часто срабатывает</div></div>
                 </div>
             </div>
             <button class="promo-hint-cta" onclick="contactManagerFromPromo()"><i class="fa-brands fa-telegram"></i> Написать менеджеру</button>
@@ -700,7 +531,7 @@
                 <span id="promoDiscountAmount">−0 ₽</span>
             </div>
             <div class="cart-total"><span>Итого</span><span id="cartTotal">0 ₽</span></div>
-            <button class="checkout-btn" onclick="checkout()">Перейти к оплате</button>
+            <button class="checkout-btn" onclick="checkout()">Перейти к оформлению</button>
             <button class="manager-order-btn" onclick="contactManager()"><i class="fa-solid fa-headset"></i> Заказать через менеджера</button>
         </div>
     </div>
@@ -734,79 +565,6 @@
                 <button type="submit" class="submit-btn"><i class="fa-solid fa-arrow-right"></i> Продолжить оформление</button>
                 <button type="button" class="manager-order-btn" onclick="orderViaManager()"><i class="fa-solid fa-headset"></i> Заказать через менеджера</button>
             </form>
-        </div>
-    </div>
-
-    <div class="modal" id="orderConfirmModal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeOrderConfirm()"><i class="fa-solid fa-xmark"></i></button>
-            <h2><i class="fa-solid fa-circle-check" style="color:var(--green);"></i> Проверьте ваши данные</h2>
-            <div id="orderConfirmCustomer"></div>
-            <div class="order-confirm-section-title"><i class="fa-solid fa-bag-shopping"></i> Ваш заказ</div>
-            <div id="orderConfirmItems"></div>
-            <div class="cart-total"><span>Итого</span><span class="order-confirm-total-wrap" id="orderConfirmTotal">0 ₽</span></div>
-            <button class="submit-btn" onclick="confirmGoToPayment()"><i class="fa-solid fa-wallet"></i> Перейти к оплате</button>
-            <button class="manager-order-btn" onclick="contactManager()"><i class="fa-brands fa-telegram"></i> Оформить через менеджера</button>
-        </div>
-    </div>
-
-    <div class="modal" id="paymentModal">
-        <div class="modal-content payment-content">
-            <button class="modal-close" onclick="closePayment()"><i class="fa-solid fa-xmark"></i></button>
-            <h2 id="paymentTitle"><i class="fa-solid fa-wallet"></i> Способ оплаты</h2>
-
-            <div id="paymentAvailable">
-                <div class="payment-instruction">
-                    <p><span class="step-num">1</span> Отсканируйте QR-код для оплаты</p>
-                    <p><span class="step-num">2</span> Или нажмите на кнопку ниже — выберите ваш банк</p>
-                    <p><span class="step-num">3</span> Сумма к оплате: <strong id="paymentAmount">0 ₽</strong></p>
-                    <p><span class="step-num">4</span> После оплаты отправьте чек</p>
-                </div>
-                <div class="payment-qr-section"><img id="qrImage" src="" alt="QR-код для оплаты"></div>
-                <button class="payment-link-btn" onclick="openPaymentLink()"><i class="fa-solid fa-arrow-up-right-from-square"></i> Нажмите для оплаты</button>
-                <div class="payment-divider"><span>или</span></div>
-                <div class="payment-receipt-section">
-                    <p class="payment-receipt-label">Отправьте чек об оплате на проверку:</p>
-                    <div class="file-upload-wrap" id="fileUploadWrap" onclick="document.getElementById('fileInput').click()">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <span class="upload-text">Нажмите для загрузки чека</span>
-                        <span class="upload-hint">Фото или PDF файл</span>
-                    </div>
-                    <input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFileSelect(event)">
-                    <button class="send-receipt-btn" id="sendReceiptBtn" disabled onclick="sendReceiptToManager()"><i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру</button>
-                </div>
-
-                <div class="manager-block">
-                    <span class="manager-block-emoji">🙋‍♂️</span>
-                    <div class="manager-block-badge">Поможем с выбором</div>
-                    <h3>Закажите через менеджера — быстрее и удобнее</h3>
-                    <p>Наш менеджер подберёт идеальную модель, ответит на все вопросы и оформит заказ с доставкой за пару минут. Так заказать даже проще, чем онлайн.</p>
-                    <div class="manager-block-features">
-                        <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Персональный подбор модели под ваш запрос</span></div>
-                        <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Поможет сравнить модели и найти лучшую цену</span></div>
-                        <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Оформит доставку в любой город России</span></div>
-                    </div>
-                    <button class="manager-block-btn" onclick="contactManager()"><i class="fa-brands fa-telegram"></i> Написать менеджеру в Telegram</button>
-                    <div class="manager-block-note"><i class="fa-solid fa-clock"></i> Отвечает в течение минуты</div>
-                </div>
-            </div>
-
-            <div id="paymentUnavailable" style="display:none;">
-                <div class="manager-block">
-                    <span class="manager-block-emoji">✨</span>
-                    <div class="manager-block-badge">Оформим за минуту</div>
-                    <h3>Мы поможем вам с оформлением заказа</h3>
-                    <p>Оплата онлайн сейчас обновляется, но это даже к лучшему — <strong>менеджер оформит заказ персонально под вас</strong>. Ответит на все вопросы, подберёт модель и оформит доставку за пару минут.</p>
-                    <div class="manager-block-features">
-                        <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Персональный подбор модели под ваш запрос</span></div>
-                        <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Ответит на любые вопросы о часах</span></div>
-                        <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Оформит доставку в любой город России</span></div>
-                        <div class="manager-block-feature"><i class="fa-solid fa-check-circle"></i><span>Подскажет по гарантии и условиям</span></div>
-                    </div>
-                    <button class="manager-block-btn" onclick="contactManager()"><i class="fa-brands fa-telegram"></i> Написать менеджеру в Telegram</button>
-                    <div class="manager-block-note"><i class="fa-solid fa-clock"></i> Отвечает в течение минуты</div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -860,7 +618,7 @@
         }
 
         let PRODUCTS = [], SETTINGS = {}, cart = [], currentFilter = 'all';
-        let lastOrderData = null, selectedFile = null;
+        let lastOrderData = null;
         let galleryImages = [], currentSlide = 0;
         let isDirectBuy = false;
         let appliedPromo = null;
@@ -1837,7 +1595,7 @@
         }
 
         // ============================================================
-        // НОВЫЙ ФЛОУ: Форма → Подтверждение → Оплата
+        // НОВЫЙ ФЛОУ: Сохранение в sessionStorage и переход на confirm.html
         // ============================================================
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1845,13 +1603,16 @@
 
             const form = e.target;
             const prevTotal = (lastOrderData && lastOrderData.total) || 0;
-            lastOrderData = buildOrderDataFromForm(form);
+            const orderData = buildOrderDataFromForm(form);
 
-            submitOrderToBot(lastOrderData);
-            window.omTrack('order_submit', { order_number: lastOrderData.orderNumber, total: prevTotal });
+            // Сохраняем данные для страницы подтверждения
+            sessionStorage.setItem('lastOrderData', JSON.stringify(orderData));
+
+            submitOrderToBot(orderData);
+            window.omTrack('order_submit', { order_number: orderData.orderNumber, total: prevTotal });
 
             closeOrder();
-            showOrderConfirm();
+            window.location.href = 'confirm.html';
         });
 
         function orderViaManager() {
@@ -1869,177 +1630,6 @@
             closeOrder();
         }
 
-        function showOrderConfirm() {
-            if (!lastOrderData) return;
-
-            const custEl = document.getElementById('orderConfirmCustomer');
-            const fio = `${lastOrderData.lastName} ${lastOrderData.firstName}${lastOrderData.middleName !== '—' ? ' ' + lastOrderData.middleName : ''}`;
-            let html = '';
-            html += `<div class="order-confirm-row"><span class="order-confirm-label">ФИО</span><span class="order-confirm-value">${escapeHtml(fio)}</span></div>`;
-            html += `<div class="order-confirm-row"><span class="order-confirm-label">Телефон</span><span class="order-confirm-value">${escapeHtml(lastOrderData.phone)}</span></div>`;
-            if (lastOrderData.email !== '—') {
-                html += `<div class="order-confirm-row"><span class="order-confirm-label">Email</span><span class="order-confirm-value">${escapeHtml(lastOrderData.email)}</span></div>`;
-            }
-            html += `<div class="order-confirm-row"><span class="order-confirm-label">Адрес</span><span class="order-confirm-value">${escapeHtml(lastOrderData.address)}</span></div>`;
-            html += `<div class="order-confirm-row"><span class="order-confirm-label">Доставка</span><span class="order-confirm-value">${escapeHtml(lastOrderData.delivery)}</span></div>`;
-            custEl.innerHTML = html;
-
-            const itemsEl = document.getElementById('orderConfirmItems');
-            itemsEl.innerHTML = lastOrderData.items.map(item => `
-                <div class="order-confirm-item">
-                    <div class="order-confirm-item-name">${escapeHtml(item.product.name)}<span class="order-confirm-item-qty">×${item.quantity}</span></div>
-                    <div class="order-confirm-item-price">${fmt(item.product.price * item.quantity)}</div>
-                </div>
-            `).join('');
-
-            const totalEl = document.getElementById('orderConfirmTotal');
-            if (lastOrderData.promo_discount > 0) {
-                totalEl.innerHTML = `<span class="order-confirm-total-old">${fmt(lastOrderData.subtotal)}</span><span class="order-confirm-total-discount">−${fmt(lastOrderData.promo_discount)}</span><span>${fmt(lastOrderData.total)}</span>`;
-            } else {
-                totalEl.innerHTML = `<span>${fmt(lastOrderData.total)}</span>`;
-            }
-
-            document.getElementById('orderConfirmModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            window.omTrack('order_confirm_open', { order_number: lastOrderData.orderNumber, total: lastOrderData.total });
-        }
-
-        function closeOrderConfirm() {
-            document.getElementById('orderConfirmModal').style.display = 'none';
-            document.body.style.overflow = '';
-        }
-
-        function confirmGoToPayment() {
-            window.omTrack('payment_start_from_confirm', {
-                order_number: lastOrderData ? lastOrderData.orderNumber : null,
-                total: lastOrderData ? lastOrderData.total : 0
-            });
-            closeOrderConfirm();
-            openPaymentModal();
-        }
-
-        function escapeHtml(str) {
-            return String(str || '').replace(/[&<>"']/g, function(m) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-            });
-        }
-
-        // ============================================================
-        // ОПЛАТА
-        // ============================================================
-        function openPaymentModal() {
-            const total = lastOrderData ? lastOrderData.total : 0;
-            document.getElementById('paymentAmount').textContent = fmt(total);
-            const hasQR = SETTINGS.payment_qr && SETTINGS.payment_qr.trim() !== '';
-            const hasLink = SETTINGS.payment_link && SETTINGS.payment_link.trim() !== '';
-            const paymentAvailable = hasQR || hasLink;
-            if (paymentAvailable) {
-                document.getElementById('paymentTitle').innerHTML = '<i class="fa-solid fa-wallet"></i> Способ оплаты';
-                document.getElementById('paymentAvailable').style.display = 'block';
-                document.getElementById('paymentUnavailable').style.display = 'none';
-                const qrSection = document.querySelector('.payment-qr-section');
-                if (hasQR) {
-                    document.getElementById('qrImage').src = SETTINGS.payment_qr;
-                    qrSection.style.display = 'block';
-                } else {
-                    qrSection.style.display = 'none';
-                }
-                const linkBtn = document.querySelector('.payment-link-btn');
-                if (hasLink) linkBtn.style.display = 'block';
-                else linkBtn.style.display = 'none';
-                const divider = document.querySelector('.payment-divider');
-                if (hasQR && hasLink) divider.style.display = 'flex';
-                else divider.style.display = 'none';
-            } else {
-                document.getElementById('paymentTitle').innerHTML = '<i class="fa-solid fa-wallet"></i> Оформление';
-                document.getElementById('paymentAvailable').style.display = 'none';
-                document.getElementById('paymentUnavailable').style.display = 'block';
-            }
-            document.getElementById('paymentModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            selectedFile = null;
-            document.getElementById('sendReceiptBtn').disabled = true;
-            const wrap = document.getElementById('fileUploadWrap');
-            wrap.classList.remove('has-file');
-            wrap.querySelector('.upload-text').textContent = 'Нажмите для загрузки чека';
-            wrap.querySelector('i').className = 'fa-solid fa-cloud-arrow-up';
-            window.omTrack('payment_open', { total: total, available: paymentAvailable });
-        }
-        function closePayment() {
-            document.getElementById('paymentModal').style.display = 'none';
-            document.body.style.overflow = '';
-            selectedFile = null;
-        }
-        function openPaymentLink() {
-            const link = SETTINGS.payment_link;
-            if (link && link.trim() !== '') {
-                window.open(link, '_blank');
-                window.omTrack('payment_link_click', { link: link });
-            } else {
-                showNotification('Ссылка для оплаты не настроена');
-            }
-        }
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            selectedFile = file;
-            const wrap = document.getElementById('fileUploadWrap');
-            wrap.classList.add('has-file');
-            wrap.querySelector('.upload-text').textContent = file.name;
-            wrap.querySelector('i').className = 'fa-solid fa-file-circle-check';
-            document.getElementById('sendReceiptBtn').disabled = false;
-            window.omTrack('receipt_selected', { filename: file.name, size: file.size });
-        }
-
-        function sendReceiptToManager() {
-            if (!lastOrderData || !selectedFile) return;
-            const btn = document.getElementById('sendReceiptBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Отправка...';
-            const order = lastOrderData;
-            const itemsText = order.items.map(item => `• ${item.product.name} ×${item.quantity} = ${fmt(item.product.price * item.quantity)}`).join('\n');
-            let caption = `🧾 ЧЕК ОПЛАТЫ #${order.orderNumber}\n📅 ${order.date}\n👤 ${order.lastName} ${order.firstName}\n📞 ${order.phone}\n🚚 ${order.delivery}\n`;
-            if (order.promo) caption += `🎟 Промокод: ${order.promo} (−${order.promo_discount} ₽)\n`;
-            caption += `💰 ИТОГО: ${fmt(order.total)}\n\n${itemsText}`;
-            const formData = new FormData();
-            formData.append('document', selectedFile);
-            formData.append('caption', caption);
-            fetch(`${BOT_SERVER_URL}/upload-receipt`, { method: 'POST', body: formData })
-            .then(r => r.json())
-            .then(data => {
-                if (data.status === 'ok') {
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Чек отправлен!';
-                    btn.style.background = 'var(--green)';
-                    showNotification('Чек отправлен в группу заявок');
-                    window.omTrack('receipt_upload', { order_number: order.orderNumber, total: order.total, success: true });
-                    setTimeout(() => { closePayment(); showThankYouPage(true); }, 1500);
-                } else { throw new Error('send failed'); }
-            })
-            .catch(err => {
-                console.error('Ошибка:', err);
-                btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Не удалось отправить';
-                btn.style.background = 'var(--red)';
-                showNotification('Не удалось отправить чек. Попробуйте ещё раз.');
-                window.omTrack('receipt_upload', { order_number: order.orderNumber, total: order.total, success: false });
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Отправить чек менеджеру';
-                    btn.style.background = '';
-                }, 3000);
-            });
-        }
-
-        function showThankYouPage(receiptSent) {
-            if (!lastOrderData) return;
-            cart = [];
-            appliedPromo = null;
-            try { localStorage.removeItem('appliedPromo'); } catch(e) {}
-            updateCartDisplay();
-            hideFloatingCart();
-            const orderParam = encodeURIComponent(JSON.stringify(lastOrderData));
-            const receiptParam = receiptSent ? '&receipt=uploaded' : '';
-            window.location.href = `thankyou.html?order=${orderParam}${receiptParam}`;
-        }
         function contactManager() {
             window.omTrack('contact_manager_click', {});
             window.open(SETTINGS.manager_telegram || 'https://t.me/manager', '_blank');
