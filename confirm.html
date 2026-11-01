@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Проверьте ваши данные — OneMinute</title>
+
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]function(){(m[i].a=m[i].a[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113665503', 'ym');
+
+        ym(113665503, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/113665503" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
+
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -53,6 +68,16 @@
     </div>
 
     <script>
+        window.omTrack = function(name, params) {
+            params = params || {};
+            try { console.log('[omTrack]', name, params); } catch(e) {}
+            try {
+                if (typeof ym === 'function') {
+                    ym(113665503, 'reachGoal', name, params);
+                }
+            } catch(e) {}
+        };
+
         let order = null;
         let settings = { manager_telegram: 'https://t.me/manager' };
 
@@ -109,13 +134,26 @@
             } else {
                 totalEl.innerHTML = `<span>${fmt(order.total)}</span>`;
             }
+
+            window.omTrack('order_confirm_view', {
+                order_number: order.orderNumber,
+                total: order.total
+            });
         }
 
         function goToPayment() {
+            window.omTrack('payment_start_from_confirm', {
+                order_number: order ? order.orderNumber : null,
+                total: order ? order.total : 0
+            });
             window.location.href = 'payment.html';
         }
 
         function contactManager() {
+            window.omTrack('contact_manager_from_confirm', {
+                order_number: order ? order.orderNumber : null,
+                total: order ? order.total : 0
+            });
             window.open(settings.manager_telegram || 'https://t.me/manager', '_blank');
         }
 
